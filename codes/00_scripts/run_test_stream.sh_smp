@@ -1,0 +1,292 @@
+#!/usr/local_rwth/bin/zsh
+#BSUB -J "batch_stream_smp"
+#BSUB -o batch_stream_smp.out.%J
+#BSUB -e batch_stream_smp.err.%J
+#BSUB -W 05:00
+##BSUB -m c24m128
+#BSUB -m c144m1024
+#BSUB -n 1
+#BSUB -x
+#BSUB -a openmp
+#BSUB -P jara0001
+#BSUB -M 1000000
+#BSUB -u j.klinkenberg@itc.rwth-aachen.de
+#BSUB -B
+#BSUB -N
+
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CUR_MEDIAN_FILE=${CUR_DIR}/median.sh
+
+OMP_BASE_DIR=${CUR_DIR}/../stream/
+PROGRAM_CMD="no_numa_balancing ./stream_task.exe"
+
+# enable modules
+module switch intel intel/18.0
+module use /home/jk869269/.modules
+
+# first necessary to rebuild runtimes on SMP machine
+cd ${CUR_DIR}/../
+
+cd ${OMP_BASE_DIR}
+
+#NUM_ITER=3
+NUM_ITER=15
+#export STREAM_ARRAY_SIZE=660000000
+export STREAM_ARRAY_SIZE=$((2**31))
+
+#array=( 32 64 128 )
+array=( 64 )
+: << END
+module unload omp
+make rel.baseline
+for value in ${array[*]}
+do
+  echo "Running rel.baseline with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.baseline" "${PROGRAM_CMD}"
+done
+END
+
+# =====================================================================
+# ----------------------- single creator ----------------------------
+# =====================================================================
+export T_AFF_INVERTED=0
+export T_AFF_SINGLE_CREATOR=1
+export T_AFF_NUM_TASK_MULTIPLICATOR=20
+: << END
+make rel.llvm
+for value in ${array[*]}
+do
+  echo "Running rel.intel with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.intel" "${PROGRAM_CMD}"
+done
+
+module switch intel gcc/7
+make rel.gcc
+for value in ${array[*]}
+do
+  echo "Running rel.gcc with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.libgomp" "${PROGRAM_CMD}"
+done
+module switch gcc intel/18.0
+
+module load omp/task_aff.rel
+
+make rel.llvm
+for value in ${array[*]}
+do
+  echo "Running rel.llvm with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.llvm" "${PROGRAM_CMD}"
+done
+END
+
+module load omp/task_aff.rel
+make rel.domain.rand
+for value in ${array[*]}
+do
+  echo "Running rel.domain.rand with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.rand" "${PROGRAM_CMD}"
+done
+
+make rel.domain.lowest
+for value in ${array[*]}
+do
+  echo "Running rel.domain.lowest with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.lowest" "${PROGRAM_CMD}"
+done
+
+make rel.domain.round_robin
+for value in ${array[*]}
+do
+  echo "Running rel.domain.round_robin with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.rr" "${PROGRAM_CMD}"
+done
+
+make rel.domain.private
+for value in ${array[*]}
+do
+  echo "Running rel.domain.private with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.private" "${PROGRAM_CMD}"
+done
+
+make rel.thread.rand
+for value in ${array[*]}
+do
+  echo "Running rel.thread.rand with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.rand" "${PROGRAM_CMD}"
+done
+
+make rel.thread.lowest
+for value in ${array[*]}
+do
+  echo "Running rel.thread.lowest with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.lowest" "${PROGRAM_CMD}"
+done
+
+make rel.thread.round_robin
+for value in ${array[*]}
+do
+  echo "Running rel.thread.round_robin with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.rr" "${PROGRAM_CMD}"
+done
+
+: << END
+# =====================================================================
+# ----------------------- parallel creator ----------------------------
+# =====================================================================
+export T_AFF_SINGLE_CREATOR=0
+
+module unload omp
+make rel.llvm
+for value in ${array[*]}
+do
+  echo "Running rel.intel with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.intel.par" "${PROGRAM_CMD}"
+done
+
+module switch intel gcc/7
+make rel.gcc
+for value in ${array[*]}
+do
+  echo "Running rel.gcc with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.libgomp.par" "${PROGRAM_CMD}"
+done
+module switch gcc intel/18.0
+
+module load omp/task_aff.rel
+
+make rel.llvm
+for value in ${array[*]}
+do
+  echo "Running rel.llvm with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.llvm.par" "${PROGRAM_CMD}"
+done
+
+make rel.domain.rand
+for value in ${array[*]}
+do
+  echo "Running rel.domain.rand with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.rand.par" "${PROGRAM_CMD}"
+done
+
+make rel.domain.lowest
+for value in ${array[*]}
+do
+  echo "Running rel.domain.lowest with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.lowest.par" "${PROGRAM_CMD}"
+done
+
+make rel.domain.round_robin
+for value in ${array[*]}
+do
+  echo "Running rel.domain.round_robin with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.rr.par" "${PROGRAM_CMD}"
+done
+
+make rel.domain.private
+for value in ${array[*]}
+do
+  echo "Running rel.domain.private with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.private.par" "${PROGRAM_CMD}"
+done
+
+make rel.thread.rand
+for value in ${array[*]}
+do
+  echo "Running rel.thread.rand with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.rand.par" "${PROGRAM_CMD}"
+done
+
+make rel.thread.lowest
+for value in ${array[*]}
+do
+  echo "Running rel.thread.lowest with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.lowest.par" "${PROGRAM_CMD}"
+done
+
+make rel.thread.round_robin
+for value in ${array[*]}
+do
+  echo "Running rel.thread.round_robin with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.rr.par" "${PROGRAM_CMD}"
+done
+
+# =====================================================================
+# ----------------------- parallel creator inverted -------------------
+# =====================================================================
+export T_AFF_INVERTED=1
+
+module unload omp
+make rel.llvm
+for value in ${array[*]}
+do
+  echo "Running rel.intel with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.intel.par.inv" "${PROGRAM_CMD}"
+done
+
+module switch intel gcc/7
+make rel.gcc
+for value in ${array[*]}
+do
+  echo "Running rel.gcc with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.libgomp.par.inv" "${PROGRAM_CMD}"
+done
+module switch gcc intel/18.0
+
+module load omp/task_aff.rel
+
+make rel.llvm
+for value in ${array[*]}
+do
+  echo "Running rel.llvm with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.llvm.par.inv" "${PROGRAM_CMD}"
+done
+
+make rel.domain.rand
+for value in ${array[*]}
+do
+  echo "Running rel.domain.rand with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.rand.par.inv" "${PROGRAM_CMD}"
+done
+
+make rel.domain.lowest
+for value in ${array[*]}
+do
+  echo "Running rel.domain.lowest with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.lowest.par.inv" "${PROGRAM_CMD}"
+done
+
+make rel.domain.round_robin
+for value in ${array[*]}
+do
+  echo "Running rel.domain.round_robin with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.rr.par.inv" "${PROGRAM_CMD}"
+done
+
+make rel.domain.private
+for value in ${array[*]}
+do
+  echo "Running rel.domain.private with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.domain.private.par.inv" "${PROGRAM_CMD}"
+done
+
+make rel.thread.rand
+for value in ${array[*]}
+do
+  echo "Running rel.thread.rand with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.rand.par.inv" "${PROGRAM_CMD}"
+done
+
+make rel.thread.lowest
+for value in ${array[*]}
+do
+  echo "Running rel.thread.lowest with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.lowest.par.inv" "${PROGRAM_CMD}"
+done
+
+make rel.thread.round_robin
+for value in ${array[*]}
+do
+  echo "Running rel.thread.round_robin with $value threads..."
+  ${CUR_MEDIAN_FILE} ${NUM_ITER} ${value} "rel.thread.rr.par.inv" "${PROGRAM_CMD}"
+done
+END

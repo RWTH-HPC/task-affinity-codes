@@ -1,0 +1,25 @@
+App is strassen
+Version: omp-tasks
+Label: icc
+Executing strassen(icc,omp-tasks) with 4 CPUS
+Command is: 4 ./../bin/strassen.icc.omp-tasks -n 2048
+Computing parallel Strassen algorithm (n=2048)  completed!
+Elapsed time for program	0.615964	sec
+
+Program             = Strassen
+Parameters          = N=2048:Y=64
+Model               = OpenMP (using tasks)
+Embedded cut-off    = none
+# of Threads        = 4
+Verification        = Not requested
+Time Program        = 0.615985 seconds
+Execution Date      = 2018/01/03;15:08
+Execution Message   = 
+Architecture        = Linux-x86_64;48
+Load Avg [1:5:15]   = 0.44;0.39;0.59
+Compilation Date    = 2018/01/03;16:08
+Compilation Message = 
+Compiler            = icc -qopenmp
+Compiler Flags      = -c -I../..//common -O2   -I.
+Linker              = icc -qopenmp
+Linker Flags        = -O2   

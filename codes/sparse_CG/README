@@ -1,0 +1,6 @@
+Usage:
+
+./benchmark.rb config.yaml
+
+For documentation on the config file, see the documented example file
+benchmark.yaml.

@@ -1,0 +1,130 @@
+# General configuration
+config:
+  # The build directory. If you use a path relative to benchmark.rb, prefix it
+  # with $ROOT_DIR/, otherwise things *will* go wrong. Absolute paths work by
+  # just specifying them.
+  build_dir: $ROOT_DIR/build
+# Targets - consisting of multiple configurations
+targets:
+  # Configuration called gcc.
+  gcc:
+    # Possible fields:
+    #
+    # compiler: The module name of the compiler. May be prefixed with a
+    #           category, e.g. BETA gcc/4.10
+    # options: The options to pass to CMake. All options not listed will be set
+    #          to OFF, all listed to ON.
+    # tests: A list of paths to the test binaries to run
+    # environment: Environment variables to set in the form NAME=value
+    # host: The host to build and run the tests on
+    compiler: gcc/4.9
+    options:
+      - SERIAL
+      - OPENMP
+      - OPENMP_DD
+      - TASK_PP
+      - TASK_PP_DD
+      - TASK_SP
+      - TASK_SP_DD
+      - LIS
+    tests:
+      - serial/cg_ser
+      - openmp/cg_omp
+      - openmp/cg_omp_dd
+      - tasking/cg_task_sp
+      - tasking/cg_task_sp_dd
+      - tasking/cg_task_pp
+      - tasking/cg_task_pp_dd
+      - lis/cg_lis
+    matrix: nos5.mtxdump
+    environment:
+      - OMP_NUM_THREADS=64
+  intel:
+    compiler: intel
+    options:
+      - SERIAL
+      - OPENMP
+      - OPENMP_DD
+      - TASK_PP
+      - TASK_PP_DD
+      - TASK_SP
+      - TASK_SP_DD
+      - MKL
+    tests:
+      - serial/cg_ser
+      - openmp/cg_omp
+      - openmp/cg_omp_dd
+      - tasking/cg_task_sp
+      - tasking/cg_task_sp_dd
+      - tasking/cg_task_pp
+      - tasking/cg_task_pp_dd
+      - mkl/cg_mkl
+    matrix: nos5.mtxdump
+    environment:
+      - OMP_NUM_THREADS=64
+  pgi:
+    compiler: pgi
+    options:
+      - SERIAL
+      - OPENMP
+      - OPENMP_DD
+      - TASK_PP
+      - TASK_PP_DD
+      - TASK_SP
+      - TASK_SP_DD
+    tests:
+      - serial/cg_ser
+      - openmp/cg_omp
+      - openmp/cg_omp_dd
+      - tasking/cg_task_sp
+      - tasking/cg_task_sp_dd
+      - tasking/cg_task_pp
+      - tasking/cg_task_pp_dd
+    matrix: nos5.mtxdump
+    environment:
+      - OMP_NUM_THREADS=64
+  sun:
+    compiler: studio
+    options:
+      - SERIAL
+      - OPENMP
+      - OPENMP_DD
+      - TASK_PP
+      - TASK_PP_DD
+      - TASK_SP
+      - TASK_SP_DD
+    tests:
+      - serial/cg_ser
+      - openmp/cg_omp
+      - openmp/cg_omp_dd
+      - tasking/cg_task_sp
+      - tasking/cg_task_sp_dd
+      - tasking/cg_task_pp
+      - tasking/cg_task_pp_dd
+    matrix: nos5.mtxdump
+    environment:
+      - OMP_NUM_THREADS=64
+  pgi_openacc:
+    compiler: pgi
+    options:
+      - OPENACC
+    tests:
+      - openacc/cg_openacc
+    matrix: nos5.mtxdump
+    host: linuxgpud3
+  gpu_gcc:
+    compiler: gcc cuda
+    options:
+      - CUBLAS
+      - CUDA
+      #- CUSP
+      - CUSPARSE
+      #- VIENNACL
+    tests:
+      - cublas/cg_cublas
+      - cuda/cg_cuda
+      #- cusp/cg_cusp
+      - cusparse/cg_cusparse
+      #- viennacl/cg_viennacl
+    matrix: nos5.mtxdump
+    host: linuxgpud3
