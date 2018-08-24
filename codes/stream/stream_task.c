@@ -1,3 +1,4 @@
+#define NTIMES 10
 /*-----------------------------------------------------------------------*/
 /* Program: STREAM                                                       */
 /* Revision: $Id: stream.c,v 5.10 2013/01/17 16:01:06 mccalpin Exp mccalpin $ */
@@ -134,7 +135,7 @@
 #endif
 #endif
 #ifndef NTIMES
-#   define NTIMES	10
+#   define NTIMES	2
 #endif
 
 /*  Users are allowed to modify the "OFFSET" variable, which *may* change the
@@ -248,6 +249,7 @@ main()
     //printf("set_mempolicy: %d (errno=%d)\n", ret, errno);
 
     /* --- SETUP --- determine precision and check timing --- */
+    int size = sizeof(STREAM_TYPE);
 
 
     printf(HLINE);
@@ -387,7 +389,8 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step-1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&a[tmp_idx_start]);
+      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -445,7 +448,9 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&c[tmp_idx_start]);
+      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -482,7 +487,9 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&b[tmp_idx_start]);
+      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      kmpc_set_task_affinity(&b[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -519,7 +526,10 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&c[tmp_idx_start]);
+      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&b[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -559,7 +569,13 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&a[tmp_idx_start]);
+      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      //fprintf(stderr, "+++ size a %lu, &a %p, &a[0] %p, len %d\n", 
+              //sizeof(a),&a, &a[tmp_idx_start], len);
+      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&scalar, &size);
+      kmpc_set_task_affinity(&b[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {

@@ -1,21 +1,22 @@
 #!/bin/bash
 
 PROG_CMD=./stream_task.exe
-#PROG_VERSION=deb
-PROG_VERSION=rel
+PROG_VERSION=deb
+#PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-export KMP_A_DEBUG=30 
+export KMP_A_DEBUG=50
 export OMP_PLACES=cores 
 export OMP_PROC_BIND=spread 
-#export OMP_NUM_THREADS=8
-export OMP_NUM_THREADS=64
+export OMP_NUM_THREADS=2
+#export OMP_NUM_THREADS=64
 
 export T_AFF_INVERTED=0
 export T_AFF_SINGLE_CREATOR=1
-export T_AFF_NUM_TASK_MULTIPLICATOR=16
-export STREAM_ARRAY_SIZE=$((2**31))
-#export STREAM_ARRAY_SIZE=$((2**28))
+export T_AFF_NUM_TASK_MULTIPLICATOR=2
+#export T_AFF_NUM_TASK_MULTIPLICATOR=16
+export STREAM_ARRAY_SIZE=$((2**24))
+#export STREAM_ARRAY_SIZE=$((2**31))
 
 module switch intel intel/18.0
 
@@ -54,14 +55,14 @@ function eval_run {
 make clean
 module unload omp
 #eval_run "baseline"
-eval_run "llvm" "intel"
+#eval_run "llvm" "intel"
 
 module switch intel gcc/7
-eval_run "gcc"
+#eval_run "gcc"
 module switch gcc intel/18.0
 
 module load omp/task_aff.${PROG_VERSION}
-eval_run "llvm"
+#eval_run "llvm"
 eval_run "domain.lowest"
 #eval_run "domain.private"
 #eval_run "domain.rand"
