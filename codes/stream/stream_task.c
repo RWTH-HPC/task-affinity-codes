@@ -282,31 +282,31 @@ main()
 
 	// choose which policy you want to use by specifying FLAG during compile process
 #ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, 1 , 10);
 #endif
 #ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, 1 , 10);
 #endif
 #ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, 1 , 10);
 #endif
 #ifdef TASK_AFF_DOMAIN_PRIVATE
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, 1 , 10);
 #endif
 #ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, 1 , 10);
 #endif
 #ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, 1 , 10);
 #endif
 #ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, 1 , 10);
 #endif
 #ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, 1 , 10);
 #endif
 #ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, 1 , 10);
 #endif
 
 #ifdef _FILTER_EXEC_TIMES
