@@ -1,4 +1,3 @@
-#define NTIMES 10
 /*-----------------------------------------------------------------------*/
 /* Program: STREAM                                                       */
 /* Revision: $Id: stream.c,v 5.10 2013/01/17 16:01:06 mccalpin Exp mccalpin $ */
@@ -135,7 +134,7 @@
 #endif
 #endif
 #ifndef NTIMES
-#   define NTIMES	2
+#   define NTIMES	10
 #endif
 
 /*  Users are allowed to modify the "OFFSET" variable, which *may* change the
