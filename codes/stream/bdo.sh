@@ -1,22 +1,32 @@
 #!/bin/bash
+#BSUB -P thes0466
+#BSUB -W 5
+#BSUB -m c144m1024
+#BSUB -n 255
+#BSUB -a openmp
+#BSUB -o output_batch
+#BSUB -J streamB
+#BSUB -M 1048576
 
+#lscpu
+#lstopo
 PROG_CMD=./stream_task.exe
-PROG_VERSION=deb
-#PROG_VERSION=rel
+#PROG_VERSION=deb
+PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=50
 export OMP_PLACES=cores 
 export OMP_PROC_BIND=spread 
 #export OMP_NUM_THREADS=4
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=255
 
 export T_AFF_INVERTED=0
 export T_AFF_SINGLE_CREATOR=0
 #export T_AFF_NUM_TASK_MULTIPLICATOR=4
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=$((2**21))
-export STREAM_ARRAY_SIZE=$((2**26))
+export STREAM_ARRAY_SIZE=$((2**35))
 
 module switch intel intel/18.0
 
@@ -71,21 +81,21 @@ eval_run "domain.lowest"
 #eval_run "thread.rand"
 #eval_run "thread.round_robin"
 
-#eval_run "first.first"
+eval_run "first.first"
 #eval_run "divn.none.20"
-#eval_run "divn.none.40"
+eval_run "divn.none.40"
 #eval_run "divn.none.80"
 #eval_run "divn.none.200"
-#eval_run "divn.none"
-#eval_run "divn.aff"
-#eval_run "divn.size"
+eval_run "divn.none"
+eval_run "divn.aff"
+eval_run "divn.size"
 #eval_run "step.size20"
 #eval_run "step.size80"
 #eval_run "step.size200"
-#eval_run "step.size"
-#eval_run "step.none"
+eval_run "step.size"
+eval_run "step.none"
 #eval_run "step.aff"
-#eval_run "fal.none"
+eval_run "fal.none"
 #eval_run "fal.aff"
 #eval_run "fal.size"
 
