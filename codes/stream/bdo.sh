@@ -2,7 +2,6 @@
 #BSUB -P thes0466
 #BSUB -W 5
 #BSUB -m c144m1024
-#BSUB -n 255
 #BSUB -a openmp
 #BSUB -o output_batch
 #BSUB -J streamB
