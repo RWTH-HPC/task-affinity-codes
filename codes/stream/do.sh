@@ -5,11 +5,11 @@ PROG_VERSION=deb
 #PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-export KMP_A_DEBUG=50
-export OMP_PLACES=cores 
-export OMP_PROC_BIND=spread 
+export KMP_A_DEBUG=60
+export OMP_PLACES=cores
+export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=4
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=32
 
 export T_AFF_INVERTED=0
 export T_AFF_SINGLE_CREATOR=0
@@ -25,12 +25,15 @@ module switch intel intel/18.0
 #module load likwid
 
 function eval_run {
-  curname=$1
-  if ! [ -z "$2" ]; then
-    curname="${curname}.$2"
+  if [ -n "$2" ] && [ -n "$3" ]; then
+    curname="$1.$4.$3"
+    echo "Executing affinity ${curname}"
+    make ${PROG_VERSION} sched=$2 num=$3
+else
+    curname=$1
+    echo "Executing affinity ${curname}"
+    make ${PROG_VERSION}."$1"
   fi
-  echo "Executing affinity ${curname}"
-  make ${PROG_VERSION}."$1"
 
   #{ timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
   #{ timex -v likwid-perfctr -f -g TASKAFFINITY -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
@@ -49,7 +52,7 @@ function eval_run {
   #grep "TASK_SUCCESSFULLY_PUSHED" output_${curname}.txt > pushed_${curname}
   #grep "task_aff_stats" output_${curname}.txt > evol_${curname}
   #grep "__kmp_task_start(enter_aff)" output_${curname}.txt > starts_${curname}
-  grep "TASK_EXECUTION_TIME"  output_${curname}.txt > task_execution_times_${curname} 
+  grep "TASK_EXECUTION_TIME"  output_${curname}.txt > task_execution_times_${curname}
 }
 
 make clean
@@ -63,7 +66,7 @@ module switch gcc intel/18.0
 
 module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
-eval_run "domain.lowest"
+#eval_run "domain.lowest"
 #eval_run "domain.private"
 #eval_run "domain.rand"
 #eval_run "domain.round_robin"
@@ -71,23 +74,33 @@ eval_run "domain.lowest"
 #eval_run "thread.rand"
 #eval_run "thread.round_robin"
 
-#eval_run "first.first"
-#eval_run "divn.none.20"
-#eval_run "divn.none.40"
-#eval_run "divn.none.80"
-#eval_run "divn.none.200"
-#eval_run "divn.none"
-#eval_run "divn.aff"
-#eval_run "divn.size"
-#eval_run "step.size20"
-#eval_run "step.size80"
-#eval_run "step.size200"
-#eval_run "step.size"
-#eval_run "step.none"
-#eval_run "step.aff"
-#eval_run "fal.none"
-#eval_run "fal.aff"
-#eval_run "fal.size"
+#STRATS NAME TO NUMBER CONVERTER
+first=0
+divn=1
+step=2
+fal=3
 
+first=00
+none=01
+aff=02
+size=03
+size2=31
+#divn 1, step 2, fal 3, first 0
+#none 1, aff 2, size 3, first 0
 
+eval_run "domain.lowest" $first$first 10 "first_first"
 
+#eval_run "domain.lowest" $divn$first 10 "divn_first"
+eval_run "domain.lowest" $divn$none 10 "divn_none"
+#eval_run "domain.lowest" $divn$aff 10 "divn_aff"
+#eval_run "domain.lowest" $divn$size 10 "faldivn_size"
+
+#eval_run "domain.lowest" $step$first 10 "step_first"
+#eval_run "domain.lowest" $step$none 10 "step_none"
+#eval_run "domain.lowest" $step$aff 10 "step_aff"
+#eval_run "domain.lowest" $step$size 10 "step_size"
+
+#eval_run "domain.lowest" $fal$first 10 "fal_first"
+#eval_run "domain.lowest" $fal$none 10 "fal_none"
+#eval_run "domain.lowest" $fal$aff 10 "fal_aff"
+#eval_run "domain.lowest" $fal$size 10 "fal_size"
