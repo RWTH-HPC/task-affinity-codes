@@ -1,3 +1,4 @@
+
 /**********************************************************************************************/
 /*  This program is part of the Barcelona OpenMP Tasks Suite                                  */
 /*  Copyright (C) 2009 Barcelona Supercomputing Center - Centro Nacional de Supercomputacion  */
@@ -430,7 +431,8 @@ void sim_village_par(struct Village *village)
    while(vlist)
    {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(vlist);
+      int len = sizeof(Village);
+      kmpc_set_task_affinity(&vlist, &len);
 #endif
 //printf("Task created\n");
 //#pragma omp atomic update
@@ -474,7 +476,8 @@ void sim_village_par(struct Village *village)
       while(vlist)
       {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(vlist);
+      int len = sizeof(vlist);
+      kmpc_set_task_affinity(&vlist, &len);
 #endif
 //#pragma omp atomic update
 //nr_tasks++;
@@ -527,7 +530,8 @@ void sim_village_par(struct Village *village)
    while(vlist)
    {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(vlist);
+      int len = sizeof(vlist);
+      kmpc_set_task_affinity(&vlist, &len);
 #endif
 //#pragma omp atomic update
 //nr_tasks++;
@@ -665,33 +669,42 @@ void sim_village_main_par(struct Village *top)
    double t_overall;
    t_overall = omp_get_wtime();
 
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_PRIVATE
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
-#endif
+   // choose which policy you want to use by specifying FLAG during compile process
+   //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
+   #ifndef SCHEDULE_TYPE
+   #   define SCHEDULE_TYPE 101
+   #endif
+   #ifndef SCHEDULE_NUM
+   #   define SCHEDULE_NUM 20
+   #endif
+
+   #ifdef TASK_AFF_DOMAIN_FIRST
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_DOMAIN_RAND
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_DOMAIN_LOWEST
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_DOMAIN_PRIVATE
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_DOMAIN_RR
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_THREAD_FIRST
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_THREAD_RAND
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_THREAD_LOWEST
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
+   #ifdef TASK_AFF_THREAD_RR
+     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+   #endif
 
 printf("Last Patient id = %d\n", sim_pid);
 #pragma omp parallel

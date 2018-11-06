@@ -28,7 +28,7 @@ function eval_run {
   if [ -n "$2" ] && [ -n "$3" ]; then
     curname="$1.$4.$3"
     echo "Executing affinity ${curname}"
-    make ${PROG_VERSION} sched=$2 num=$3
+    make ${PROG_VERSION}."$1" sched=$2 num=$3
 else
     curname=$1
     echo "Executing affinity ${curname}"
@@ -47,12 +47,12 @@ else
   #no_numa_balancing advixe-cl -collect roofline -project-dir TestRoofline -- "${PROG_CMD}" &> output_${curname}.txt
   no_numa_balancing "${PROG_CMD}" &> output_${curname}.txt
   grep "Elapsed time" output_${curname}.txt
-  grep "TASK AFFINITY:" output_${curname}.txt > bla_${curname}
+  #grep "TASK AFFINITY:" output_${curname}.txt > bla_${curname}
   #grep "stole task" output_${curname}.txt > nr_steals_${curname}
   #grep "TASK_SUCCESSFULLY_PUSHED" output_${curname}.txt > pushed_${curname}
   #grep "task_aff_stats" output_${curname}.txt > evol_${curname}
   #grep "__kmp_task_start(enter_aff)" output_${curname}.txt > starts_${curname}
-  grep "TASK_EXECUTION_TIME"  output_${curname}.txt > task_execution_times_${curname}
+  #grep "TASK_EXECUTION_TIME"  output_${curname}.txt > task_execution_times_${curname}
 }
 
 make clean
@@ -79,6 +79,7 @@ first=0
 divn=1
 step=2
 fal=3
+bin=4
 
 first=00
 none=01
@@ -89,6 +90,7 @@ size2=31
 #none 1, aff 2, size 3, first 0
 
 eval_run "domain.lowest" $first$first 10 "first_first"
+eval_run "domain.lowest" $bin.$none 10 "bin.none"
 
 #eval_run "domain.lowest" $divn$first 10 "divn_first"
 eval_run "domain.lowest" $divn$none 10 "divn_none"

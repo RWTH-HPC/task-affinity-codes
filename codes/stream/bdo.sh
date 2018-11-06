@@ -25,7 +25,7 @@ export T_AFF_SINGLE_CREATOR=0
 #export T_AFF_NUM_TASK_MULTIPLICATOR=4
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=$((2**21))
-export STREAM_ARRAY_SIZE=$((2**35))
+export STREAM_ARRAY_SIZE=$((2**30))
 
 module switch intel intel/18.0
 
@@ -88,6 +88,7 @@ first=0
 divn=1
 step=2
 fal=3
+bin=4
 
 first=00
 none=01
@@ -99,10 +100,10 @@ size2=31
 
 eval_run "domain.lowest" $first$first 10 "first_first"
 
-#eval_run "domain.lowest" $divn$first 10 "divn_first"
+eval_run "domain.lowest" $divn$first 10 "divn_first"
 eval_run "domain.lowest" $divn$none 10 "divn_none"
-#eval_run "domain.lowest" $divn$aff 10 "divn_aff"
-#eval_run "domain.lowest" $divn$size 10 "faldivn_size"
+eval_run "domain.lowest" $divn$aff 10 "divn_aff"
+eval_run "domain.lowest" $divn$size 10 "divn_size"
 
 #eval_run "domain.lowest" $step$first 10 "step_first"
 #eval_run "domain.lowest" $step$none 10 "step_none"
