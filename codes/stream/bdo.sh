@@ -1,11 +1,13 @@
 #!/bin/bash
 #BSUB -P thes0466
-#BSUB -W 5
+#BSUB -W 01:00
 #BSUB -m c144m1024
 #BSUB -a openmp
+#BSUB -n 1
+#BSUB -x
 #BSUB -o output_batch
 #BSUB -J streamB
-#BSUB -M 1048576
+#BSUB -M 524288
 
 #lscpu
 #lstopo
@@ -36,13 +38,11 @@ module switch intel intel/18.0
 function eval_run {
   if [ -n "$2" ] && [ -n "$3" ]; then
     curname="$1.$4.$3"
-    echo "Executing affinity ${curname}"
-    make ${PROG_VERSION} sched=$2 num=$3
 else
     curname=$1
-    echo "Executing affinity ${curname}"
-    make ${PROG_VERSION}."$1"
   fi
+  echo "Executing affinity ${curname}"
+  make ${PROG_VERSION}."$1" sched=$2 num=$3
 
   #{ timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
   #{ timex -v likwid-perfctr -f -g TASKAFFINITY -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
@@ -67,11 +67,17 @@ else
 make clean
 module unload omp
 #eval_run "baseline"
-#eval_run "llvm" "intel"
+#eval_run "llvm" "" "intel"
 
 module switch intel gcc/7
 #eval_run "gcc"
 module switch gcc intel/18.0
+
+make -C ../../ task.${PROG_VERSION}
+if [[ $? -ne 0 ]] ; then
+    exit 1
+fi
+module use -a ~/.modules
 
 module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
@@ -85,8 +91,13 @@ module load omp/task_aff.${PROG_VERSION}
 
 #STRATS NAME TO NUMBER CONVERTER
 first=0
+first0=99
 divn=1
+divn2=11
+divn3=12
+divn_old=19
 step=2
+step2=21
 fal=3
 bin=4
 
@@ -99,11 +110,12 @@ size2=31
 #none 1, aff 2, size 3, first 0
 
 eval_run "domain.lowest" $first$first 10 "first_first"
+eval_run "domain.lowest" $bin.$none 10 "bin.none"
 
-eval_run "domain.lowest" $divn$first 10 "divn_first"
+#eval_run "domain.lowest" $divn$first 10 "divn_first"
 eval_run "domain.lowest" $divn$none 10 "divn_none"
-eval_run "domain.lowest" $divn$aff 10 "divn_aff"
-eval_run "domain.lowest" $divn$size 10 "divn_size"
+#eval_run "domain.lowest" $divn$aff 10 "divn_aff"
+#eval_run "domain.lowest" $divn$size 10 "faldivn_size"
 
 #eval_run "domain.lowest" $step$first 10 "step_first"
 #eval_run "domain.lowest" $step$none 10 "step_none"

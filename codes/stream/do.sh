@@ -27,13 +27,11 @@ module switch intel intel/18.0
 function eval_run {
   if [ -n "$2" ] && [ -n "$3" ]; then
     curname="$1.$4.$3"
-    echo "Executing affinity ${curname}"
-    make ${PROG_VERSION}."$1" sched=$2 num=$3
 else
     curname=$1
-    echo "Executing affinity ${curname}"
-    make ${PROG_VERSION}."$1"
   fi
+  echo "Executing affinity ${curname}"
+  make ${PROG_VERSION}."$1" sched=$2 num=$3
 
   #{ timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
   #{ timex -v likwid-perfctr -f -g TASKAFFINITY -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
@@ -58,11 +56,17 @@ else
 make clean
 module unload omp
 #eval_run "baseline"
-#eval_run "llvm" "intel"
+#eval_run "llvm" "" "intel"
 
 module switch intel gcc/7
 #eval_run "gcc"
 module switch gcc intel/18.0
+
+make -C ../../ task.${PROG_VERSION}
+if [[ $? -ne 0 ]] ; then
+    exit 1
+fi
+module use -a ~/.modules
 
 module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
@@ -76,8 +80,13 @@ module load omp/task_aff.${PROG_VERSION}
 
 #STRATS NAME TO NUMBER CONVERTER
 first=0
+first0=99
 divn=1
+divn2=11
+divn3=12
+divn_old=19
 step=2
+step2=21
 fal=3
 bin=4
 

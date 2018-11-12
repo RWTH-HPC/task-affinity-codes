@@ -21,28 +21,28 @@ pre-build-deb:
 deb: deb.domain.lowest
 
 deb.domain.rand: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RAND
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.domain.first: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_FIRST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.domain.lowest: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_LOWEST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.domain.round_robin: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RR
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RR -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.thread.rand: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RAND
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.thread.first: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_FIRST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.thread.lowest: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_LOWEST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.thread.round_robin: pre-build-deb
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RR
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RR -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 deb.llvm: pre-build-deb
 	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
@@ -53,25 +53,25 @@ deb.gcc: pre-build-deb
 rel: rel.domain.lowest
 
 rel.domain.rand: pre-build
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RAND
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 rel.domain.first: pre-build
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_FIRST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 rel.domain.lowest: pre-build
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_LOWEST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 rel.domain.round_robin: pre-build
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RR
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RR -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 rel.thread.rand: pre-build
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RAND
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 rel.thread.first: pre-build
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_FIRST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 rel.thread.lowest: pre-build
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_LOWEST
+	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
 
 rel.thread.round_robin: pre-build
 	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 -I$(COMMON_DIR) bots_common.o  main.o ${BOT_ADDITIONAL_PARAMS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RR

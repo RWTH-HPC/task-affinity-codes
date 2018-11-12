@@ -88,9 +88,22 @@ matvec(struct SolverConfig* sc, const struct MatrixCRS* A, const floatType* x,
 #ifdef TASK_AFFINITY
       // get start position
       //int tmp = A->ptr[(int)((ce+cs)/2)];
-      int tmp = A->ptr[ce];
-      kmpc_set_task_affinity((void *)&value[tmp]);
+      //int tmp = A->ptr[ce];
       //kmpc_set_task_affinity((void *)&y[tmp]);
+	  //kmpc_set_task_affinity((void *)&value[tmp]);
+
+	  int n = A->n;
+	  int srt = A->ptr[cs];
+	  int end = A->ptr[ce];
+	  int dif = ce - cs;
+	  int len = end - srt;//len for *ptr
+	  //TODO
+	  kmpc_set_task_affinity(&&(value[srt]),&len);/*
+	  kmpc_set_task_affinity((void *)&(index[srt]),&len);
+	  kmpc_set_task_affinity(&(A->ptr[cs]),&dif);
+	  kmpc_set_task_affinity(&y,&n);
+	  kmpc_set_task_affinity((void *)&(x[srt]), &len);
+	  */
 #endif
 #else
 	// generate all tasks
@@ -100,9 +113,20 @@ matvec(struct SolverConfig* sc, const struct MatrixCRS* A, const floatType* x,
 #ifdef TASK_AFFINITY
       // get start position
       //int tmp = A->ptr[c+(int)(chunkSize / 2)];
-      int tmp = A->ptr[c];
-      kmpc_set_task_affinity((void *)&value[tmp]);
+      //int tmp = A->ptr[c];
       //kmpc_set_task_affinity((void *)&y[tmp]);
+	  //kmpc_set_task_affinity((void *)&value[tmp]);
+
+	  int n = A->n;
+	  int srt = A->ptr[c];
+	  int end = A->ptr[c+chunkSize];
+	  int dif = chunkSize;
+	  int len = end - srt;//len for *ptr
+	  kmpc_set_task_affinity((void *)&(value[srt]),&len);/*
+	  kmpc_set_task_affinity((void *)&(index[srt]),&len);
+	  kmpc_set_task_affinity(&(A->ptr[cs]),&dif);
+	  kmpc_set_task_affinity(&y, &n);
+	  kmpc_set_task_affinity((void *)&(x[srt]), &len);*/
 #endif
 #endif
 #ifdef TASK_DISTRIBUTION
@@ -208,33 +232,46 @@ cg(const struct MatrixCRS* A, const floatType* b, floatType* x,
 	double timeMatvec = 0;
 	const int chunkSize = sc->chunkSize;
 
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_PRIVATE
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
-#endif
+	// choose which policy you want to use by specifying FLAG during compile process
+	//also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
+	#ifndef SCHEDULE_TYPE
+	#   define SCHEDULE_TYPE 101
+	#endif
+	#ifndef SCHEDULE_NUM
+	#   define SCHEDULE_NUM 20
+	#endif
+
+	#ifdef TASK_AFF_DOMAIN_FIRST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_RAND
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_LOWEST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_PRIVATE
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_RR
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_FIRST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_RAND
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_LOWEST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_RR
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+
+	#ifdef _FILTER_EXEC_TIMES
+	  kmpc_task_affinity_taskexectimes_set_enabled(0);
+	#endif
 
 	// allocate memory
 	r=(floatType*)malloc(n*sizeof(floatType));

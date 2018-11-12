@@ -75,10 +75,10 @@ void ReadFile(T array[], const size_t size)
     printf("Error open file\n");
     exit(1);
   }
-  
+
   struct stat st;
   fstat(fd, &st);
-  
+
   void *mem = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
   if(mem == MAP_FAILED){
     printf("Error reading file\n");
@@ -89,10 +89,10 @@ void ReadFile(T array[], const size_t size)
   size_t i;
   for(i = 0; i < size; i++)
   {
-    array[i] = tmp_arr[i];  
+    array[i] = tmp_arr[i];
   }
-  
-  munmap(mem, st.st_size);  
+
+  munmap(mem, st.st_size);
   close(fd);
 }
 
@@ -108,7 +108,7 @@ void WriteFile(T array[], const size_t size, bool binary)
   else
     sprintf(buf, "input__%lu_pure", size);
 
-  if(binary){  
+  if(binary){
   int* value = (int*)malloc(PAGES(sizeof(int) * size));
   memset(value, 0, PAGES(sizeof(int) * size));
   memcpy(value, array, sizeof(int) * size);
@@ -116,7 +116,7 @@ void WriteFile(T array[], const size_t size, bool binary)
   FILE *f;
   f = fopen(buf, "wb");
   fwrite(value, 1, PAGES(sizeof(int) * size), f);
-  fclose(f); 
+  fclose(f);
   free(value);
   } else {
     FILE *f;
@@ -251,7 +251,13 @@ void MsMergeParallel(T out[], T in[], long begin1, long end1, long begin2, long 
         sprintf(buf, "MsMergeParallel %d (seq)", nextDeep);
         kmpc_task_affinity_set_msg(buf);
 #endif
-        kmpc_set_task_affinity(&out[begin1]);
+        //kmpc_set_task_affinity(&out[begin1]);
+        int len1 = half1 - begin1;
+        int len2 = half2 - begin2;
+        int len12 = len1+len2;
+        kmpc_set_task_affinity(&out[begin1],&len12);
+        kmpc_set_task_affinity(&in[begin1],&len1);
+        kmpc_set_task_affinity(&in[begin2],&len2);
       }
 #endif
 #if TASK_AFF_UNTIED
@@ -276,7 +282,13 @@ void MsMergeParallel(T out[], T in[], long begin1, long end1, long begin2, long 
         sprintf(buf, "MsMergeParallel %d (seq)", nextDeep);
         kmpc_task_affinity_set_msg(buf);
 #endif
-        kmpc_set_task_affinity(&out[half1]);
+        //kmpc_set_task_affinity(&out[half1]);
+        int len1 = end1 - half1;
+        int len2 = end2 - half2;
+        int len12 = len1+len2;
+        kmpc_set_task_affinity(&out[half1],&len12);
+        kmpc_set_task_affinity(&in[half1],&len1);
+        kmpc_set_task_affinity(&in[half2],&len2);
       }
 #endif
 #if TASK_AFF_UNTIED
@@ -320,7 +332,10 @@ void MsParallel(T array[], T tmp[], bool inplace, long begin, long end, int deep
         sprintf(buf, "MsParallel %d (seq)", nextDeep);
         kmpc_task_affinity_set_msg(buf);
 #endif
-        kmpc_set_task_affinity(&tmp[begin]);
+        //kmpc_set_task_affinity(&tmp[begin]);
+        int len = half - begin;
+        kmpc_set_task_affinity(&array[begin],&len);
+        kmpc_set_task_affinity(&tmp[begin],&len);
       }
 #endif
 #if TASK_AFF_UNTIED
@@ -343,7 +358,10 @@ void MsParallel(T array[], T tmp[], bool inplace, long begin, long end, int deep
         sprintf(buf, "MsParallel %d (seq)", nextDeep);
         kmpc_task_affinity_set_msg(buf);
 #endif
-        kmpc_set_task_affinity(&tmp[half]);
+        //kmpc_set_task_affinity(&tmp[half]);
+        int len = end- half;
+        kmpc_set_task_affinity(&array[half],&len);
+        kmpc_set_task_affinity(&tmp[half],&len);
       }
 #endif
 #if TASK_AFF_UNTIED
@@ -356,7 +374,7 @@ void MsParallel(T array[], T tmp[], bool inplace, long begin, long end, int deep
 			}
     #pragma omp taskwait
 		}
-		else 
+		else
     {
 			MsSequential(array, tmp, !inplace, begin, half);
 			MsSequential(array, tmp, !inplace, half, end);
@@ -417,33 +435,42 @@ int main(int argc, char* argv[]) {
 	// measure the time
 	double t1, t2;
 
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_PRIVATE
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
-#endif
+    // choose which policy you want to use by specifying FLAG during compile process
+    //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
+    #ifndef SCHEDULE_TYPE
+    #   define SCHEDULE_TYPE 101
+    #endif
+    #ifndef SCHEDULE_NUM
+    #   define SCHEDULE_NUM 20
+    #endif
+
+    #ifdef TASK_AFF_DOMAIN_FIRST
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_DOMAIN_RAND
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_DOMAIN_LOWEST
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_DOMAIN_PRIVATE
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_DOMAIN_RR
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_THREAD_FIRST
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_THREAD_RAND
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_THREAD_LOWEST
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
+    #ifdef TASK_AFF_THREAD_RR
+      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+    #endif
 
 	// expect one command line arguments: array size
 	if (argc != 2) {
@@ -455,7 +482,7 @@ int main(int argc, char* argv[]) {
 		const size_t stSize = strtol(argv[1], NULL, 10);
 		//ELEMENT_T *data = new ELEMENT_T[stSize];
 		//ELEMENT_T *tmp = new ELEMENT_T[stSize];
-		
+
     ELEMENT_T *data = (ELEMENT_T *) alloc(stSize * sizeof(ELEMENT_T));
     ELEMENT_T *tmp = (ELEMENT_T *) alloc(stSize * sizeof(ELEMENT_T));
 
@@ -463,7 +490,7 @@ int main(int argc, char* argv[]) {
     size_t pagesize;
     if ((pagesize = sysconf(_SC_PAGESIZE)) < 1)
       pagesize = 4096;
-    
+
 		std::cout << "Use memory alignment with pagesize = " << pagesize << std::endl;
     data = (ELEMENT_T*) memalign(pagesize, sizeof(ELEMENT_T) * stSize);
     tmp = (ELEMENT_T*) memalign(pagesize, sizeof(ELEMENT_T) * stSize);
@@ -475,7 +502,7 @@ int main(int argc, char* argv[]) {
 			data[idx] = 0;
 			tmp[idx] = 0;
 		}
-		
+
     std::cout << "Initialization..." << std::endl;
     if(FileExists(stSize))
     {

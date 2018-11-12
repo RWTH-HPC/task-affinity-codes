@@ -13,7 +13,8 @@
 #include <stdlib.h>
 
 // This n results in matix with size of 6 GB (with 5 entries per row)
-int n = 100000000; 
+//int n = 100000000;
+int n = 1024000;
 int nnz = 0;
 
 void addNNZ(std::ofstream& out, int x, int x_dist, int val){
@@ -28,7 +29,7 @@ void addNNZ(std::ofstream& out, int x, int x_dist, int val){
 }
 
 int main(){
-	std::string fname = "/dev/shm/out.mtx";
+	std::string fname = "./out.mtx";
 	std::ofstream out;
 	out.open(fname.c_str());
 

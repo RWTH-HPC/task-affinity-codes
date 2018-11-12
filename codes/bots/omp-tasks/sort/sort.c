@@ -37,7 +37,7 @@
  *
  *
  * The procedure cilkmerge does the following:
- *       
+ *
  *       cilkmerge(A[1..n], B[1..m], C[1..(n+m)]) =
  *          find the median of A \union B using binary
  *          search.  The binary search gives a pair
@@ -107,10 +107,10 @@ static void ReadFile(ELM *array, const size_t size)
     printf("Error open file\n");
     exit(1);
   }
-  
+
   struct stat st;
   fstat(fd, &st);
-  
+
   void *mem = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
   if(mem == MAP_FAILED){
     printf("Error reading file\n");
@@ -121,10 +121,10 @@ static void ReadFile(ELM *array, const size_t size)
   size_t i;
   for(i = 0; i < size; i++)
   {
-    array[i] = tmp_arr[i];  
+    array[i] = tmp_arr[i];
   }
-  
-  munmap(mem, st.st_size);  
+
+  munmap(mem, st.st_size);
   close(fd);
 }
 
@@ -138,7 +138,7 @@ static void WriteFile(ELM *array, const size_t size, int binary)
   else
     sprintf(buf, "input__%lu_pure", size);
 
-  if(binary){  
+  if(binary){
   long* value = (long*)malloc(PAGES(sizeof(long) * size));
   memset(value, 0, PAGES(sizeof(long) * size));
   memcpy(value, array, sizeof(long) * size);
@@ -146,7 +146,7 @@ static void WriteFile(ELM *array, const size_t size, int binary)
   FILE *f;
   f = fopen(buf, "wb");
   fwrite(value, 1, PAGES(sizeof(long) * size), f);
-  fclose(f); 
+  fclose(f);
   free(value);
   } else {
     FILE *f;
@@ -303,7 +303,7 @@ void seqmerge(ELM *low1, ELM *high1, ELM *low2, ELM *high2,
       * loading an element out of range.  While this is
       * probably not a problem in practice, yet I don't feel
       * comfortable with an incorrect algorithm.  Therefore,
-      * I use the 'fast' loop on the array (except for the last 
+      * I use the 'fast' loop on the array (except for the last
       * element) and the 'slow' loop for the rest, saving both
       * performance and correctness.
       */
@@ -385,24 +385,24 @@ ELM *binsplit(ELM val, ELM *low, ELM *high)
 void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 {
      /*
-      * Cilkmerge: Merges range [low1, high1] with range [low2, high2] 
-      * into the range [lowdest, ...]  
+      * Cilkmerge: Merges range [low1, high1] with range [low2, high2]
+      * into the range [lowdest, ...]
       */
 
      ELM *split1, *split2;	/*
-				 * where each of the ranges are broken for 
-				 * recursive merge 
+				 * where each of the ranges are broken for
+				 * recursive merge
 				 */
      long int lowsize;		/*
 				 * total size of lower halves of two
-				 * ranges - 2 
+				 * ranges - 2
 				 */
 
      /*
       * We want to take the middle element (indexed by split1) from the
       * larger of the two arrays.  The following code assumes that split1
       * is taken from range [low1, high1].  So if [low1, high1] is
-      * actually the smaller range, we should swap it with [low2, high2] 
+      * actually the smaller range, we should swap it with [low2, high2]
       */
 
      if (high2 - low2 > high1 - low1) {
@@ -422,14 +422,14 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
       * Basic approach: Find the middle element of one range (indexed by
       * split1). Find where this element would fit in the other range
       * (indexed by split 2). Then merge the two lower halves and the two
-      * upper halves. 
+      * upper halves.
       */
-	 
+
      split1 = ((high1 - low1 + 1) / 2) + low1;
      split2 = binsplit(*split1, low2, high2);
      lowsize = split1 - low1 + split2 - low2;
 
-     /* 
+     /*
       * directly put the splitting element into
       * the appropriate location
       */
@@ -438,7 +438,13 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 #if USE_TASK_AFF_ONLY_AT_CUTOFF
 	if (split1 - 1 - low1 < bots_app_cutoff_value )
 #endif
-      kmpc_set_task_affinity(lowdest);
+      //kmpc_set_task_affinity(lowdest);
+	  int lenL1 = split1 - low1 - 1;
+	  int lenL2 = split2 - low2;
+	  int lenL12 = lenL1 + lenL2;
+	  kmpc_set_task_affinity(low1, &lenL1);
+	  kmpc_set_task_affinity(low2, &lenL2);
+	  kmpc_set_task_affinity(low1, &lenL12);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -451,7 +457,13 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 #if USE_TASK_AFF_ONLY_AT_CUTOFF
 	if (high1 - (split1 + 1) < bots_app_cutoff_value )
 #endif
-      kmpc_set_task_affinity(lowdest + lowsize + 2);
+      //kmpc_set_task_affinity(lowdest + lowsize + 2);
+	  int lenH1 = high1 - split1 - 1;
+	  int lenH2 = high2 - split2 - 1;
+	  int lenH12 = lenH1 + lenH2;
+	  kmpc_set_task_affinity(split1+1,&lenH1);
+	  kmpc_set_task_affinity(split2+1,&lenH2);
+	  kmpc_set_task_affinity(lowdest+lowsize+2,&lenH12);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -460,7 +472,7 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 #endif
      cilkmerge_par(split1 + 1, high1, split2 + 1, high2,
 		     lowdest + lowsize + 2);
-			 
+
 #pragma omp taskwait
 
      return;
@@ -497,7 +509,10 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
 	if (quarter < bots_app_cutoff_value_1 )
 #endif
       //kmpc_set_task_affinity(&tmpA[quarter/2]);
-      kmpc_set_task_affinity(tmpA);
+      //kmpc_set_task_affinity(tmpA);
+	  int len = quarter;
+	  kmpc_set_task_affinity(tmpA, &len);
+	  kmpc_set_task_affinity(A, &len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -511,7 +526,10 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
 	if (quarter < bots_app_cutoff_value_1 )
 #endif
       //kmpc_set_task_affinity(&tmpB[quarter/2]);
-      kmpc_set_task_affinity(tmpB);
+      //kmpc_set_task_affinity(tmpB);
+	  //int len = quarter;
+	  kmpc_set_task_affinity(tmpB, &len);
+	  kmpc_set_task_affinity(B, &len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -525,7 +543,10 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
 	if (quarter < bots_app_cutoff_value_1 )
 #endif
       //kmpc_set_task_affinity(&tmpC[quarter/2]);
-      kmpc_set_task_affinity(tmpC);
+      //kmpc_set_task_affinity(tmpC);
+	  //int len = quarter;
+	  kmpc_set_task_affinity(tmpC, &len);
+	  kmpc_set_task_affinity(C, &len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -539,7 +560,10 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
 	if (quarter < bots_app_cutoff_value_1 )
 #endif
       //kmpc_set_task_affinity(&tmpD[quarter/2]);
-      kmpc_set_task_affinity(tmpD);
+      //kmpc_set_task_affinity(tmpD);
+	  //int len = quarter;
+	  kmpc_set_task_affinity(tmpD, &len);
+	  kmpc_set_task_affinity(D, &len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -555,7 +579,10 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
 	if (quarter < bots_app_cutoff_value )
 #endif
       //kmpc_set_task_affinity(&A[quarter/2]);
-      kmpc_set_task_affinity(tmpA);
+      //kmpc_set_task_affinity(tmpA);
+	  //int len = quarter;
+	  kmpc_set_task_affinity(tmpA, &len);
+	  kmpc_set_task_affinity(A, &len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -569,7 +596,10 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
 	if (quarter < bots_app_cutoff_value )
 #endif
       //kmpc_set_task_affinity(&C[quarter/2]);
-      kmpc_set_task_affinity(tmpC);
+      //kmpc_set_task_affinity(tmpC);
+	  //int len = quarter;
+	  kmpc_set_task_affinity(tmpC, &len);
+	  kmpc_set_task_affinity(C, &len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -656,7 +686,7 @@ void sort_init ( void )
      for (i = 0; i < bots_arg_size; ++i) {
 	      tmp[i] = 0;
      }
-  
+
     // check for existing file otherwise write
     if(FileExists(bots_arg_size))
     {
@@ -668,7 +698,7 @@ void sort_init ( void )
       scramble_array(array);
       WriteFile(array, bots_arg_size, 1);
     }
-	 
+
      //fill_array(array);
      //fill_array(tmp);
      //scramble_array(array);
@@ -676,30 +706,44 @@ void sort_init ( void )
 
 void sort_par ( void )
 {
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
-#endif
+	#ifndef SCHEDULE_TYPE
+	#   define SCHEDULE_TYPE 101
+	#endif
+	#ifndef SCHEDULE_NUM
+	#   define SCHEDULE_NUM 20
+	#endif
+
+	#ifdef TASK_AFF_DOMAIN_FIRST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_RAND
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_LOWEST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_PRIVATE
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_DOMAIN_RR
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_FIRST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_RAND
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_LOWEST
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+	#ifdef TASK_AFF_THREAD_RR
+	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
+	#endif
+
+	#ifdef _FILTER_EXEC_TIMES
+	  kmpc_task_affinity_taskexectimes_set_enabled(0);
+	#endif
 
 	double t_overall;
 	t_overall = omp_get_wtime();
@@ -715,7 +759,7 @@ void sort_par ( void )
 	bots_message(" completed!\n");
 	t_overall = omp_get_wtime() - t_overall;
 	printf("Elapsed time for program\t%lf\tsec\n",t_overall);
-  
+
   if(sort_verify() == BOTS_RESULT_SUCCESSFUL)
     printf("Sort successfull\n");
   else
@@ -733,4 +777,3 @@ int sort_verify ( void )
 
      return success ? BOTS_RESULT_SUCCESSFUL : BOTS_RESULT_UNSUCCESSFUL;
 }
-
