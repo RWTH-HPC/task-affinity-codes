@@ -92,18 +92,17 @@ matvec(struct SolverConfig* sc, const struct MatrixCRS* A, const floatType* x,
       //kmpc_set_task_affinity((void *)&y[tmp]);
 	  //kmpc_set_task_affinity((void *)&value[tmp]);
 
-	  int n = A->n;
+	  int n = A->n*sizeof(floatType);
 	  int srt = A->ptr[cs];
 	  int end = A->ptr[ce];
-	  int dif = ce - cs;
-	  int len = end - srt;//len for *ptr
-	  //TODO
-	  kmpc_set_task_affinity(&&(value[srt]),&len);/*
-	  kmpc_set_task_affinity((void *)&(index[srt]),&len);
-	  kmpc_set_task_affinity(&(A->ptr[cs]),&dif);
-	  kmpc_set_task_affinity(&y,&n);
+	  int dif = (ce - cs)*sizeof(int);
+	  int len = (end - srt)*sizeof(floatType);
+	  int len2= (end - srt)*sizeof(int);
+	  kmpc_set_task_affinity(&&(value[srt]),&len);
 	  kmpc_set_task_affinity((void *)&(x[srt]), &len);
-	  */
+	  kmpc_set_task_affinity(&y,&n);
+	  kmpc_set_task_affinity((void *)&(index[srt]),&len2);
+	  kmpc_set_task_affinity(&(A->ptr[cs]),&dif);
 #endif
 #else
 	// generate all tasks
@@ -117,16 +116,17 @@ matvec(struct SolverConfig* sc, const struct MatrixCRS* A, const floatType* x,
       //kmpc_set_task_affinity((void *)&y[tmp]);
 	  //kmpc_set_task_affinity((void *)&value[tmp]);
 
-	  int n = A->n;
+	  int n = A->n*sizeof(floatType);
 	  int srt = A->ptr[c];
 	  int end = A->ptr[c+chunkSize];
-	  int dif = chunkSize;
-	  int len = end - srt;//len for *ptr
-	  kmpc_set_task_affinity((void *)&(value[srt]),&len);/*
-	  kmpc_set_task_affinity((void *)&(index[srt]),&len);
-	  kmpc_set_task_affinity(&(A->ptr[cs]),&dif);
+	  int dif = chunkSize*sizeof(int);
+	  int len = (end - srt)*sizeof(floatType);
+	  int len2= (end - srt)*sizeof(int);
+	  kmpc_set_task_affinity((void *) &value[srt],&len);
+	  kmpc_set_task_affinity((void *)&(x[srt]), &len);
 	  kmpc_set_task_affinity(&y, &n);
-	  kmpc_set_task_affinity((void *)&(x[srt]), &len);*/
+	  kmpc_set_task_affinity((void *)&(index[srt]),&len2);
+	  kmpc_set_task_affinity(&(A->ptr[cs]),&dif);
 #endif
 #endif
 #ifdef TASK_DISTRIBUTION

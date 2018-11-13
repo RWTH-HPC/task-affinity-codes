@@ -439,8 +439,9 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 	if (split1 - 1 - low1 < bots_app_cutoff_value )
 #endif
       //kmpc_set_task_affinity(lowdest);
-	  int lenL1 = split1 - low1 - 1;
-	  int lenL2 = split2 - low2;
+	  int size = sizeof(ELM);
+	  int lenL1 = (split1 - low1 - 1)*size;
+	  int lenL2 = (split2 - low2)*size;
 	  int lenL12 = lenL1 + lenL2;
 	  kmpc_set_task_affinity(low1, &lenL1);
 	  kmpc_set_task_affinity(low2, &lenL2);
@@ -458,8 +459,8 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 	if (high1 - (split1 + 1) < bots_app_cutoff_value )
 #endif
       //kmpc_set_task_affinity(lowdest + lowsize + 2);
-	  int lenH1 = high1 - split1 - 1;
-	  int lenH2 = high2 - split2 - 1;
+	  int lenH1 = (high1 - split1 - 1)*size;
+	  int lenH2 = (high2 - split2 - 1)*size;
 	  int lenH12 = lenH1 + lenH2;
 	  kmpc_set_task_affinity(split1+1,&lenH1);
 	  kmpc_set_task_affinity(split2+1,&lenH2);

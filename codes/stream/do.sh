@@ -93,8 +93,10 @@ bin=4
 first=00
 none=01
 aff=02
+aff2=21
 size=03
 size2=31
+size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
 

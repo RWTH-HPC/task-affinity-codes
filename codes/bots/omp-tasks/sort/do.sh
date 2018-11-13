@@ -47,7 +47,7 @@ module unload omp
 eval_run "gcc"
 eval_run "llvm"
 
-make -C ~ task.${PROG_VERSION}
+#make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi

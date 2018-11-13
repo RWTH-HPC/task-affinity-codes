@@ -22,10 +22,10 @@ export KMP_TASK_STEALING_CONSTRAINT=0
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=12
-export OMP_NUM_THREADS=64
+export OMP_NUM_THREADS=4
 
 # additionally specify number of tasks
-export CG_NUM_TASKS=$(($OMP_NUM_THREADS * 16))
+export CG_NUM_TASKS=$(($OMP_NUM_THREADS * 16))//16
 export PAR_PRODUCER=1
 
 module switch intel intel/18.0
@@ -65,7 +65,7 @@ module unload omp
 eval_run "llvm" "" "intel"
 #eval_run "baseline"
 
-make -C ~ task.${PROG_VERSION}
+#make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi
@@ -100,8 +100,9 @@ size=03
 size2=31
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
-eval_run "domain.lowest" $fal$size 2 "fal_size"
-eval_run "domain.lowest" $first0$first 1 "first0_first"
+eval_run "domain.lowest" $fal$none 2 "fal_none"
+#eval_run "domain.lowest" $first0$first 1 "first0_first"
+#eval_run "domain.lowest" $divn2$size 20 "divn2_size"
 
 : << 'COMT'
 eval_run "domain.lowest" $first$first 10 "first_first"
