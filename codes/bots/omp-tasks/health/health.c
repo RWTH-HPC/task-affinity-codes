@@ -171,11 +171,14 @@ void allocate_village( struct Village **capital, struct Village *back,
       if(level == sim_level)
       {
         printf("Running parallel version for level = %d\n", level);
-        #pragma omp parallel for schedule(static) private(i) lastprivate(current)
+        #pragma omp parallel for schedule(static) private(i)
         for (i = sim_cities; i>0; i--)
         {
-         allocate_village(&current, *capital, inext, level-1, (vid * (int32_t) sim_cities)+ (int32_t) i);
-         inext = current;
+			#pragma omp critical
+			{
+				allocate_village(&current, *capital, inext, level-1, (vid * (int32_t) sim_cities)+ (int32_t) i);
+				inext = current;
+			}         
         }
       }
       else{
