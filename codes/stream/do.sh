@@ -9,14 +9,14 @@ export KMP_A_DEBUG=60
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=4
-export OMP_NUM_THREADS=32
+export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
 export T_AFF_SINGLE_CREATOR=0
 #export T_AFF_NUM_TASK_MULTIPLICATOR=4
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=$((2**21))
-export STREAM_ARRAY_SIZE=$((2**26))
+export STREAM_ARRAY_SIZE=$((2**8))
 
 module switch intel intel/18.0
 
@@ -56,19 +56,19 @@ else
 make clean
 module unload omp
 #eval_run "baseline"
-#eval_run "llvm" "" "intel"
+eval_run "llvm" "" "intel"
 
 module switch intel gcc/7
 #eval_run "gcc"
 module switch gcc intel/18.0
 
-make -C ../../ task.${PROG_VERSION}
+module use -a ~/.modules
+module load omp/task_aff.${PROG_VERSION}
+#make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi
-module use -a ~/.modules
 
-module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
 #eval_run "domain.lowest"
 #eval_run "domain.private"
@@ -80,7 +80,7 @@ module load omp/task_aff.${PROG_VERSION}
 
 #STRATS NAME TO NUMBER CONVERTER
 first=0
-first0=99
+first1=99
 divn=1
 divn2=11
 divn3=12
@@ -100,8 +100,8 @@ size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
 
-eval_run "domain.lowest" $first$first 10 "first_first"
-eval_run "domain.lowest" $bin.$none 10 "bin.none"
+eval_run "domain.lowest" $first1$first 1 "first1_first"
+eval_run "domain.lowest" $bin$none 10 "bin_none"
 
 #eval_run "domain.lowest" $divn$first 10 "divn_first"
 eval_run "domain.lowest" $divn$none 10 "divn_none"

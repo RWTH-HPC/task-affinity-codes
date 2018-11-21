@@ -65,13 +65,13 @@ module unload omp
 eval_run "llvm" "" "intel"
 #eval_run "baseline"
 
+module use -a ~/.modules
+module load omp/task_aff.${PROG_VERSION}
 #make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi
-module use -a ~/.modules
 
-module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
 #eval_run "gcc"
 #eval_run "domain.lowest"

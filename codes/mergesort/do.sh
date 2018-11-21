@@ -10,15 +10,15 @@
 #BSUB -M 524288
 
 #ARR_SIZE=120000000
-#ARR_SIZE=$((2**24))
+ARR_SIZE=$((2**20))
 #ARR_SIZE=$((2**30))
-ARR_SIZE=$((2**33))
+#ARR_SIZE=$((2**33))
 PROG_CMD="./MergeSort.exe ${ARR_SIZE}"
-#PROG_VERSION=deb
-PROG_VERSION=rel
+PROG_VERSION=deb
+#PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-#export KMP_A_DEBUG=30
+export KMP_A_DEBUG=60
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 export OMP_NUM_THREADS=260
@@ -69,13 +69,13 @@ module switch intel gcc/7
 #eval_run "gcc"
 module switch gcc intel/18.0
 
+module use -a ~/.modules
+module load omp/task_aff.${PROG_VERSION}
 make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi
-module use -a ~/.modules
 
-module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
 #eval_run "domain.lowest"
 #eval_run "domain.private"
@@ -106,12 +106,12 @@ size2=31
 #none 1, aff 2, size 3, first 0
 
 eval_run "domain.lowest" $first$first 1 "first_first"
-eval_run "domain.lowest" $bin.$none 10 "bin.none"
+eval_run "domain.lowest" $bin$none 10 "bin.none"
 
 #eval_run "domain.lowest" $divn$first 10 "divn_first"
 eval_run "domain.lowest" $divn$none 6 "divn_none"
 eval_run "domain.lowest" $divn2$none 6 "divn2_none"
-eval_run "domain.lowest" $divn2_old$none 6 "divn2_old_none"
+eval_run "domain.lowest" $divn_old$none 6 "divn2_old_none"
 #eval_run "domain.lowest" $divn$aff 10 "divn_aff"
 #eval_run "domain.lowest" $divn$size 10 "faldivn_size"
 

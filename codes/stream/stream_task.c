@@ -84,13 +84,13 @@
  *           Example 1: One Xeon E3 with 8 MB L3 cache
  *               STREAM_ARRAY_SIZE should be >= 4 million, giving
  *               an array size of 30.5 MB and a total memory requirement
- *               of 91.5 MB.  
+ *               of 91.5 MB.
  *           Example 2: Two Xeon E5's with 20 MB L3 cache each (using OpenMP)
  *               STREAM_ARRAY_SIZE should be >= 20 million, giving
  *               an array size of 153 MB and a total memory requirement
- *               of 458 MB.  
+ *               of 458 MB.
  *       (b) The size should be large enough so that the 'timing calibration'
- *           output by the program is at least 20 clock-ticks.  
+ *           output by the program is at least 20 clock-ticks.
  *           Example: most versions of Windows have a 10 millisecond timer
  *               granularity.  20 "ticks" at 10 ms/tic is 200 milliseconds.
  *               If the chip is capable of 10 GB/s, it moves 2 GB in 200 msec.
@@ -99,7 +99,7 @@
  *      Version 5.10 increases the default array size from 2 million
  *          elements to 10 million elements in response to the increasing
  *          size of L3 caches.  The new default size is large enough for caches
- *          up to 20 MB. 
+ *          up to 20 MB.
  *      Version 5.10 changes the loop index variables from "register int"
  *          to "ssize_t", which allows array indices >2^32 (4 billion)
  *          on properly configured 64-bit systems.  Additional compiler options
@@ -138,8 +138,8 @@
 #endif
 
 /*  Users are allowed to modify the "OFFSET" variable, which *may* change the
- *         relative alignment of the arrays (though compilers may change the 
- *         effective offset by making the arrays non-contiguous on some systems). 
+ *         relative alignment of the arrays (though compilers may change the
+ *         effective offset by making the arrays non-contiguous on some systems).
  *      Use of non-zero values for OFFSET can be especially helpful if the
  *         STREAM_ARRAY_SIZE is set to a value close to a large power of 2.
  *      OFFSET can also be set on the compile line without changing the source
@@ -151,7 +151,7 @@
 
 /*
  *	3) Compile the code with optimization.  Many compilers generate
- *       unreasonably bad code before the optimizer tightens things up.  
+ *       unreasonably bad code before the optimizer tightens things up.
  *     If the results are unreasonably good, on the other hand, the
  *       optimizer might be too smart for me!
  *
@@ -162,7 +162,7 @@
  *     To use multiple cores, you need to tell the compiler to obey the OpenMP
  *       directives in the code.  This varies by compiler, but a common example is
  *            gcc -O -fopenmp stream.c -o stream_omp
- *       The environment variable OMP_NUM_THREADS allows runtime control of the 
+ *       The environment variable OMP_NUM_THREADS allows runtime control of the
  *         number of threads/cores used when the resulting "stream_omp" program
  *         is executed.
  *
@@ -171,9 +171,9 @@
  *     to the compile line.
  *     Note that this changes the minimum array sizes required --- see (1) above.
  *
- *     The preprocessor directive "TUNED" does not do much -- it simply causes the 
+ *     The preprocessor directive "TUNED" does not do much -- it simply causes the
  *       code to call separate functions to execute each kernel.  Trivial versions
- *       of these functions are provided, but they are *not* tuned -- they just 
+ *       of these functions are provided, but they are *not* tuned -- they just
  *       provide predefined interfaces to be replaced with tuned code.
  *
  *
@@ -268,14 +268,14 @@ main()
 #endif
 
     printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) STREAM_ARRAY_SIZE, OFFSET);
-    printf("Memory per array = %.1f MiB (= %.1f GiB).\n", 
+    printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
 	BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
 	BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
     printf("Total memory required = %.1f MiB (= %.1f GiB).\n",
 	(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
 	(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
     printf("Each kernel will be executed %d times.\n", NTIMES);
-    printf(" The *best* time for each kernel (excluding the first iteration)\n"); 
+    printf(" The *best* time for each kernel (excluding the first iteration)\n");
     printf(" will be used to compute the reported bandwidth.\n");
     fflush(stdout);
 
@@ -324,7 +324,7 @@ main()
 
 #ifdef _OPENMP
     printf(HLINE);
-#pragma omp parallel 
+#pragma omp parallel
     {
 #pragma omp master
 	{
@@ -337,7 +337,7 @@ main()
 #ifdef _OPENMP
 	k = 0;
 #pragma omp parallel
-#pragma omp atomic 
+#pragma omp atomic
 		k++;
     printf ("Number of Threads counted = %i\n",k);
 #endif
@@ -353,7 +353,7 @@ main()
 
     printf(HLINE);
 
-    if  ( (quantum = checktick()) >= 1) 
+    if  ( (quantum = checktick()) >= 1)
 	printf("Your clock granularity/precision appears to be "
 	    "%d microseconds.\n", quantum);
     else {
@@ -399,6 +399,7 @@ main()
       long tmp_idx_end = MIN((ntask+1)*step-1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
       int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      printf("set_task_affinity len %d start %ld end %ld ntask %ld\n", len, tmp_idx_start, tmp_idx_end, ntask);//len is < 0 bc step=1 :(
       kmpc_set_task_affinity(&a[tmp_idx_start], &len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
@@ -427,7 +428,7 @@ main()
     printf("For best results, please be sure you know the\n");
     printf("precision of your system timer.\n");
     printf(HLINE);
-    
+
     /*	--- MAIN LOOP --- repeat test cases NTIMES times --- */
 
     fprintf(stderr, "Starting main loop...\n");
@@ -435,7 +436,7 @@ main()
     scalar = 3.0;
 	  t_overall = mysecond();
     for (k=0; k<NTIMES; k++)
-	{ 
+	{
     fprintf(stderr, "---------- Running iteration %d ...\n", k);
 	times[0][k] = mysecond();
 
@@ -452,7 +453,7 @@ main()
     for(ntask = n_tasks_overall-1; ntask >=0 ; ntask--)
 #else
     for(ntask = 0; ntask < n_tasks_overall; ntask++)
-#endif    
+#endif
     {
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
@@ -553,7 +554,7 @@ main()
 #endif
 }
 	times[2][k] = mysecond() - times[2][k];
-	
+
   fprintf(stderr, "---------- Triad ...\n");
 #ifdef _FILTER_EXEC_TIMES
   kmpc_task_affinity_taskexectimes_set_enabled(1);
@@ -579,7 +580,7 @@ main()
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
       int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
-      //fprintf(stderr, "+++ size a %lu, &a %p, &a[0] %p, len %d\n", 
+      //fprintf(stderr, "+++ size a %lu, &a %p, &a[0] %p, len %d\n",
               //sizeof(a),&a, &a[tmp_idx_start], len);
       kmpc_set_task_affinity(&a[tmp_idx_start], &len);
       kmpc_set_task_affinity(&scalar, &size);
@@ -617,7 +618,7 @@ main()
 	    maxtime[j] = MAX(maxtime[j], times[j][k]);
 	    }
 	}
-    
+
     printf("Function    Best Rate MB/s  Avg time     Min time     Max time\n");
     for (j=0; j<4; j++) {
 		avgtime[j] = avgtime[j]/(double)(NTIMES-1);
@@ -804,5 +805,3 @@ void checkSTREAMresults ()
 	printf ("    Rel Errors on a, b, c:     %e %e %e \n",abs(aAvgErr/aj),abs(bAvgErr/bj),abs(cAvgErr/cj));
 #endif
 }
-
-

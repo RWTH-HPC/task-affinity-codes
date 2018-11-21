@@ -19,7 +19,7 @@ PROG_CMD="./health.exe -f ../../inputs/health/medium.input"
 #PROG_CMD="./health.exe -f ../../inputs/health/small.input"
 #PROG_CMD="./sort.exe -n $((2**26))"
 #PROG_CMD="./sort.exe -n 33554432"
-PROG_VERSION=rel
+PROG_VERSION=deb
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=60
@@ -51,16 +51,16 @@ function eval_run {
 
 make clean
 module unload omp
-eval_run "gcc"
+#eval_run "gcc"
 eval_run "llvm" "intel"
 
-make -C ~ task.${PROG_VERSION}
+module use -a ~/.modules
+module load omp/task_aff.${PROG_VERSION}
+#make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi
-module use -a ~/.modules
 
-module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
 #eval_run "gcc"
 #eval_run "domain.lowest"
@@ -72,7 +72,7 @@ module load omp/task_aff.${PROG_VERSION}
 
 #STRATS NAME TO NUMBER CONVERTER
 first=0
-first0=99
+first1=99
 divn=1
 divn2=11
 divn3=12
@@ -85,15 +85,19 @@ bin=4
 first=00
 none=01
 aff=02
+aff2=21
 size=03
 size2=31
+size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
-eval_run "domain.lowest" $divn$size 10 "divn_size"
-eval_run "domain.lowest" $divn3$size 10 "divn3_size"
+#eval_run "domain.lowest" $divn$size 10 "divn_size"
+#eval_run "domain.lowest" $divn3$size 10 "divn3_size"
+eval_run "domain.lowest" $first1$first 1 "first1_first"
+#eval_run "domain.lowest" $fal$size 2 "fal_size"
 
-eval_run "thread.lowest" $divn$none 10 "divn_none"
-eval_run "domain.rand" $divn$none 10 "divn_none"
+#eval_run "thread.lowest" $divn$none 10 "divn_none"
+#eval_run "domain.rand" $divn$none 10 "divn_none"
 
 : << 'COMT'
 eval_run "domain.lowest" $first$first 10 "first_first"

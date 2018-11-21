@@ -1,17 +1,20 @@
 #!/bin/bash
 #BSUB -P thes0466
-#BSUB -W 01:00
+#BSUB -W 5:00
 #BSUB -m c144m1024
 #BSUB -a openmp
 #BSUB -n 1
 #BSUB -x
-#BSUB -o output_batch
-#BSUB -J streamB
+#BSUB -o stream_%J
+#BSUB -J stream
 #BSUB -M 524288
 
-#lscpu
+lscpu
 #lstopo
-PROG_CMD=./stream_task.exe
+
+mkdir batch_$LSB_JOBID
+cd batch_$LSB_JOBID
+PROG_CMD=../stream_task.exe
 #PROG_VERSION=deb
 PROG_VERSION=rel
 
@@ -20,14 +23,14 @@ export KMP_A_DEBUG=50
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=4
-export OMP_NUM_THREADS=255
+export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
 export T_AFF_SINGLE_CREATOR=0
 #export T_AFF_NUM_TASK_MULTIPLICATOR=4
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=$((2**21))
-export STREAM_ARRAY_SIZE=$((2**30))
+export STREAM_ARRAY_SIZE=$((2**8))
 
 module switch intel intel/18.0
 
@@ -42,7 +45,7 @@ else
     curname=$1
   fi
   echo "Executing affinity ${curname}"
-  make ${PROG_VERSION}."$1" sched=$2 num=$3
+  make -C ../ ${PROG_VERSION}."$1" sched=$2 num=$3
 
   #{ timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
   #{ timex -v likwid-perfctr -f -g TASKAFFINITY -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
@@ -56,7 +59,11 @@ else
   #no_numa_balancing advixe-cl -collect roofline -project-dir TestRoofline -- "${PROG_CMD}" &> output_${curname}.txt
   no_numa_balancing "${PROG_CMD}" &> output_${curname}.txt
   grep "Elapsed time" output_${curname}.txt
-  grep "TASK AFFINITY:" output_${curname}.txt > bla_${curname}
+  grep "Copy:" output_${curname}.txt
+  grep "Scale:" output_${curname}.txt
+  grep "Add:" output_${curname}.txt
+  grep "Triad:" output_${curname}.txt
+  #grep "TASK AFFINITY:" output_${curname}.txt > bla_${curname}
   #grep "stole task" output_${curname}.txt > nr_steals_${curname}
   #grep "TASK_SUCCESSFULLY_PUSHED" output_${curname}.txt > pushed_${curname}
   #grep "task_aff_stats" output_${curname}.txt > evol_${curname}
@@ -66,20 +73,20 @@ else
 
 make clean
 module unload omp
-#eval_run "baseline"
-#eval_run "llvm" "" "intel"
+eval_run "baseline"
+eval_run "llvm" "" "intel"
 
 module switch intel gcc/7
-#eval_run "gcc"
+eval_run "gcc"
 module switch gcc intel/18.0
 
-make -C ../../ task.${PROG_VERSION}
+module use -a ~/.modules
+module load omp/task_aff.${PROG_VERSION}
+make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi
-module use -a ~/.modules
 
-module load omp/task_aff.${PROG_VERSION}
 #eval_run "llvm"
 #eval_run "domain.lowest"
 #eval_run "domain.private"
@@ -91,7 +98,7 @@ module load omp/task_aff.${PROG_VERSION}
 
 #STRATS NAME TO NUMBER CONVERTER
 first=0
-first0=99
+first1=99
 divn=1
 divn2=11
 divn3=12
@@ -104,25 +111,85 @@ bin=4
 first=00
 none=01
 aff=02
+aff2=21
 size=03
 size2=31
+size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
 
-eval_run "domain.lowest" $first$first 10 "first_first"
-eval_run "domain.lowest" $bin.$none 10 "bin.none"
+eval_run "domain.lowest" $first$first 3 "first_first"
+eval_run "domain.lowest" $first$none 3 "first_none"
+eval_run "domain.lowest" $first$size 3 "first_size"
 
-#eval_run "domain.lowest" $divn$first 10 "divn_first"
-eval_run "domain.lowest" $divn$none 10 "divn_none"
-#eval_run "domain.lowest" $divn$aff 10 "divn_aff"
-#eval_run "domain.lowest" $divn$size 10 "faldivn_size"
+eval_run "domain.lowest" $first1$first 1 "first1_first"
 
-#eval_run "domain.lowest" $step$first 10 "step_first"
-#eval_run "domain.lowest" $step$none 10 "step_none"
-#eval_run "domain.lowest" $step$aff 10 "step_aff"
-#eval_run "domain.lowest" $step$size 10 "step_size"
+eval_run "domain.lowest" $bin$none 3 "bin_none"
 
-#eval_run "domain.lowest" $fal$first 10 "fal_first"
-#eval_run "domain.lowest" $fal$none 10 "fal_none"
-#eval_run "domain.lowest" $fal$aff 10 "fal_aff"
-#eval_run "domain.lowest" $fal$size 10 "fal_size"
+eval_run "domain.lowest" $fal$first 2 "fal_first"
+eval_run "domain.lowest" $fal$none 2 "fal_none"
+eval_run "domain.lowest" $fal$aff 2 "fal_aff"
+eval_run "domain.lowest" $fal$aff2 2 "fal_aff2"
+eval_run "domain.lowest" $fal$size 2 "fal_size"
+eval_run "domain.lowest" $fal$size2 2 "fal_size2"
+eval_run "domain.lowest" $fal$size3 2 "fal_size3"
+
+eval_run "domain.lowest" $fal$size2 2 "fal_size2"
+eval_run "domain.private" $fal$size2 2 "fal_size2"
+eval_run "domain.rand" $fal$size2 2 "fal_size2"
+eval_run "domain.round_robin" $fal$size2 2 "fal_size2"
+eval_run "thread.lowest" $fal$size2 2 "fal_size2"
+eval_run "thread.rand" $fal$size2 2 "fal_size2"
+eval_run "thread.round_robin" $fal$size2 2 "fal_size2"
+
+for i in 3 8 10 30 60 150; do
+
+eval_run "domain.lowest" $divn$first $i "divn_first"
+eval_run "domain.lowest" $divn$none $i "divn_none"
+eval_run "domain.lowest" $divn$aff $i "divn_aff"
+eval_run "domain.lowest" $divn$aff2 $i "divn_aff2"
+eval_run "domain.lowest" $divn$size $i "faldivn_size"
+eval_run "domain.lowest" $divn$size2 $i "faldivn_size2"
+eval_run "domain.lowest" $divn$size3 $i "faldivn_size3"
+
+eval_run "domain.lowest" $divn2$first $i "divn2_first"
+eval_run "domain.lowest" $divn2$none $i "divn2_none"
+eval_run "domain.lowest" $divn2$aff $i "divn2_aff"
+eval_run "domain.lowest" $divn2$aff2 $i "divn2_aff2"
+eval_run "domain.lowest" $divn2$size $i "faldivn2_size"
+eval_run "domain.lowest" $divn2$size2 $i "faldivn2_size2"
+eval_run "domain.lowest" $divn2$size3 $i "faldivn2_size3"
+
+eval_run "domain.lowest" $divn3$first $i "divn3_first"
+eval_run "domain.lowest" $divn3$none $i "divn3_none"
+eval_run "domain.lowest" $divn3$aff $i "divn3_aff"
+eval_run "domain.lowest" $divn3$aff2 $i "divn3_aff2"
+eval_run "domain.lowest" $divn3$size $i "faldivn3_size"
+eval_run "domain.lowest" $divn3$size2 $i "faldivn3_size2"
+eval_run "domain.lowest" $divn3$size3 $i "faldivn3_size3"
+
+eval_run "domain.lowest" $divn_old$first $i "divn.old_first"
+eval_run "domain.lowest" $divn_old$none $i "divn.old_none"
+eval_run "domain.lowest" $divn_old$aff $i "divn.old_aff"
+eval_run "domain.lowest" $divn_old$aff2 $i "divn.old_aff2"
+eval_run "domain.lowest" $divn_old$size $i "faldivn.old_size"
+eval_run "domain.lowest" $divn_old$size2 $i "faldivn.old_size2"
+eval_run "domain.lowest" $divn_old$size3 $i "faldivn.old_size3"
+
+eval_run "domain.lowest" $step$first $i "step_first"
+eval_run "domain.lowest" $step$none $i "step_none"
+eval_run "domain.lowest" $step$aff $i "step_aff"
+eval_run "domain.lowest" $step$aff2 $i "step_aff2"
+eval_run "domain.lowest" $step$size $i "falstep_size"
+eval_run "domain.lowest" $step$size2 $i "falstep_size2"
+eval_run "domain.lowest" $step$size3 $i "falstep_size3"
+
+eval_run "domain.lowest" $step2$first $i "step2_first"
+eval_run "domain.lowest" $step2$none $i "step2_none"
+eval_run "domain.lowest" $step2$aff $i "step2_aff"
+eval_run "domain.lowest" $step2$aff2 $i "step2_aff2"
+eval_run "domain.lowest" $step2$size $i "step2_size"
+eval_run "domain.lowest" $step2$size2 $i "step2_size2"
+eval_run "domain.lowest" $step2$size3 $i "step2_size3"
+
+done
