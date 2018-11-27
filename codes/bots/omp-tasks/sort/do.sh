@@ -13,10 +13,10 @@
 #PROG_CMD="./strassen.exe -n 4096"
 #PROG_CMD="./sort.exe -n 33554432"
 #PROG_CMD="./sort.exe -n $((2**31))"
-PROG_CMD="./sort.exe -n $((2**26))"
+PROG_CMD="./sort.exe -n $((2**29))"
 #PROG_CMD="./sort.exe -n 33554432"
 #PROG_VERSION=deb
-PROG_VERSION=deb
+PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=60

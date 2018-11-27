@@ -1,13 +1,13 @@
 #!/bin/bash
 #BSUB -P thes0466
-#BSUB -W 5:00
+#BSUB -W 10:00
 #BSUB -m c144m1024
 #BSUB -a openmp
 #BSUB -n 1
 #BSUB -x
-#BSUB -o stream_%J
+#BSUB -o batch_%J/stream_%J
 #BSUB -J stream
-#BSUB -M 524288
+#BSUB -M 1020000
 
 lscpu
 #lstopo
@@ -23,14 +23,14 @@ export KMP_A_DEBUG=50
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=4
-export OMP_NUM_THREADS=284
+export OMP_NUM_THREADS=280
 
 export T_AFF_INVERTED=0
 export T_AFF_SINGLE_CREATOR=0
 #export T_AFF_NUM_TASK_MULTIPLICATOR=4
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
-#export STREAM_ARRAY_SIZE=$((2**21))
-export STREAM_ARRAY_SIZE=$((2**8))
+#export STREAM_ARRAY_SIZE=45000000000
+export STREAM_ARRAY_SIZE=$((2**32))
 
 module switch intel intel/18.0
 
@@ -47,37 +47,49 @@ else
   echo "Executing affinity ${curname}"
   make -C ../ ${PROG_VERSION}."$1" sched=$2 num=$3
 
-  #{ timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
-  #{ timex -v likwid-perfctr -f -g TASKAFFINITY -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
-  #{ timex -v likwid-perfctr -f -g QPI -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
-  #{ timex -v likwid-perfctr -f -g CYCLE_ACTIVITY -c ${TMP_CORES} -O -o likwid_cycle_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
+  # { timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
+  # { timex -v likwid-perfctr -f -g TASKAFFINITY -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
+  # { timex -v likwid-perfctr -f -g QPI -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
+  # { timex -v likwid-perfctr -f -g CYCLE_ACTIVITY -c ${TMP_CORES} -O -o likwid_cycle_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
   #sed -i 's/,/\t/g' likwid_${curname}.csv
   #sed -i 's/\./,/g' likwid_${curname}.csv
   #sed -i 's/,/\t/g' likwid_cycle_${curname}.csv
   #sed -i 's/\./,/g' likwid_cycle_${curname}.csv
 
   #no_numa_balancing advixe-cl -collect roofline -project-dir TestRoofline -- "${PROG_CMD}" &> output_${curname}.txt
-  no_numa_balancing "${PROG_CMD}" &> output_${curname}.txt
-  grep "Elapsed time" output_${curname}.txt
-  grep "Copy:" output_${curname}.txt
-  grep "Scale:" output_${curname}.txt
-  grep "Add:" output_${curname}.txt
-  grep "Triad:" output_${curname}.txt
+  no_numa_balancing "${PROG_CMD}" &>> output_${curname}.txt
+  echo "=== === === === === === === === === === === === === === === === === === === === === === === === === === === === === ===" >> output_${curname}.txt
+  tac output_${curname}.txt | grep -m 1 "Elapsed time"
+  tac output_${curname}.txt | grep -m 1 "Copy:"
+  tac output_${curname}.txt | grep -m 1 "Scale:"
+  tac output_${curname}.txt | grep -m 1 "Add:"
+  tac output_${curname}.txt | grep -m 1 "Triad:"
+
+  tac output_${curname}.txt | grep -m 1 "Elapsed time" >> time_${curname}.txt
+  tac output_${curname}.txt | grep -m 1 "Copy:" >> time_${curname}.txt
+  tac output_${curname}.txt | grep -m 1 "Scale:" >> time_${curname}.txt
+  tac output_${curname}.txt | grep -m 1 "Add:" >> time_${curname}.txt
+  tac output_${curname}.txt | grep -m 1 "Triad:" >> time_${curname}.txt
+
   #grep "TASK AFFINITY:" output_${curname}.txt > bla_${curname}
   #grep "stole task" output_${curname}.txt > nr_steals_${curname}
   #grep "TASK_SUCCESSFULLY_PUSHED" output_${curname}.txt > pushed_${curname}
   #grep "task_aff_stats" output_${curname}.txt > evol_${curname}
   #grep "__kmp_task_start(enter_aff)" output_${curname}.txt > starts_${curname}
-  grep "TASK_EXECUTION_TIME"  output_${curname}.txt > task_execution_times_${curname}
+  #grep "TASK_EXECUTION_TIME"  output_${curname}.txt > task_execution_times_${curname}
 }
 
 make clean
 module unload omp
+for i in {1..10}; do
 eval_run "baseline"
 eval_run "llvm" "" "intel"
+done
 
 module switch intel gcc/7
+for i in {1..10}; do
 eval_run "gcc"
+done
 module switch gcc intel/18.0
 
 module use -a ~/.modules
@@ -102,7 +114,6 @@ first1=99
 divn=1
 divn2=11
 divn3=12
-divn_old=19
 step=2
 step2=21
 fal=3
@@ -117,6 +128,8 @@ size2=31
 size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
+
+for j in {1..10}; do
 
 eval_run "domain.lowest" $first$first 3 "first_first"
 eval_run "domain.lowest" $first$none 3 "first_none"
@@ -142,47 +155,40 @@ eval_run "thread.lowest" $fal$size2 2 "fal_size2"
 eval_run "thread.rand" $fal$size2 2 "fal_size2"
 eval_run "thread.round_robin" $fal$size2 2 "fal_size2"
 
-for i in 3 8 10 30 60 150; do
+
+for i in 3 8 20 60 180 550; do
 
 eval_run "domain.lowest" $divn$first $i "divn_first"
 eval_run "domain.lowest" $divn$none $i "divn_none"
 eval_run "domain.lowest" $divn$aff $i "divn_aff"
 eval_run "domain.lowest" $divn$aff2 $i "divn_aff2"
-eval_run "domain.lowest" $divn$size $i "faldivn_size"
-eval_run "domain.lowest" $divn$size2 $i "faldivn_size2"
-eval_run "domain.lowest" $divn$size3 $i "faldivn_size3"
+eval_run "domain.lowest" $divn$size $i "divn_size"
+eval_run "domain.lowest" $divn$size2 $i "divn_size2"
+eval_run "domain.lowest" $divn$size3 $i "divn_size3"
 
 eval_run "domain.lowest" $divn2$first $i "divn2_first"
 eval_run "domain.lowest" $divn2$none $i "divn2_none"
 eval_run "domain.lowest" $divn2$aff $i "divn2_aff"
 eval_run "domain.lowest" $divn2$aff2 $i "divn2_aff2"
-eval_run "domain.lowest" $divn2$size $i "faldivn2_size"
-eval_run "domain.lowest" $divn2$size2 $i "faldivn2_size2"
-eval_run "domain.lowest" $divn2$size3 $i "faldivn2_size3"
+eval_run "domain.lowest" $divn2$size $i "divn2_size"
+eval_run "domain.lowest" $divn2$size2 $i "divn2_size2"
+eval_run "domain.lowest" $divn2$size3 $i "divn2_size3"
 
 eval_run "domain.lowest" $divn3$first $i "divn3_first"
 eval_run "domain.lowest" $divn3$none $i "divn3_none"
 eval_run "domain.lowest" $divn3$aff $i "divn3_aff"
 eval_run "domain.lowest" $divn3$aff2 $i "divn3_aff2"
-eval_run "domain.lowest" $divn3$size $i "faldivn3_size"
-eval_run "domain.lowest" $divn3$size2 $i "faldivn3_size2"
-eval_run "domain.lowest" $divn3$size3 $i "faldivn3_size3"
-
-eval_run "domain.lowest" $divn_old$first $i "divn.old_first"
-eval_run "domain.lowest" $divn_old$none $i "divn.old_none"
-eval_run "domain.lowest" $divn_old$aff $i "divn.old_aff"
-eval_run "domain.lowest" $divn_old$aff2 $i "divn.old_aff2"
-eval_run "domain.lowest" $divn_old$size $i "faldivn.old_size"
-eval_run "domain.lowest" $divn_old$size2 $i "faldivn.old_size2"
-eval_run "domain.lowest" $divn_old$size3 $i "faldivn.old_size3"
+eval_run "domain.lowest" $divn3$size $i "divn3_size"
+eval_run "domain.lowest" $divn3$size2 $i "divn3_size2"
+eval_run "domain.lowest" $divn3$size3 $i "divn3_size3"
 
 eval_run "domain.lowest" $step$first $i "step_first"
 eval_run "domain.lowest" $step$none $i "step_none"
 eval_run "domain.lowest" $step$aff $i "step_aff"
 eval_run "domain.lowest" $step$aff2 $i "step_aff2"
-eval_run "domain.lowest" $step$size $i "falstep_size"
-eval_run "domain.lowest" $step$size2 $i "falstep_size2"
-eval_run "domain.lowest" $step$size3 $i "falstep_size3"
+eval_run "domain.lowest" $step$size $i "step_size"
+eval_run "domain.lowest" $step$size2 $i "step_size2"
+eval_run "domain.lowest" $step$size3 $i "step_size3"
 
 eval_run "domain.lowest" $step2$first $i "step2_first"
 eval_run "domain.lowest" $step2$none $i "step2_none"
@@ -192,4 +198,5 @@ eval_run "domain.lowest" $step2$size $i "step2_size"
 eval_run "domain.lowest" $step2$size2 $i "step2_size2"
 eval_run "domain.lowest" $step2$size3 $i "step2_size3"
 
+done
 done

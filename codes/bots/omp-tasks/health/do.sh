@@ -10,16 +10,10 @@
 #BSUB -M 524288
 
 #lscpu
-#PROG_CMD="./strassen.exe -n 2048"
-#PROG_CMD="./strassen.exe -n 4096"
-#PROG_CMD="./sort.exe -n 33554432"
-#PROG_CMD="./sort.exe -n $((2**31))"
 #PROG_CMD="./health.exe -f ../../inputs/health/large.input_rwth"
-PROG_CMD="./health.exe -f ../../inputs/health/medium.input"
-#PROG_CMD="./health.exe -f ../../inputs/health/small.input"
-#PROG_CMD="./sort.exe -n $((2**26))"
-#PROG_CMD="./sort.exe -n 33554432"
-PROG_VERSION=deb
+#PROG_CMD="./health.exe -f ../../inputs/health/medium.input"
+PROG_CMD="./health.exe -f ../../inputs/health/small.input"
+PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=60
@@ -76,7 +70,6 @@ first1=99
 divn=1
 divn2=11
 divn3=12
-divn_old=19
 step=2
 step2=21
 fal=3
@@ -91,13 +84,13 @@ size2=31
 size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
-#eval_run "domain.lowest" $divn$size 10 "divn_size"
-#eval_run "domain.lowest" $divn3$size 10 "divn3_size"
+eval_run "domain.lowest" $divn$size 10 "divn_size"
+eval_run "domain.lowest" $divn3$size 10 "divn3_size"
 eval_run "domain.lowest" $first1$first 1 "first1_first"
-#eval_run "domain.lowest" $fal$size 2 "fal_size"
+eval_run "domain.lowest" $fal$size 2 "fal_size"
 
-#eval_run "thread.lowest" $divn$none 10 "divn_none"
-#eval_run "domain.rand" $divn$none 10 "divn_none"
+eval_run "thread.lowest" $divn$none 10 "divn_none"
+eval_run "domain.rand" $divn$none 10 "divn_none"
 
 : << 'COMT'
 eval_run "domain.lowest" $first$first 10 "first_first"

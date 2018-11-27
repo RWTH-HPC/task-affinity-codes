@@ -398,8 +398,8 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step-1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
-      printf("set_task_affinity len %d start %ld end %ld ntask %ld\n", len, tmp_idx_start, tmp_idx_end, ntask);//len is < 0 bc step=1 :(
+      int len = (tmp_idx_end - tmp_idx_start) * size; //bytes used
+      //printf("set_task_affinity len %d start %ld end %ld ntask %ld\n", len, tmp_idx_start, tmp_idx_end, ntask);//len is < 0 bc step=1 :(
       kmpc_set_task_affinity(&a[tmp_idx_start], &len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
@@ -458,7 +458,7 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      int len = (tmp_idx_end - tmp_idx_start) * size; //bytes used
       kmpc_set_task_affinity(&a[tmp_idx_start], &len);
       kmpc_set_task_affinity(&c[tmp_idx_start], &len);
 #endif
@@ -497,7 +497,7 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      int len = (tmp_idx_end - tmp_idx_start) * size; //bytes used
       kmpc_set_task_affinity(&b[tmp_idx_start], &len);
       kmpc_set_task_affinity(&c[tmp_idx_start], &len);
 #endif
@@ -536,7 +536,7 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      int len = (tmp_idx_end - tmp_idx_start) * size; //bytes used
       kmpc_set_task_affinity(&a[tmp_idx_start], &len);
       kmpc_set_task_affinity(&b[tmp_idx_start], &len);
       kmpc_set_task_affinity(&c[tmp_idx_start], &len);
@@ -579,11 +579,11 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
+      int len = (tmp_idx_end - tmp_idx_start) * size; //bytes used
       //fprintf(stderr, "+++ size a %lu, &a %p, &a[0] %p, len %d\n",
               //sizeof(a),&a, &a[tmp_idx_start], len);
       kmpc_set_task_affinity(&a[tmp_idx_start], &len);
-      kmpc_set_task_affinity(&scalar, &size);
+      //kmpc_set_task_affinity(&scalar, &size);
       kmpc_set_task_affinity(&b[tmp_idx_start], &len);
       kmpc_set_task_affinity(&c[tmp_idx_start], &len);
 #endif

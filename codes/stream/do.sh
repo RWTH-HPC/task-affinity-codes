@@ -1,22 +1,22 @@
 #!/bin/bash
 
 PROG_CMD=./stream_task.exe
-PROG_VERSION=deb
+PROG_VERSION=rel
 #PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=60
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-#export OMP_NUM_THREADS=4
-export OMP_NUM_THREADS=284
+export OMP_NUM_THREADS=32
+#export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
-export T_AFF_SINGLE_CREATOR=0
+export T_AFF_SINGLE_CREATOR=1
 #export T_AFF_NUM_TASK_MULTIPLICATOR=4
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=$((2**21))
-export STREAM_ARRAY_SIZE=$((2**8))
+export STREAM_ARRAY_SIZE=$((2**28))
 
 module switch intel intel/18.0
 
@@ -101,12 +101,18 @@ size3=32
 #none 1, aff 2, size 3, first 0
 
 eval_run "domain.lowest" $first1$first 1 "first1_first"
-eval_run "domain.lowest" $bin$none 10 "bin_none"
+#eval_run "domain.lowest" $bin$none 10 "bin_none"
 
-#eval_run "domain.lowest" $divn$first 10 "divn_first"
-eval_run "domain.lowest" $divn$none 10 "divn_none"
-#eval_run "domain.lowest" $divn$aff 10 "divn_aff"
-#eval_run "domain.lowest" $divn$size 10 "faldivn_size"
+#eval_run "domain.lowest" $divn$first 2 "divn_first"
+#eval_run "domain.lowest" $divn$none 4 "divn_none"
+#eval_run "domain.lowest" $divn$aff 4 "divn_aff"
+#eval_run "domain.lowest" $divn$size 4 "divn_size"
+
+eval_run "domain.lowest" $step2$aff2 400 "step2_aff2"
+eval_run "thread.lowest" $step2$aff2 12 "step2_aff2"
+eval_run "domain.lowest" $fal$size 12 "fal_size"
+
+
 
 #eval_run "domain.lowest" $step$first 10 "step_first"
 #eval_run "domain.lowest" $step$none 10 "step_none"

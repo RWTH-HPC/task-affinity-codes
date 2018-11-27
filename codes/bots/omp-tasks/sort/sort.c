@@ -445,7 +445,7 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 	  int lenL12 = lenL1 + lenL2;
 	  kmpc_set_task_affinity(low1, &lenL1);
 	  kmpc_set_task_affinity(low2, &lenL2);
-	  kmpc_set_task_affinity(low1, &lenL12);
+	  kmpc_set_task_affinity(lowdest, &lenL12);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied

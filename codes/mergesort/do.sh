@@ -10,18 +10,18 @@
 #BSUB -M 524288
 
 #ARR_SIZE=120000000
-ARR_SIZE=$((2**20))
-#ARR_SIZE=$((2**30))
+#ARR_SIZE=$((2**20))
+ARR_SIZE=$((2**28))
 #ARR_SIZE=$((2**33))
 PROG_CMD="./MergeSort.exe ${ARR_SIZE}"
-PROG_VERSION=deb
+PROG_VERSION=rel
 #PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=60
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-export OMP_NUM_THREADS=260
+export OMP_NUM_THREADS=72
 #export OMP_NUM_THREADS=128
 export T_AFF_NUMBER_TASKS_MULTIPLICATOR=6
 
@@ -71,7 +71,7 @@ module switch gcc intel/18.0
 
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
-make -C ~ task.${PROG_VERSION}
+#make -C ~ task.${PROG_VERSION}
 if [[ $? -ne 0 ]] ; then
     exit 1
 fi
