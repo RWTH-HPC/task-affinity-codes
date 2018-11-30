@@ -83,11 +83,10 @@ fi
 
 #STRATS NAME TO NUMBER CONVERTER
 first=0
-first0=99
+first1=99
 divn=1
 divn2=11
 divn3=12
-divn_old=19
 step=2
 step2=21
 fal=3
@@ -96,13 +95,19 @@ bin=4
 first=00
 none=01
 aff=02
+aff2=21
 size=03
 size2=31
+size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
 
 eval_run "domain.lowest" $divn3$none 5 "divn3_size"
 eval_run "domain.lowest" $fal$none 2 "fal_none"
+eval_run "domain.lowest" $first1$first 1 "first1_first"
+eval_run "thread.rand" $fal$size2 2 "fal_size2"
+eval_run "domain.lowest" $first$first 3 "first_first"
+eval_run "domain.lowest" $step$size 3 "step_size"
 #eval_run "domain.lowest" $first0$first 1 "first0_first"
 #eval_run "domain.lowest" $divn2$size 20 "divn2_size"
 

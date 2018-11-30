@@ -1,13 +1,4 @@
 #!/bin/bash
-#BSUB -P thes0466
-#BSUB -W 01:00
-#BSUB -m c144m1024
-#BSUB -a openmp
-#BSUB -n 1
-#BSUB -x
-#BSUB -o output_batch
-#BSUB -J healthB
-#BSUB -M 524288
 
 #lscpu
 #PROG_CMD="./health.exe -f ../../inputs/health/large.input_rwth"
@@ -21,7 +12,7 @@ export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=64
 #export OMP_NUM_THREADS=24
-export OMP_NUM_THREADS=200
+export OMP_NUM_THREADS=144
 #export KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION=1
 
 module switch intel intel/18.0
@@ -31,10 +22,12 @@ function eval_run {
   echo "Executing affinity ${curname}"
   make ${PROG_VERSION}."$1" sched=$2 num=$3
   #no_numa_balancing "${PROG_CMD}" &> output_$1.txt
-  no_numa_balancing numamem -s 1  "${PROG_CMD}" &> output_${curname}.txt
-  no_numa_balancing "${PROG_CMD}" -c &> output_${curname}.txt
+  no_numa_balancing numamem -s 1  "${PROG_CMD}" &>> output_${curname}.txt
+  no_numa_balancing "${PROG_CMD}" -c &>> output_${curname}.txt
   grep "Elapsed" output_${curname}.txt
   grep "Verification" output_${curname}.txt
+
+  tac output_${curname}.txt | grep -m 1 "Elapsed" >> time_${curname}.txt
   #grep "TASK AFFINITY:" output_$1.txt > bla_$1
   #grep "stole task" output_$1.txt > nr_steals_$1
   #grep "TASK_SUCCESSFULLY_PUSHED" output_$1.txt > pushed_$1
@@ -45,8 +38,10 @@ function eval_run {
 
 make clean
 module unload omp
+#for i in {1..10}; do
 #eval_run "gcc"
-eval_run "llvm" "intel"
+#eval_run "llvm" "intel"
+#done
 
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
@@ -84,13 +79,12 @@ size2=31
 size3=32
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
-eval_run "domain.lowest" $divn$size 10 "divn_size"
-eval_run "domain.lowest" $divn3$size 10 "divn3_size"
-eval_run "domain.lowest" $first1$first 1 "first1_first"
-eval_run "domain.lowest" $fal$size 2 "fal_size"
 
-eval_run "thread.lowest" $divn$none 10 "divn_none"
-eval_run "domain.rand" $divn$none 10 "divn_none"
+i=4
+
+eval_run "domain.lowest" $divn$none $i "divn_none"
+eval_run "domain.lowest" $step$size $i "step_size"
+eval_run "domain.lowest" $fal$size2 2 "fal_size2"
 
 : << 'COMT'
 eval_run "domain.lowest" $first$first 10 "first_first"

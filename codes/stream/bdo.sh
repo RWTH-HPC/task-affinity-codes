@@ -19,14 +19,14 @@ PROG_CMD=../stream_task.exe
 PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-export KMP_A_DEBUG=50
+export KMP_A_DEBUG=60
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=4
-export OMP_NUM_THREADS=280
+export OMP_NUM_THREADS=144
 
 export T_AFF_INVERTED=0
-export T_AFF_SINGLE_CREATOR=0
+export T_AFF_SINGLE_CREATOR=1
 #export T_AFF_NUM_TASK_MULTIPLICATOR=4
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=45000000000
@@ -155,8 +155,17 @@ eval_run "thread.lowest" $fal$size2 2 "fal_size2"
 eval_run "thread.rand" $fal$size2 2 "fal_size2"
 eval_run "thread.round_robin" $fal$size2 2 "fal_size2"
 
+eval_run "domain.lowest" $bin$first $i "bin_first"
+eval_run "domain.lowest" $bin$none $i "bin_none"
+eval_run "domain.lowest" $bin$aff $i "bin_aff"
+eval_run "domain.lowest" $bin$aff2 $i "bin_aff2"
+eval_run "domain.lowest" $bin$size $i "bin_size"
+eval_run "domain.lowest" $bin$size2 $i "bin_size2"
+eval_run "domain.lowest" $bin$size3 $i "bin_size3"
 
-for i in 3 8 20 60 180 550; do
+
+
+for i in 1 2 6 12 32; do
 
 eval_run "domain.lowest" $divn$first $i "divn_first"
 eval_run "domain.lowest" $divn$none $i "divn_none"
@@ -182,6 +191,9 @@ eval_run "domain.lowest" $divn3$size $i "divn3_size"
 eval_run "domain.lowest" $divn3$size2 $i "divn3_size2"
 eval_run "domain.lowest" $divn3$size3 $i "divn3_size3"
 
+done
+for i in 1 2 4 8 24; do
+
 eval_run "domain.lowest" $step$first $i "step_first"
 eval_run "domain.lowest" $step$none $i "step_none"
 eval_run "domain.lowest" $step$aff $i "step_aff"
@@ -198,5 +210,10 @@ eval_run "domain.lowest" $step2$size $i "step2_size"
 eval_run "domain.lowest" $step2$size2 $i "step2_size2"
 eval_run "domain.lowest" $step2$size3 $i "step2_size3"
 
+done
+
+for i in 1 4 16 32 64 128 144; do
+export OMP_NUM_THREADS=$i
+eval_run "domain.lowest" $first$size2 3 "first_size2_T$i"
 done
 done
