@@ -26,6 +26,10 @@ ifdef STREAM_ARRAY_SIZE
 	ADD_COMPILE_FLAGS += -DSTREAM_ARRAY_SIZE=${STREAM_ARRAY_SIZE}
 	ADD_COMPILE_FLAGS_GCC += -DSTREAM_ARRAY_SIZE=${STREAM_ARRAY_SIZE}
 endif
+ifdef THIRD_INVERTED
+	ADD_COMPILE_FLAGS += -DTHIRD_INVERTED=${THIRD_INVERTED}
+	ADD_COMPILE_FLAGS_GCC += -DTHIRD_INVERTED=${THIRD_INVERTED}
+endif
 
 ADD_COMPILE_FLAGS += -DNTIMES=10
 #-D_FILTER_EXEC_TIMES
@@ -107,4 +111,4 @@ rel.baseline:
 	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} stream_base.c -o ${PROG}.exe
 
 clean:
-	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.*
+	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*

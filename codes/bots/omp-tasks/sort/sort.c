@@ -443,9 +443,9 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 	  int lenL1 = (split1 - low1 - 1)*size;
 	  int lenL2 = (split2 - low2)*size;
 	  int lenL12 = lenL1 + lenL2;
-	  kmpc_set_task_affinity(low1, &lenL1);
-	  kmpc_set_task_affinity(low2, &lenL2);
-	  kmpc_set_task_affinity(lowdest, &lenL12);
+	  kmpc_set_task_affinity(low1, lenL1);
+	  kmpc_set_task_affinity(low2, lenL2);
+	  kmpc_set_task_affinity(lowdest, lenL12);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -462,9 +462,9 @@ void cilkmerge_par(ELM *low1, ELM *high1, ELM *low2, ELM *high2, ELM *lowdest)
 	  int lenH1 = (high1 - split1 - 1)*size;
 	  int lenH2 = (high2 - split2 - 1)*size;
 	  int lenH12 = lenH1 + lenH2;
-	  kmpc_set_task_affinity(split1+1,&lenH1);
-	  kmpc_set_task_affinity(split2+1,&lenH2);
-	  kmpc_set_task_affinity(lowdest+lowsize+2,&lenH12);
+	  kmpc_set_task_affinity(split1+1,lenH1);
+	  kmpc_set_task_affinity(split2+1,lenH2);
+	  kmpc_set_task_affinity(lowdest+lowsize+2,lenH12);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -512,8 +512,8 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
       //kmpc_set_task_affinity(&tmpA[quarter/2]);
       //kmpc_set_task_affinity(tmpA);
 	  int len = quarter;
-	  kmpc_set_task_affinity(tmpA, &len);
-	  kmpc_set_task_affinity(A, &len);
+	  kmpc_set_task_affinity(tmpA, len);
+	  kmpc_set_task_affinity(A, len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -529,8 +529,8 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
       //kmpc_set_task_affinity(&tmpB[quarter/2]);
       //kmpc_set_task_affinity(tmpB);
 	  //int len = quarter;
-	  kmpc_set_task_affinity(tmpB, &len);
-	  kmpc_set_task_affinity(B, &len);
+	  kmpc_set_task_affinity(tmpB, len);
+	  kmpc_set_task_affinity(B, len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -546,8 +546,8 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
       //kmpc_set_task_affinity(&tmpC[quarter/2]);
       //kmpc_set_task_affinity(tmpC);
 	  //int len = quarter;
-	  kmpc_set_task_affinity(tmpC, &len);
-	  kmpc_set_task_affinity(C, &len);
+	  kmpc_set_task_affinity(tmpC, len);
+	  kmpc_set_task_affinity(C, len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -563,8 +563,8 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
       //kmpc_set_task_affinity(&tmpD[quarter/2]);
       //kmpc_set_task_affinity(tmpD);
 	  //int len = quarter;
-	  kmpc_set_task_affinity(tmpD, &len);
-	  kmpc_set_task_affinity(D, &len);
+	  kmpc_set_task_affinity(tmpD, len);
+	  kmpc_set_task_affinity(D, len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -582,8 +582,8 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
       //kmpc_set_task_affinity(&A[quarter/2]);
       //kmpc_set_task_affinity(tmpA);
 	  //int len = quarter;
-	  kmpc_set_task_affinity(tmpA, &len);
-	  kmpc_set_task_affinity(A, &len);
+	  kmpc_set_task_affinity(tmpA, len);
+	  kmpc_set_task_affinity(A, len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied
@@ -599,8 +599,8 @@ void cilksort_par(ELM *low, ELM *tmp, long size)
       //kmpc_set_task_affinity(&C[quarter/2]);
       //kmpc_set_task_affinity(tmpC);
 	  //int len = quarter;
-	  kmpc_set_task_affinity(tmpC, &len);
-	  kmpc_set_task_affinity(C, &len);
+	  kmpc_set_task_affinity(tmpC, len);
+	  kmpc_set_task_affinity(C, len);
 #endif
 #if USE_UNTIED_VER
 #pragma omp task untied

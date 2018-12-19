@@ -435,7 +435,7 @@ void sim_village_par(struct Village *village)
    {
 #ifdef TASK_AFFINITY
       int len = sizeof(Village);
-      kmpc_set_task_affinity(&vlist, &len);
+      kmpc_set_task_affinity(&vlist, len);
 #endif
 //printf("Task created\n");
 //#pragma omp atomic update
@@ -480,7 +480,7 @@ void sim_village_par(struct Village *village)
       {
 #ifdef TASK_AFFINITY
       int len = sizeof(vlist);
-      kmpc_set_task_affinity(&vlist, &len);
+      kmpc_set_task_affinity(&vlist, len);
 #endif
 //#pragma omp atomic update
 //nr_tasks++;
@@ -534,7 +534,7 @@ void sim_village_par(struct Village *village)
    {
 #ifdef TASK_AFFINITY
       int len = sizeof(vlist);
-      kmpc_set_task_affinity(&vlist, &len);
+      kmpc_set_task_affinity(&vlist, len);
 #endif
 //#pragma omp atomic update
 //nr_tasks++;

@@ -286,7 +286,7 @@ main()
 #   define SCHEDULE_TYPE 101
 #endif
 #ifndef SCHEDULE_NUM
-#   define SCHEDULE_NUM 20
+#   define SCHEDULE_NUM 2
 #endif
 
 #ifdef TASK_AFF_DOMAIN_FIRST
@@ -344,9 +344,16 @@ main()
 
     /* Get initial value for system clock. */
     fprintf(stderr, "Initializing data (parallel) ...\n");
+    #if THIRD_INVERTED
+    fprintf(stderr, "using one third inverted data setup!\n");
+    #endif
 	#pragma omp parallel for schedule(static)
     for (j=0; j<STREAM_ARRAY_SIZE; j++) {
-	    a[j] = 1.0;
+        #if THIRD_INVERTED
+	    a[STREAM_ARRAY_SIZE-1 - j] = 1.0;//inverted!!
+        #else
+        a[j] = 1.0;
+        #endif
 	    b[j] = 2.0;
 	    c[j] = 0.0;
 	}
@@ -398,9 +405,7 @@ main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step-1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-      int len = ((tmp_idx_end - tmp_idx_start + 1) * size); //bytes used
-      printf("set_task_affinity len %d start %ld end %ld size %d -- %p %p\n", len, tmp_idx_start, tmp_idx_end, size, &a[tmp_idx_start], &a[tmp_idx_end]);//len is < 0 bc step=1 :(
-      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
+//TODO
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -459,8 +464,8 @@ main()
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
       int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
-      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
-      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], len);
+      kmpc_set_task_affinity(&a[tmp_idx_start], len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -498,8 +503,8 @@ main()
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
       int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
-      kmpc_set_task_affinity(&b[tmp_idx_start], &len);
-      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&b[tmp_idx_start], len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -537,9 +542,9 @@ main()
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
       int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
-      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
-      kmpc_set_task_affinity(&b[tmp_idx_start], &len);
-      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&a[tmp_idx_start], len);
+      kmpc_set_task_affinity(&b[tmp_idx_start], len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -581,10 +586,10 @@ main()
 #ifdef TASK_AFFINITY
       int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
       //fprintf(stderr, "+++ size a %lu, &a %p, &a[0] %p, len %d\n",sizeof(a),&a, &a[tmp_idx_start], len);
-      kmpc_set_task_affinity(&a[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&a[tmp_idx_start], len);
       //kmpc_set_task_affinity(&scalar, &size);
-      kmpc_set_task_affinity(&b[tmp_idx_start], &len);
-      kmpc_set_task_affinity(&c[tmp_idx_start], &len);
+      kmpc_set_task_affinity(&b[tmp_idx_start], len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
