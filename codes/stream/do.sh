@@ -1,10 +1,10 @@
 #!/bin/bash
 
 PROG_CMD=./stream_task.exe
-PROG_VERSION=rel
+PROG_VERSION=deb
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-export KMP_A_DEBUG=60
+export KMP_A_DEBUG=2
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 export OMP_NUM_THREADS=64
