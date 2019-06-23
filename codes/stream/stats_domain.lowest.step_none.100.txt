@@ -1,2 +1,0 @@
-__kmp_register_root: found slot in threads array: T#0
-__kmp_unregister_root_current_thread: enter T#0
