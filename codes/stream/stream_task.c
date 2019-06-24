@@ -48,6 +48,7 @@
 # include <limits.h>
 # include <sys/time.h>
 # include "no_huge_page_alloc.h"
+# include "kmp.h"
 //# include "callback.h"
 
 #ifndef T_AFF_INVERTED
