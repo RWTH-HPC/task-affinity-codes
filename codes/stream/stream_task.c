@@ -48,7 +48,6 @@
 # include <limits.h>
 # include <sys/time.h>
 # include "no_huge_page_alloc.h"
-# include "kmp.h"
 //# include "callback.h"
 
 #ifndef T_AFF_INVERTED
@@ -284,31 +283,34 @@ main()
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
 #ifndef SCHEDULE_TYPE
-  kmp_config_affinity_schedule_t affinity_schedule = {.weight = 1; .strategy = DIVIDE_IN_N_PAGES}
+  # define SCHEDULE_TYPE_WEIGHT = 1;
+  # define SCHEDULE_TYPE_STRATEGY = DIVIDE_IN_N_PAGES; = 1;
+  SCHEDULE_TYPE = {.weight = SCHEDULE_TYPE_WEIGHT, .strategy = SCHEDULE_TYPE_STRATEGY}
 #else 
-  kmp_config_affinity_schedule_t affinity_schedule;
-  SCHEDULE_TYPE.weight = SCHEDULE_TYPE%100;
+  # define SCHEDULE_TYPE_WEIGHT = SCHEDULE_TYPE%100;
+
   switch((int)(SCHEDULE_TYPE/100))
   {
     case 0:
-      SCHEDULE_TYPE.strategy = FIRST_PAGE_OF_FIRST_AFFINITY_ONLY;
+      # define SCHEDULE_TYPE_STRATEGY = FIRST_PAGE_OF_FIRST_AFFINITY_ONLY;
       break;
     case 1:
-      SCHEDULE_TYPE.strategy = DIVIDE_IN_N_PAGES;
+      # define SCHEDULE_TYPE_STRATEGY = DIVIDE_IN_N_PAGES;
       break;
     case 2:
-      SCHEDULE_TYPE.strategy = EVERY_NTH_PAGE;
+      # define SCHEDULE_TYPE_STRATEGY = EVERY_NTH_PAGE;
       break;
     case 3:
-      SCHEDULE_TYPE.strategy = FIRST_AND_LAST_PAGE;
+      # define SCHEDULE_TYPE_STRATEGY = FIRST_AND_LAST_PAGE;
       break;
     case 4:
-      SCHEDULE_TYPE.strategy = CONTINUOUS_BINARY_SEARCH;
+      # define SCHEDULE_TYPE_STRATEGY = CONTINUOUS_BINARY_SEARCH;
       break;
     case 5:
-      SCHEDULE_TYPE.strategy = FIRST_PAGE;
+      # define SCHEDULE_TYPE_STRATEGY = FIRST_PAGE;
       break;
   }
+   SCHEDULE_TYPE = {.weight = SCHEDULE_TYPE_WEIGHT, .strategy = SCHEDULE_TYPE_STRATEGY}
     
 #endif
 #ifndef SCHEDULE_NUM
@@ -316,31 +318,31 @@ main()
 #endif
 
 #ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE, SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_DOMAIN_PRIVATE
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 #ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, affinity_schedule , SCHEDULE_NUM);
+  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
 #endif
 
 #ifdef _FILTER_EXEC_TIMES
