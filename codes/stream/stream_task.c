@@ -283,12 +283,32 @@ main()
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
 #ifndef SCHEDULE_TYPE
-  kmp_config_affinity_schedule_t affinity_schedule
-  SCHEDULE_TYPE.strategy = 1;
+  kmp_config_affinity_schedule_t affinity_schedule = {.weight = 1; .strategy = DIVIDE_IN_N_PAGES}
 #else 
   kmp_config_affinity_schedule_t affinity_schedule;
-  SCHEDULE_TYPE.weigth = SCHEDULE_TYPE%100;
-  SCHEDULE_TYPE.strategy = (int)(SCHEDULE_TYPE/100);
+  SCHEDULE_TYPE.weight = SCHEDULE_TYPE%100;
+  switch((int)(SCHEDULE_TYPE/100))
+  {
+    case 0:
+      SCHEDULE_TYPE.strategy = FIRST_PAGE_OF_FIRST_AFFINITY_ONLY;
+      break;
+    case 1:
+      SCHEDULE_TYPE.strategy = DIVIDE_IN_N_PAGES;
+      break;
+    case 2:
+      SCHEDULE_TYPE.strategy = EVERY_NTH_PAGE;
+      break;
+    case 3:
+      SCHEDULE_TYPE.strategy = FIRST_AND_LAST_PAGE;
+      break;
+    case 4:
+      SCHEDULE_TYPE.strategy = CONTINUOUS_BINARY_SEARCH;
+      break;
+    case 5:
+      SCHEDULE_TYPE.strategy = FIRST_PAGE;
+      break;
+  }
+    
 #endif
 #ifndef SCHEDULE_NUM
 #   define SCHEDULE_NUM 2
