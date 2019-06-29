@@ -90,17 +90,17 @@ fi
 #eval_run "thread.round_robin"
 
 #STRATS NAME TO NUMBER CONVERTER
-first1  =0
-divn    =1
-step    =2
-fal     =3
-bin     =4
-first   =5
+first1=0
+divn=1
+step=2
+fal=3
+bin=4
+first=5
 
-first1  =0
-none    =1
-aff     =2
-size    =3
+first1=0
+none=1
+aff=2
+size=3
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
 
