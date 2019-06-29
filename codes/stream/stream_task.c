@@ -282,72 +282,111 @@ main()
 
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
-#ifndef SCHEDULE_TYPE
-  # define SCHEDULE_TYPE_WEIGHT = 1;
-  # define SCHEDULE_TYPE_STRATEGY = DIVIDE_IN_N_PAGES; = 1;
-  SCHEDULE_TYPE = {.weight = SCHEDULE_TYPE_WEIGHT, .strategy = SCHEDULE_TYPE_STRATEGY}
-#else 
-  # define SCHEDULE_TYPE_WEIGHT = SCHEDULE_TYPE%100;
-  # define SCHEDULE_TYPE_STRATEGY
-  switch((int)(SCHEDULE_TYPE/100))
+
+    kmp_affinity_thread_selection_mode_t thread_selection_strategy;
+    kmp_affinity_map_mode_t affinity_map_mode;
+    kmp_affinity_page_selection_strategy_t page_selection_strategy;
+    kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
+    int kmp_number_of_affinities;
+  
+#ifndef THREAD_SELECTION_MODE
+  thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
+#else
+  switch (THREAD_SELECTION_MODE)
   {
-    case 0:
-      SCHEDULE_TYPE_STRATEGY = FIRST_PAGE_OF_FIRST_AFFINITY_ONLY;
-      break;
-    case 1:
-      SCHEDULE_TYPE_STRATEGY = DIVIDE_IN_N_PAGES;
-      break;
-    case 2:
-      SCHEDULE_TYPE_STRATEGY = EVERY_NTH_PAGE;
-      break;
-    case 3:
-      SCHEDULE_TYPE_STRATEGY = FIRST_AND_LAST_PAGE;
-      break;
-    case 4:
-      SCHEDULE_TYPE_STRATEGY = CONTINUOUS_BINARY_SEARCH;
-      break;
-    case 5:
-      SCHEDULE_TYPE_STRATEGY = FIRST_PAGE;
-      break;
+  case FIRST:
+    thread_selection_strategy = kmp_affinity_thread_selection_mode_first;
+    break;
+  case RANDOM:
+    thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
+    break;
+  case LOWEST_WL:
+    thread_selection_strategy = kmp_affinity_thread_selection_mode_lowest_wl;
+    break;
+  case ROUND_ROBIN:
+    thread_selection_strategy = kmp_affinity_thread_selection_mode_round_robin;
+    break;
+  case PRIVATE:
+    thread_selection_strategy = kmp_affinity_thread_selection_mode_private;
+    break;
   }
-   SCHEDULE_TYPE = {.weight = SCHEDULE_TYPE_WEIGHT, .strategy = SCHEDULE_TYPE_STRATEGY}
+#endif
+
+#ifndef MAP_MODE
+    affinity_map_mode = kmp_affinity_map_type_domain;
+#else
+    switch (MAP_MODE)
+    {
+      case DOMAIN:
+        affinity_map_mode = kmp_affinity_map_type_domain;
+        break;
+      case THREAD:
+        affinity_map_mode = kmp_affinity_map_type_thread;
+        break;
+      }
+#endif
+
+#ifndef PAGE_SELECTION_STRATEGY
+    page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
+#else
+    switch (PAGE_SELECTION_STRATEGY)
+    {
+      case 0:
+        page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only;
+        break;
+      case 1:
+        page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
+        break;
+      case 2:
+        page_selection_strategy = kmp_affinity_page_mode_every_nth_page;
+        break;
+      case 3:
+        page_selection_strategy = kmp_affinity_page_mode_first_and_last_page;
+        break;
+      case 4:
+        page_selection_strategy = kmp_affinity_page_mode_continuous_binary_search;
+        break;
+      case 5:
+        page_selection_strategy = kmp_affinity_page_mode_first_page;
+        break;
+    } 
+#endif
+
+#ifndef PAGE_WEIGHTING_STRATEGY
+    page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
+#else
+    switch (PAGE_WEIGHT_STRATEGY)
+    {
+      case 0:
+        page_weighting_strategy = kmp_affinity_page_weight_mode_first_page_only;
+        break;
+      case 1:
+        page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
+        break;
+      case 2:
+        page_weighting_strategy = kmp_affinity_page_weight_mode_by_affinity;
+        break;
+      case 3:
+        page_weighting_strategy = kmp_affinity_page_weight_mode_by_size;
+        break;
+    } 
+#endif
+
+#ifndef NUMBER_OF_AFFINITIES
+    kmp_number_of_affinities = 1;
+#else
+    kmp_number_of_affinities = NUMBER_OF_AFFINITIES;
+#endif
+
+    kmp_affinity_settings_t affinity_settings{
+      .thread_selection_strategy = thread_selection_strategy,
+      .affinity_map_mode = affinity_map_mode,
+      .page_selection_strategy = page_selection_strategy,
+      .page_weighting_strategy = page_weighting_strategy,
+      .kmp_number_of_affinities = kmp_number_of_affinities
+    }
     
-#endif
-#ifndef SCHEDULE_NUM
-#   define SCHEDULE_NUM 2
-#endif
-
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE, SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_DOMAIN_PRIVATE
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-#endif
-
-#ifdef _FILTER_EXEC_TIMES
-  kmpc_task_affinity_taskexectimes_set_enabled(0);
-#endif
+    kmpc_task_affinity_init(affinity_settings);
 
 
 #ifdef _OPENMP

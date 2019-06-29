@@ -25,13 +25,13 @@ module switch intel intel/18.0
 #module load likwid
 
 function eval_run {
-  if [ -n "$2" ] && [ -n "$3" ]; then
-    curname="$1.$4.$3"
+  if [ -n "$2" ] && [ -n "$3" ] && [-n "$4"]; then
+    curname="$1.$5.$4"
 else
     curname=$1
   fi
   echo "Executing affinity ${curname}"
-  make ${PROG_VERSION}."$1" sched=$2 num=$3
+  make ${PROG_VERSION}."$1" page_select_strategy=$2 page_weight_strategy=$3 num=$4
 
   # { timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
   # { timex -v likwid-perfctr -f -g TASKAFFINITY -c ${TMP_CORES} -O -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
@@ -90,25 +90,24 @@ fi
 #eval_run "thread.round_robin"
 
 #STRATS NAME TO NUMBER CONVERTER
-first1=0
-first=5
-divn=1
-divn2=12
-step=2
-fal=3
-bin=4
+first1  =0
+divn    =1
+step    =2
+fal     =3
+bin     =4
+first   =5
 
-first1=00
-none=01
-aff=02
-size=03
+first1  =0
+none    =1
+aff     =2
+size    =3
 #divn 1, step 2, fal 3, first 0
 #none 1, aff 2, size 3, first 0
 
-eval_run "domain.lowest" $first1$first1 1 "first1_first1"
-eval_run "thread.lowest" $first1$first1 1 "first1_first1"
-eval_run "domain.lowest" $first$none 1 "first_none"
-eval_run "thread.lowest" $first$none 1 "first_none"
+eval_run "domain.lowest" $first1 $first1 1 "first1_first1"
+eval_run "thread.lowest" $first1 $first1 1 "first1_first1"
+eval_run "domain.lowest" $first $none 1 "first_none"
+eval_run "thread.lowest" $first $none 1 "first_none"
 # eval_run "domain.lowest" $bin$none 10 "bin_none"
 
 # eval_run "domain.lowest" $divn$first 2 "divn_first"
@@ -116,16 +115,16 @@ eval_run "thread.lowest" $first$none 1 "first_none"
 # eval_run "domain.lowest" $divn$aff 4 "divn_aff"
 # eval_run "domain.lowest" $divn$size 4 "divn_size"
 # eval_run "domain.lowest" $divn$size 12 "divn_size"
-eval_run "domain.lowest" $divn$none 12 "divn_none"
-eval_run "thread.lowest" $divn$none 12 "divn_none"
+eval_run "domain.lowest" $divn $none 12 "divn_none"
+eval_run "thread.lowest" $divn $none 12 "divn_none"
 #
 #
 # eval_run "thread.lowest" $divn2$aff2 12 "divn2_aff2"
 # eval_run "domain.lowest" $fal$size 12 "fal_size"
 #
 # eval_run "domain.lowest" $step$first 100 "step_first"
-eval_run "domain.lowest" $step$none 100 "step_none"
-eval_run "thread.lowest" $step$none 100 "step_none"
+eval_run "domain.lowest" $step $none 100 "step_none"
+eval_run "thread.lowest" $step $none 100 "step_none"
 # eval_run "domain.lowest" $step$aff 100 "step_aff"
 # eval_run "domain.lowest" $step$size 100 "step_size"
 #
@@ -135,7 +134,7 @@ eval_run "thread.lowest" $step$none 100 "step_none"
 # eval_run "domain.lowest" $divn2$size 100 "divn2_size"
 
 # eval_run "domain.lowest" $fal$first 2 "fal_first"
-eval_run "domain.lowest" $fal$none 2 "fal_none"
-eval_run "thread.lowest" $fal$none 2 "fal_none"
+eval_run "domain.lowest" $fal $none 2 "fal_none"
+eval_run "thread.lowest" $fal $none 2 "fal_none"
 # eval_run "domain.lowest" $fal$aff 10 "fal_aff"
 # eval_run "domain.lowest" $fal$size 10 "fal_size"
