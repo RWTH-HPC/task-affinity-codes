@@ -288,47 +288,50 @@ main()
     kmp_affinity_page_selection_strategy_t page_selection_strategy;
     kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
     int kmp_number_of_affinities;
-  
-#ifndef THREAD_SELECTION_MODE
-  thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
+
+#ifdef THREAD_SELECTION_MODE
+    switch (THREAD_SELECTION_MODE)
+    {
+      case 0:
+        thread_selection_strategy = kmp_affinity_thread_selection_mode_first;
+        break;
+      case 1:
+        thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
+        break;
+      case 2:
+        thread_selection_strategy = kmp_affinity_thread_selection_mode_lowest_wl;
+        break;
+      case 3:
+        thread_selection_strategy = kmp_affinity_thread_selection_mode_round_robin;
+        break;
+      case 4:
+        thread_selection_strategy = kmp_affinity_thread_selection_mode_private;
+        break;
+      default:
+        thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
+        break;
+    }
 #else
-  switch (THREAD_SELECTION_MODE)
-  {
-  case FIRST:
-    thread_selection_strategy = kmp_affinity_thread_selection_mode_first;
-    break;
-  case RANDOM:
     thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
-    break;
-  case LOWEST_WL:
-    thread_selection_strategy = kmp_affinity_thread_selection_mode_lowest_wl;
-    break;
-  case ROUND_ROBIN:
-    thread_selection_strategy = kmp_affinity_thread_selection_mode_round_robin;
-    break;
-  case PRIVATE:
-    thread_selection_strategy = kmp_affinity_thread_selection_mode_private;
-    break;
-  }
 #endif
 
-#ifndef MAP_MODE
-    affinity_map_mode = kmp_affinity_map_type_domain;
-#else
+#ifdef MAP_MODE
     switch (MAP_MODE)
     {
-      case DOMAIN:
+      case 0:
         affinity_map_mode = kmp_affinity_map_type_domain;
         break;
-      case THREAD:
+      case 1:
         affinity_map_mode = kmp_affinity_map_type_thread;
         break;
-      }
-#endif
-
-#ifndef PAGE_SELECTION_STRATEGY
-    page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
+      default:
+        affinity_map_mode = kmp_affinity_map_type_domain;
+        break;
+    }
 #else
+    affinity_map_mode = kmp_affinity_map_type_domain;
+#endif
+#ifdef PAGE_SELECTION_STRATEGY
     switch (PAGE_SELECTION_STRATEGY)
     {
       case 0:
@@ -349,12 +352,15 @@ main()
       case 5:
         page_selection_strategy = kmp_affinity_page_mode_first_page;
         break;
+      default:
+        page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
+        break;
     } 
+#else
+    page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
 #endif
 
-#ifndef PAGE_WEIGHTING_STRATEGY
-    page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
-#else
+#ifdef PAGE_WEIGHT_STRATEGY
     switch (PAGE_WEIGHT_STRATEGY)
     {
       case 0:
@@ -369,22 +375,26 @@ main()
       case 3:
         page_weighting_strategy = kmp_affinity_page_weight_mode_by_size;
         break;
+      default:
+        page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
+        break;
     } 
-#endif
-
-#ifndef NUMBER_OF_AFFINITIES
-    kmp_number_of_affinities = 1;
 #else
-    kmp_number_of_affinities = NUMBER_OF_AFFINITIES;
+  page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
 #endif
 
+#ifdef
+    kmp_number_of_affinities = NUMBER_OF_AFFINITIES;
+#else
+    kmp_number_of_affinities = 1;
+#endif
     kmp_affinity_settings_t affinity_settings{
       .thread_selection_strategy = thread_selection_strategy,
       .affinity_map_mode = affinity_map_mode,
       .page_selection_strategy = page_selection_strategy,
       .page_weighting_strategy = page_weighting_strategy,
       .kmp_number_of_affinities = kmp_number_of_affinities
-    }
+    };
     
     kmpc_task_affinity_init(affinity_settings);
 
