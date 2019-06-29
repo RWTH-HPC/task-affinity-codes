@@ -383,12 +383,13 @@ main()
   page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
 #endif
 
-#ifdef
+#ifdef NUMBER_OF_AFFINITIES
     kmp_number_of_affinities = NUMBER_OF_AFFINITIES;
 #else
     kmp_number_of_affinities = 1;
-#endif
-    kmp_affinity_settings_t affinity_settings{
+#endif 
+    kmp_affinity_settings_t affinity_settings = 
+    {
       .thread_selection_strategy = thread_selection_strategy,
       .affinity_map_mode = affinity_map_mode,
       .page_selection_strategy = page_selection_strategy,
