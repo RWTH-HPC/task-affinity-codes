@@ -25,7 +25,7 @@ module switch intel intel/18.0
 #module load likwid
 
 function eval_run {
-  if [ -n "$2" ] && [ -n "$3" ] && [-n "$4"]; then
+  if [ -n "$2" ] && [ -n "$3" ] &&  [ -n "$4" ]; then
     curname="$1.$5.$4"
 else
     curname=$1
