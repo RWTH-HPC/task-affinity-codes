@@ -384,9 +384,9 @@ main()
 #endif
 
 #ifdef NUMBER_OF_AFFINITIES
-    kmp_number_of_affinities = NUMBER_OF_AFFINITIES;
+    number_of_affinities = NUMBER_OF_AFFINITIES;
 #else
-    kmp_number_of_affinities = 1;
+    number_of_affinities = 1;
 #endif 
     kmp_affinity_settings_t affinity_settings = 
     {
