@@ -287,7 +287,7 @@ main()
     kmp_affinity_map_mode_t affinity_map_mode;
     kmp_affinity_page_selection_strategy_t page_selection_strategy;
     kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
-    int kmp_number_of_affinities;
+    int number_of_affinities;
 
 #ifdef THREAD_SELECTION_MODE
     switch (THREAD_SELECTION_MODE)
@@ -394,7 +394,7 @@ main()
       .affinity_map_mode = affinity_map_mode,
       .page_selection_strategy = page_selection_strategy,
       .page_weighting_strategy = page_weighting_strategy,
-      .kmp_number_of_affinities = kmp_number_of_affinities
+      .number_of_affinities = number_of_affinities
     };
     
     kmpc_task_affinity_init(affinity_settings);
