@@ -11,11 +11,9 @@
 #define MYTEST 1
 #ifdef _OPENMP
 #include <omp.h>
-#endif
 
 int init_task_affinity(int argc, char** argv)
 {
-#ifdef _OPENMP
     if (argc <= 1) {
         printf("_task_affinity_support: no Arguments passed, continue with default settings");
         return 1;
@@ -129,6 +127,7 @@ int init_task_affinity(int argc, char** argv)
 
     return 1;
 #else
+int init_task_affinity(int argc, char** argv)
     return 0;
 #endif
 }
