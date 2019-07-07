@@ -1,4 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #ifndef TASK_AFFINITY_SUPPORT
 #define TASK_AFFINITY_SUPPORT
