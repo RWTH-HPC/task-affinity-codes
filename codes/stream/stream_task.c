@@ -249,7 +249,6 @@ int main(int argc, char** argv)
 
     /* --- SETUP --- determine precision and check timing --- */
     int size = sizeof(STREAM_TYPE);
-    kmp_affinity_thread_selection_mode_t thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
 
     printf(HLINE);
     printf("STREAM version $Revision: 5.10 $\n");
@@ -283,6 +282,7 @@ int main(int argc, char** argv)
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
 #ifdef _OPENMP
+    kmp_affinity_thread_selection_mode_t thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
     printf(HLINE);
     //init_task_affinity(argc, argv);
 #endif
