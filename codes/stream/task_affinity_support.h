@@ -18,7 +18,7 @@
     #ifdef _OPENMP
         if (argc <= 1) {
             printf("_task_affinity_support: no Arguments passed, continue with default setting");
-            return;
+            return 1;
         }
 
         if (argc - 1 > 5) //checks if there are to many arguments
