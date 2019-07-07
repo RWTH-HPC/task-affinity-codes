@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROG_CMD=./stream_task.exe
-PROG_VERSION=rel
+PROG_VERSION=release
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=2
