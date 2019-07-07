@@ -1,6 +1,11 @@
-
-#include <stdio.h>
-#include <stdlib.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <unistd.h>
+# include <math.h>
+# include <float.h>
+# include <limits.h>
+# include <sys/time.h>
+# include "no_huge_page_alloc.h"
 #include "task_affinity_support.h"
 
 #ifdef _OPENMP
@@ -11,13 +16,13 @@ int init_task_affinity(int argc, char** argv)
 {
 #ifdef _OPENMP
     if (argc <= 1) {
-        printf("_task_affinity_support: no Arguments passed, continue with default setting");
-        return;
+        printf("_task_affinity_support: no Arguments passed, continue with default settings");
+        return 1;
     }
 
     if (argc - 1 > 5) //checks if there are to many arguments
     {
-        printf("_task_affinity_support: to many arguments, set all to default setting");
+        printf("_task_affinity_support: to many arguments, set all to default settings");
         return -1;
     }
 
