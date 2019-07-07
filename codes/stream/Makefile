@@ -2,7 +2,7 @@ PROG=stream_task
 FILE_ENDING=.c
 CUR_COMPILER=$(CC)
 FLAGS_COMPILER=-Wall -mcmodel=medium
-EXEC_PROG=PROG
+EXEC_PROG=${PROG}
 #ADD_COMPILE_FLAGS=-I/home/jk869269/repos/openmp/ompt_lib/
 
 #ADD_COMPILE_FLAGS=-I../01_util/
