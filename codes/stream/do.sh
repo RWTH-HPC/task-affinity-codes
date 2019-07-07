@@ -24,7 +24,7 @@ module switch intel intel/18.0
 
 function eval_run {
   echo "Executing affinity ${curname}"
-  make ${PROG_VERSION}."$1"
+  make ${PROG_VERSION}"$1"
   no_numa_balancing "${PROG_CMD}" &> output_${curname}.txt
   grep "Elapsed time" output_${curname}.txt
   grep "T#0" output_${curname}.txt > stats_${curname}.txt
@@ -32,7 +32,8 @@ function eval_run {
 
 make clean
 module unload omp
-eval_run "baseline"
+eval_run ".baseline"
+eval_run ""
 #eval_run "llvm" "" "intel"
 
 # module switch intel gcc/7

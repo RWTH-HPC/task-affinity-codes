@@ -48,7 +48,7 @@
 # include <limits.h>
 # include <sys/time.h>
 # include "no_huge_page_alloc.h"
-#include <task_affinity_support.h>
+#include "task_affinity_support.h"
 //# include "callback.h"
 
 #ifndef T_AFF_INVERTED

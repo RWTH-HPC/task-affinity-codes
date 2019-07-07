@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <task_affinity_support.h>
+#include "task_affinity_support.h"
 
 #ifdef _OPENMP
 #include <omp.h>
