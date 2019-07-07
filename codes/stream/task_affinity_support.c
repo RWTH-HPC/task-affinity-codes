@@ -1,4 +1,4 @@
-/* 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "task_affinity_support.h"
@@ -129,4 +129,4 @@ int init_task_affinity(int argc, char** argv)
 
 int size_of_char_array(char *array[]) {
     return (int)(sizeof(array) / sizeof(array[0]));
-}*/
+}
