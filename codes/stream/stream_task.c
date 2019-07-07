@@ -48,6 +48,7 @@
 # include <limits.h>
 # include <sys/time.h>
 # include "no_huge_page_alloc.h"
+#include <task_affinity_support.h>
 //# include "callback.h"
 
 #ifndef T_AFF_INVERTED
@@ -228,9 +229,8 @@ extern void checkSTREAMresults();
 #include <omp.h>
 #endif
 
-int
-main()
-    {
+int main(int argc, char** argv)
+{
     int			quantum, checktick();
     int			BytesPerWord;
     int			k;
@@ -282,122 +282,10 @@ main()
 
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
-
-    kmp_affinity_thread_selection_mode_t thread_selection_strategy;
-    kmp_affinity_map_mode_t affinity_map_mode;
-    kmp_affinity_page_selection_strategy_t page_selection_strategy;
-    kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
-    int number_of_affinities;
-
-#ifdef THREAD_SELECTION_MODE
-    switch (THREAD_SELECTION_MODE)
-    {
-      case 0:
-        thread_selection_strategy = kmp_affinity_thread_selection_mode_first;
-        break;
-      case 1:
-        thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
-        break;
-      case 2:
-        thread_selection_strategy = kmp_affinity_thread_selection_mode_lowest_wl;
-        break;
-      case 3:
-        thread_selection_strategy = kmp_affinity_thread_selection_mode_round_robin;
-        break;
-      case 4:
-        thread_selection_strategy = kmp_affinity_thread_selection_mode_private;
-        break;
-      default:
-        thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
-        break;
-    }
-#else
-    thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
+#ifdef _OPENMP
+    printf(HLINE);
+    init_task_affinity(argc, argv);
 #endif
-
-#ifdef MAP_MODE
-    switch (MAP_MODE)
-    {
-      case 0:
-        affinity_map_mode = kmp_affinity_map_type_domain;
-        break;
-      case 1:
-        affinity_map_mode = kmp_affinity_map_type_thread;
-        break;
-      default:
-        affinity_map_mode = kmp_affinity_map_type_domain;
-        break;
-    }
-#else
-    affinity_map_mode = kmp_affinity_map_type_domain;
-#endif
-#ifdef PAGE_SELECTION_STRATEGY
-    switch (PAGE_SELECTION_STRATEGY)
-    {
-      case 0:
-        page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only;
-        break;
-      case 1:
-        page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
-        break;
-      case 2:
-        page_selection_strategy = kmp_affinity_page_mode_every_nth_page;
-        break;
-      case 3:
-        page_selection_strategy = kmp_affinity_page_mode_first_and_last_page;
-        break;
-      case 4:
-        page_selection_strategy = kmp_affinity_page_mode_continuous_binary_search;
-        break;
-      case 5:
-        page_selection_strategy = kmp_affinity_page_mode_first_page;
-        break;
-      default:
-        page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
-        break;
-    } 
-#else
-    page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
-#endif
-
-#ifdef PAGE_WEIGHT_STRATEGY
-    switch (PAGE_WEIGHT_STRATEGY)
-    {
-      case 0:
-        page_weighting_strategy = kmp_affinity_page_weight_mode_first_page_only;
-        break;
-      case 1:
-        page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
-        break;
-      case 2:
-        page_weighting_strategy = kmp_affinity_page_weight_mode_by_affinity;
-        break;
-      case 3:
-        page_weighting_strategy = kmp_affinity_page_weight_mode_by_size;
-        break;
-      default:
-        page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
-        break;
-    } 
-#else
-  page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
-#endif
-
-#ifdef NUMBER_OF_AFFINITIES
-    number_of_affinities = NUMBER_OF_AFFINITIES;
-#else
-    number_of_affinities = 1;
-#endif 
-    kmp_affinity_settings_t affinity_settings = 
-    {
-      .thread_selection_strategy = thread_selection_strategy,
-      .affinity_map_mode = affinity_map_mode,
-      .page_selection_strategy = page_selection_strategy,
-      .page_weighting_strategy = page_weighting_strategy,
-      .number_of_affinities = number_of_affinities
-    };
-    
-    kmpc_task_affinity_init(affinity_settings);
 
 
 #ifdef _OPENMP

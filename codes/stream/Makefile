@@ -1,6 +1,7 @@
 PROG=stream_task
 FILE_ENDING=.c
 CUR_COMPILER=$(CC)
+FLAGS_COMPILER=-Wall -mcmodel=medium
 
 #ADD_COMPILE_FLAGS=-I/home/jk869269/repos/openmp/ompt_lib/
 
@@ -31,85 +32,31 @@ ifdef THIRD_INVERTED
 	ADD_COMPILE_FLAGS_GCC += -DTHIRD_INVERTED=${THIRD_INVERTED}
 endif
 
-ADD_COMPILE_FLAGS += -DNTIMES=10
+ADD_COMPILE_FLAGS += -DNTIMES=10v
 #-D_FILTER_EXEC_TIMES
 
-deb: deb.domain.lowest
+default: release
 
-deb.domain.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=1 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
+release.baseline: PROG=stream_base
+release.baseline: release
 
-deb.domain.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=0 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
+debug.baseline: PROG=stream_base
+debug.baseline: debug
 
-deb.domain.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=2 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
+release.gcc: FLAGS_COMPILER=-mcmodel=medium
+release.gcc: release
 
-deb.domain.private:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=4 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
+debug.gcc: FLAGS_COMPILER=-mcmodel=medium
+debug.gcc: debug
 
-deb.domain.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=3 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
+debug: FLAGS_OPTIMIZATION=-g -O0
+debug: generic
 
-deb.thread.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=1 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
+release: FLAGS_OPTIMIZATION=-O3
+release: generic
 
-deb.thread.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=0 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-deb.thread.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=2 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-deb.thread.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTHREAD_SELECTION_MODE=3 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-deb.llvm:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
-
-deb.gcc:
-	$(CUR_COMPILER) -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS_GCC} ${PROG}${FILE_ENDING} -o ${PROG}.exe
-
-deb.baseline:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} stream_base.c -o ${PROG}.exe
-
-rel: rel.domain.lowest
-
-rel.domain.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=1 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-
-rel.domain.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=0 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.domain.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=2 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.domain.private:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=4 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.domain.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=3 -DMAP_MODE=0 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.thread.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=1 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.thread.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=0 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.thread.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=2 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.thread.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY  -DTHREAD_SELECTION_MODE=3 -DMAP_MODE=1 -DPAGE_SELECTION_STRATEGY=${page_select_strategy} -DPAGE_WEIGHTING_STRATEGY=${page_weight_strategy} -DNUMBER_OF_AFFINITIES=${num}
-
-rel.llvm:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
-
-rel.gcc:
-	$(CUR_COMPILER) -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS_GCC} ${PROG}${FILE_ENDING} -o ${PROG}.exe
-
-rel.baseline:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} stream_base.c -o ${PROG}.exe
+generic:
+	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
 
 clean:
 	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*
