@@ -8,6 +8,7 @@
 # include "no_huge_page_alloc.h"
 #include "task_affinity_support.h"
 
+#define MYTEST 1
 #ifdef _OPENMP
 #include <omp.h>
 #endif
