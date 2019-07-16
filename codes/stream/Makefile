@@ -4,6 +4,7 @@ CUR_COMPILER=$(CC)
 FLAGS_COMPILER=-Wall -mcmodel=medium
 ADD_COMPILE_FLAGS=-I../01_util/ -qopt-streaming-stores=always
 ADD_COMPILE_FLAGS_GCC=-I../01_util/
+AFFINITY_FLAG=
 
 ifdef T_AFF_INVERTED
 	ADD_COMPILE_FLAGS += -DT_AFF_INVERTED=${T_AFF_INVERTED}
@@ -31,6 +32,12 @@ ADD_COMPILE_FLAGS += -DNTIMES=10
 
 default: rel
 
+rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY
+rel.affinity: rel
+
+deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY
+deb.affinity: deb
+
 rel.baseline: PROG=stream_base
 rel.baseline: rel
 
@@ -50,7 +57,7 @@ rel: FLAGS_OPTIMIZATION=-O3
 rel: generic
 
 generic:
-	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} -o stream_task.exe ${PROG}${FILE_ENDING} 
+	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} -o stream_task.exe ${AFFINITY_FLAG} ${PROG}${FILE_ENDING} 
 
 clean:
 	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*

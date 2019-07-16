@@ -38,13 +38,13 @@ int init_task_affinity()
 #endif
 }
 
-int get_env_int_value(int default, char *env)
+int get_env_int_value(int default_value, char *env)
 {
     char *env = getenv(env);
 
     if (env == NULL)
     {
-        return default;
+        return default_value;
     }
 
     int value = atoi(env);
@@ -52,7 +52,7 @@ int get_env_int_value(int default, char *env)
     if (value < 0) 
     {
         printf("%s was set to default\n", env);
-        return default;
+        return default_value;
     }
 
     return value;
