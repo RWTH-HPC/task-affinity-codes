@@ -18,7 +18,7 @@ export STREAM_ARRAY_SIZE=$((2**27))
 
 export THREAD_SELECTION_STRATEGY=-1
 export AFFINITY_MAP_MODE=-1
-export PAGE_SELCTION_MODE=-1
+export PAGE_SELECTION_MODE=-1
 export PAGE_WEIGHTING_STRATEGY=-1
 export NUMBER_OF_AFFINITIES=-1
 
@@ -43,19 +43,20 @@ function run {
 
 
 function compile_and_run {
-  eval_run "$1"
-  eval_compile "$1"
+  compile "$1"
+  run "$1"
 }
 
 function set_up_affinity {
+  echo ""
   THREAD_SELECTION_STRATEGY=$1
-  echo "Thread selection strategy: ${thread_selection_mode[$1]}"
+  echo "Thread selection strategy:\t ${thread_selection_mode[$1+1]}"
   AFFINITY_MAP_MODE=$2
-  echo "Map mode: ${map_mode[$2]}"
-  PAGE_SELCTION_MODE=-$3
-  echo "Page selection strategy: ${page_selection_strategy[$3]}"
+  echo "Map mode:\t\t\t ${map_mode[$2+1]}"
+  PAGE_SELECTION_MODE=$3
+  echo "Page selection strategy:\t ${page_selection_strategy[$3+1]}"
   PAGE_WEIGHTING_STRATEGY=$4
-  echo "Page weight strategy: ${page_weight_strategy[$4]}"
+  echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
 }
 
 make clean
@@ -65,20 +66,24 @@ compile_and_run ".baseline"
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
 #run with default config
-echo "run on default"
 compile ".affinity"
+echo "\n run on default"
 run ".affinity"
+
+set_up_affinity 0 0 0 1
+#run ".affinity"
+./stream_task.exe
 
 for tsm in {0..4}
 do
-  for mm in {0..2}
+  for mm in {0..1}
     do
     for pss in {0..5}
     do
       for pws in {0..3}
       do
-        set_up_affinity $tsm $mm $pss $pws
-        run ".affinity"
+#        set_up_affinity $tsm $mm $pss $pws
+#        run ".affinity"
       done
     done
   done
