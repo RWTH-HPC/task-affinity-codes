@@ -48,7 +48,7 @@
 # include <limits.h>
 # include <sys/time.h>
 # include "no_huge_page_alloc.h"
-//#include "task_affinity_support.h"
+#include "task_affinity_support.h"
 //# include "callback.h"
 
 #ifndef T_AFF_INVERTED
@@ -254,7 +254,7 @@ int main(int argc, char** argv)
     printf("STREAM version $Revision: 5.10 $\n");
     printf(HLINE);
     BytesPerWord = sizeof(STREAM_TYPE);
-    printf("This system uses %d bytes per array element.\n",
+    printf("This system uses %d bytes pxer array element.\n",
 	BytesPerWord);
 
     printf(HLINE);
@@ -281,12 +281,7 @@ int main(int argc, char** argv)
 
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
-#ifdef _OPENMP
-    kmp_affinity_thread_selection_mode_t thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
-    printf(HLINE);
-    //init_task_affinity(argc, argv);
-#endif
-
+    init_task_affinity(argc, argv);
 
 #ifdef _OPENMP
     printf(HLINE);

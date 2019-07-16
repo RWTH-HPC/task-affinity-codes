@@ -8,111 +8,18 @@
 # include "no_huge_page_alloc.h"
 #include "task_affinity_support.h"
 
-#define MYTEST 1
-#ifdef _OPENMP
+#ifdef TASK_AFFINITY
 #include <omp.h>
+#endif
 
 int init_task_affinity(int argc, char** argv)
 {
-    if (argc <= 1) {
-        printf("_task_affinity_support: no Arguments passed, continue with default settings");
-        return 1;
-    }
-
-    if (argc - 1 > 5) //checks if there are to many arguments
-    {
-        printf("_task_affinity_support: to many arguments, set all to default settings");
-        return -1;
-    }
-
-    
-    kmp_affinity_thread_selection_mode_t thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
-    kmp_affinity_map_mode_t affinity_map_mode = kmp_affinity_map_type_domain;
-    kmp_affinity_page_selection_strategy_t page_selection_strategy = kmp_affinity_page_mode_divide_in_n_pages;
-    kmp_affinity_page_weighting_strategy_t page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
-    int number_of_affinities = 1;
-
-    int i, j;
-    int check[] = {0, 0, 0, 0, 0}; //contains data wether or not a setting is set prior
-
-    for (i = 1; i < argc; i++) 
-    {
-        //check if argument contains thread_selection_strategy
-        for (j = 0; j < size_of_char_array(kmp_affinity_thread_selection_mode_c); j++) 
-        {
-            if (kmp_affinity_thread_selection_mode_c[j] == argv[i]) 
-            {
-                if (check[0] >= 0)
-                {
-                    printf("_task_affinity_support: could not set %d argument, '%s', was already declared as: '%s'",i , atoi(argv[i]), kmp_affinity_thread_selection_mode_c[thread_selection_strategy]);
-                    continue;
-                }
-                thread_selection_strategy = j;
-                check[0]++;
-                continue;
-            }
-        }
-        //check if argument contains map_mode
-        for (j = 0; j < size_of_char_array(kmp_affinity_map_mode_c); j++) 
-        {
-            if (kmp_affinity_map_mode_c[j] == argv[i]) 
-            {
-                if (check[1] >= 0)
-                {
-                    printf("_task_affinity_support: could not set %d argument, '%s', was already declared as: '%s'", i , atoi(argv[i]), kmp_affinity_map_mode_c[affinity_map_mode]);
-                    continue;
-                }
-                affinity_map_mode = j;
-                check[1]++;
-                continue;
-            }
-        }
-        //check if argument contains page_selection_strategy
-        for (j = 0; j < size_of_char_array(kmp_affinity_page_selection_strategy_c); j++) 
-        {
-            if (kmp_affinity_page_selection_strategy_c[j] == argv[i]) 
-            {
-                if (check[2] >= 0)
-                {
-                    printf("_task_affinity_support: could not set %d argument, '%s', was already declared as: '%s'",i ,  atoi(argv[i]), kmp_affinity_page_selection_strategy_c[page_selection_strategy]);
-                    continue;
-                }
-                page_selection_strategy = j;
-                check[2]++;
-                continue;
-            }
-        }
-        //check if argument contains page_weighting_strategy
-        for (j = 0; j < size_of_char_array(kmp_affinity_page_weighting_strategy_c); j++) 
-        {
-            if (kmp_affinity_page_weighting_strategy_c[j] == argv[i]) 
-            {
-                if (check[3] >= 0)
-                {
-                    printf("_task_affinity_support: could not set %d argument, '%s', was already declared as: '%s'",i ,  atoi(argv[i]), kmp_affinity_thread_selection_mode_c[page_weighting_strategy]);
-                    continue;
-                }
-                page_weighting_strategy = j;
-                check[3]++;
-                continue;
-            }
-        }
-        int tmp = atoi(argv[i]);
-
-        if (tmp != 0) 
-        {
-            if (check[4] >= 0)
-            {
-                printf("_task_affinity_support: could not set %d argument, number_of_affinities was already declared as: '%d'",i ,  atoi(argv[i]), number_of_affinities);
-                continue;
-            }
-            check[4]++;
-            number_of_affinities = tmp;
-            continue;
-        }
-
-        printf("_task_affinity_support: '%s' is no valid affinity setting, this input will be ignored",  atoi(argv[i]));
-    }
+#ifdef TASK_AFFINITY
+    kmp_affinity_thread_selection_mode_t thread_selection_strategy = get_env_int_value(kmp_affinity_thread_selection_mode_random, "THREAD_SELECTION_STRATEGY");
+    kmp_affinity_map_mode_t affinity_map_mode = get_env_int_value(kmp_affinity_map_type_domain, "AFFINITY_MAP_MODE");
+    kpm_affintiy_page_selection_strategy_t page_selection_strategy = get_env_int_value(kmp_affinity_page_mode_divide_in_n_pages, "PAGE_SELECTION_MODE");
+    kmp_affinity_page_weighting_strategy_t page_weighting_strategy = get_env_int_value(kmp_affinity_page_weight_mode_majority, "PAGE_WEIGHTING_STRATEGY");
+    int number_of_affinities = get_env_int_value(1, "NUMBER_OF_AFFINITIES");
 
     kmp_affinity_settings_t affinity_settings = 
     {
@@ -127,11 +34,26 @@ int init_task_affinity(int argc, char** argv)
 
     return 1;
 #else
-int init_task_affinity(int argc, char** argv)
     return 0;
 #endif
 }
 
-int size_of_char_array(char *array[]) {
-    return (int)(sizeof(array) / sizeof(array[0]));
+int get_env_int_value(int default, char *env)
+{
+    char *env = getenv(env);
+
+    if (env == NULL)
+    {
+        return default;
+    }
+
+    int value = atoi(env);
+
+    if (value < 0) 
+    {
+        printf("%s was set to default", env);
+        return default;
+    }
+
+    return value;
 }

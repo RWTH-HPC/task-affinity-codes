@@ -2,12 +2,7 @@ PROG=stream_task
 FILE_ENDING=.c
 CUR_COMPILER=$(CC)
 FLAGS_COMPILER=-Wall -mcmodel=medium
-#ADD_COMPILE_FLAGS=-I/home/jk869269/repos/openmp/ompt_lib/
-
-#ADD_COMPILE_FLAGS=-I../01_util/
-#ADD_COMPILE_FLAGS=-I../01_util/ -D_STAT_ARRAYS
 ADD_COMPILE_FLAGS=-I../01_util/ -qopt-streaming-stores=always
-#ADD_COMPILE_FLAGS=-I../01_util/ -qopt-streaming-stores=always -D_STAT_ARRAYS
 ADD_COMPILE_FLAGS_GCC=-I../01_util/
 
 ifdef T_AFF_INVERTED
@@ -36,27 +31,26 @@ ADD_COMPILE_FLAGS += -DNTIMES=10
 
 default: release
 
-release.baseline: PROG=stream_base
-release.baseline: release
+rel.baseline: PROG=stream_base
+rel.baseline: release
 
-debug.baseline: PROG=stream_base
-debug.baseline: debug
+deb.baseline: PROG=stream_base
+deb.baseline: debug
 
-release.gcc: FLAGS_COMPILER=-mcmodel=medium
-release.gcc: release
+rel.gcc: FLAGS_COMPILER=-mcmodel=medium
+rel.gcc: release
 
-debug.gcc: FLAGS_COMPILER=-mcmodel=medium
-debug.gcc: debug
+deb.gcc: FLAGS_COMPILER=-mcmodel=medium
+deb.gcc: debug
 
-debug: FLAGS_OPTIMIZATION=-g -O0
-debug: generic
+deb: FLAGS_OPTIMIZATION=-g -O0
+deb: generic
 
-release: FLAGS_OPTIMIZATION=-O3
-release: generic
+rel: FLAGS_OPTIMIZATION=-O3
+rel: generic
 
 generic:
-	#$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} task_affinity_support.c 
-	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o stream_task.exe -DTASK_AFFINITY
+	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} ${FILE_ENDING} -o stream_task.exe ${PROG} 
 
 clean:
 	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*

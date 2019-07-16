@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROG_CMD=./stream_task.exe
-PROG_VERSION=release
+PROG_VERSION=rel
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=2
@@ -15,6 +15,13 @@ export THIRD_INVERTED=0
 export T_AFF_SINGLE_CREATOR=1
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 export STREAM_ARRAY_SIZE=$((2**27))
+
+export THREAD_SELECTION_STRATEGY=-1
+export AFFINITY_MAP_MODE=-1
+export PAGE_SELCTION_MODE=-1
+export PAGE_WEIGHTING_STRATEGY=-1
+export NUMBER_OF_AFFINITIES=-1
+
 
 module switch intel intel/18.0
 
@@ -33,12 +40,8 @@ function eval_run {
 make clean
 module unload omp
 eval_run ".baseline"
-eval_run ""
-#eval_run "llvm" "" "intel"
-
-# module switch intel gcc/7
-# eval_run "gcc"
-# module switch gcc intel/18.0
 
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
+
+eval_run ""
