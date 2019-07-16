@@ -229,7 +229,7 @@ extern void checkSTREAMresults();
 #include <omp.h>
 #endif
 
-int main(int argc, char** argv)
+int main()
 {
     int			quantum, checktick();
     int			BytesPerWord;
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
 
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
-    init_task_affinity(argc, argv);
+    init_task_affinity();
 
 #ifdef _OPENMP
     printf(HLINE);

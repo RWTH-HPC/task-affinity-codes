@@ -12,7 +12,7 @@
 #include <omp.h>
 #endif
 
-int init_task_affinity(int argc, char** argv)
+int init_task_affinity()
 {
 #ifdef TASK_AFFINITY
     kmp_affinity_thread_selection_mode_t thread_selection_strategy = get_env_int_value(kmp_affinity_thread_selection_mode_random, "THREAD_SELECTION_STRATEGY");
@@ -51,7 +51,7 @@ int get_env_int_value(int default, char *env)
 
     if (value < 0) 
     {
-        printf("%s was set to default", env);
+        printf("%s was set to default\n", env);
         return default;
     }
 
