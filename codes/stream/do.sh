@@ -22,10 +22,10 @@ export PAGE_SELCTION_MODE=-1
 export PAGE_WEIGHTING_STRATEGY=-1
 export NUMBER_OF_AFFINITIES=-1
 
-thread_selection_mode={first random lowest_wl round_robin private}
-map_mode={thread domain}
-page_selection_strategy={first_page_of_first_affinity divide_in_n every_n_th first_and_last binary first}
-page_weight_strategy={first majority by_affinity size}
+thread_selection_mode=( first random lowest_wl round_robin private )
+map_mode=(thread domain)
+page_selection_strategy=(first_page_of_first_affinity divide_in_n every_n_th first_and_last binary first)
+page_weight_strategy=(first majority by_affinity size)
 
 
 module switch intel intel/18.0
