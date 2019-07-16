@@ -40,7 +40,10 @@ int init_task_affinity()
 
 int get_env_int_value(int default_value, char *env)
 {
+    
+    printf("%s is set as: ", env);
     env = getenv(env);
+    printf("%s \n", env);
 
     if (env == NULL)
     {
