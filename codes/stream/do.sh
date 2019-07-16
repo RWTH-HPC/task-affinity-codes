@@ -23,11 +23,8 @@ export PAGE_WEIGHTING_STRATEGY=-1
 export NUMBER_OF_AFFINITIES=-1
 
 
-module switch intel intel/18.0
 
-#source /home/jk869269/util/bash/ompGetCoresForSpread.sh
-#TMP_CORES=$(ompGetCoresForSpread ${OMP_NUM_THREADS})
-#module load likwid
+module switch intel intel/18.0
 
 function eval_run {
   echo "Executing affinity ${curname}"
@@ -37,11 +34,29 @@ function eval_run {
   grep "T#0" output_${curname}.txt > stats_${curname}.txt
 }
 
+function compile {
+  echo "Compiling affinity ${curname}"
+  make ${PROG_VERSION}"$1"
+}
+
+function run {
+  no_numa_balancing "${PROG_CMD}" &> output_${curname}.txt
+  grep "Elapsed time" output_${curname}.txt
+  grep "T#0" output_${curname}.txt > stats_${curname}.txt
+}
+
+
+function compile_and_run {
+  eval_run "$1"
+  eval_compile "$1"
+}
+
 make clean
 module unload omp
-eval_run ".baseline"
+compile_and_run ".baseline"
 
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
 #run with default config
-eval_run ".affinity"
+compile ".affinity"
+run ".affinity"
