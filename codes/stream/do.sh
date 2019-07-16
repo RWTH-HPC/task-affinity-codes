@@ -43,5 +43,5 @@ eval_run ".baseline"
 
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
-
-eval_run ""
+#run with default config
+eval_run ".affinity"
