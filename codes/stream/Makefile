@@ -29,19 +29,19 @@ endif
 ADD_COMPILE_FLAGS += -DNTIMES=10
 #-D_FILTER_EXEC_TIMES
 
-default: release
+default: rel
 
 rel.baseline: PROG=stream_base
-rel.baseline: release
+rel.baseline: rel
 
 deb.baseline: PROG=stream_base
-deb.baseline: debug
+deb.baseline: deb
 
 rel.gcc: FLAGS_COMPILER=-mcmodel=medium
-rel.gcc: release
+rel.gcc: rel
 
 deb.gcc: FLAGS_COMPILER=-mcmodel=medium
-deb.gcc: debug
+deb.gcc: deb
 
 deb: FLAGS_OPTIMIZATION=-g -O0
 deb: generic
