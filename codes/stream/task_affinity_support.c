@@ -40,7 +40,7 @@ int init_task_affinity()
 
 int get_env_int_value(int default_value, char *env)
 {
-    char *env = getenv(env);
+    env = getenv(env);
 
     if (env == NULL)
     {
