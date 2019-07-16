@@ -32,7 +32,7 @@ ADD_COMPILE_FLAGS += -DNTIMES=10
 
 default: rel
 
-rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY
+rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY task_affinity_support.c
 rel.affinity: rel
 
 deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY
