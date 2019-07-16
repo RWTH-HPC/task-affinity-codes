@@ -50,7 +50,7 @@ rel: FLAGS_OPTIMIZATION=-O3
 rel: generic
 
 generic:
-	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} ${FILE_ENDING} -o stream_task.exe ${PROG} 
+	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} -o stream_task.exe ${PROG} ${FILE_ENDING} 
 
 clean:
 	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*
