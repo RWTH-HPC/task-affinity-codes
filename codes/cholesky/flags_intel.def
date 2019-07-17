@@ -1,0 +1,5 @@
+LOAD_COMPILER="intel/19.0"
+LOAD_LIBS="intelitac"
+CC      = icc
+CFLAGS  = -g -O3 -std=c11 -I./ -I../common -mt_mpi -qopenmp -w $(FLAGS_MKL_INCLUDE) -DHAVE_COMM_SENTINEL -DHAVE_INTERMEDIATE_COMM_SENTINEL
+LDFLAGS = -std=c11 -lrt -lpthread -lm -mt_mpi -qopenmp -w $(FLAGS_MKL_LINKER)
