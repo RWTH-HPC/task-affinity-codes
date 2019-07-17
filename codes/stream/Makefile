@@ -35,7 +35,7 @@ default: rel
 rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY task_affinity_support.c
 rel.affinity: rel
 
-deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY
+deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY task_affinity_support.c
 deb.affinity: deb
 
 rel.baseline: PROG=stream_base

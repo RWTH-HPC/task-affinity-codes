@@ -71,7 +71,10 @@ echo "\n run on default"
 run ".affinity"
 
 set_up_affinity 0 0 0 1
+<<<<<<< Updated upstream
 #run ".affinity"
+=======
+>>>>>>> Stashed changes
 ./stream_task.exe
 
 for tsm in {0..4}
@@ -82,8 +85,13 @@ do
     do
       for pws in {0..3}
       do
+<<<<<<< Updated upstream
 #        set_up_affinity $tsm $mm $pss $pws
 #        run ".affinity"
+=======
+        #set_up_affinity $tsm $mm $pss $pws
+        #run ".affinity"
+>>>>>>> Stashed changes
       done
     done
   done

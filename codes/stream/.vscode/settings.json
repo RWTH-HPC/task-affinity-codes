@@ -2,6 +2,7 @@
     "C_Cpp.dimInactiveRegions": false,
     "files.associations": {
         "*.java": "java",
-        "task_affinity_support.h": "c"
+        "task_affinity_support.h": "c",
+        "float.h": "c"
     }
 }
