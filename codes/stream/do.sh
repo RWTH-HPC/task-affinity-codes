@@ -1,13 +1,14 @@
 #!/bin/bash
 
 PROG_CMD=./stream_task.exe
-PROG_VERSION=rel
+PROG_VERSION=deb
+NAME=$PROG_VERSION
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-export KMP_A_DEBUG=2
+export KMP_A_DEBUG=3
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-export OMP_NUM_THREADS=64
+export OMP_NUM_THREADS=3
 #export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
@@ -36,9 +37,9 @@ function compile {
 }
 
 function run {
-  no_numa_balancing "${PROG_CMD}" &> output_${curname}.txt
-  grep "Elapsed time" output_${curname}.txt
-  grep "T#0" output_${curname}.txt > stats_${curname}.txt
+  no_numa_balancing "${PROG_CMD}" &> output_${NAME}.txt
+  grep "Elapsed time" output_${NAME}.txt
+  grep "T#0" output_${NAME}.txt > stats_${NAME}.txt
 }
 
 
@@ -48,7 +49,7 @@ function compile_and_run {
 }
 
 function set_up_affinity {
-  echo ""
+  #echo ""
   THREAD_SELECTION_STRATEGY=$1
   echo "Thread selection strategy:\t ${thread_selection_mode[$1+1]}"
   AFFINITY_MAP_MODE=$2
@@ -57,6 +58,9 @@ function set_up_affinity {
   echo "Page selection strategy:\t ${page_selection_strategy[$3+1]}"
   PAGE_WEIGHTING_STRATEGY=$4
   echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
+
+  NAME=${PROG_VERSION}___${thread_selection_mode[$THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
+  echo "${NAME}"
 }
 
 make clean
@@ -70,12 +74,18 @@ compile ".affinity"
 echo "\n run on default"
 run ".affinity"
 
-set_up_affinity 0 0 0 1
-<<<<<<< Updated upstream
+#set_up_affinity 0 0 0 3
 #run ".affinity"
-=======
->>>>>>> Stashed changes
-./stream_task.exe
+#no_numa_balancing ./stream_task.exe
+
+for t in {2..32}
+do
+    export OMP_NUM_THREADS=$t
+    echo ""
+    echo "Number of threads:\t\t $t"
+    set_up_affinity 3 0 0 2
+    run ".affinity"
+done
 
 for tsm in {0..4}
 do
@@ -85,13 +95,9 @@ do
     do
       for pws in {0..3}
       do
-<<<<<<< Updated upstream
-#        set_up_affinity $tsm $mm $pss $pws
-#        run ".affinity"
-=======
         #set_up_affinity $tsm $mm $pss $pws
         #run ".affinity"
->>>>>>> Stashed changes
+	#no_numa_balancing ./stream_task.exe
       done
     done
   done

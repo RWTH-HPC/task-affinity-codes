@@ -15,6 +15,7 @@
 int init_task_affinity()
 {
 #ifdef TASK_AFFINITY
+    
     kmp_affinity_thread_selection_mode_t thread_selection_strategy = get_env_int_value(kmp_affinity_thread_selection_mode_random, "THREAD_SELECTION_STRATEGY");
     printf("Selected Strategy was: %s\n", kmp_affinity_thread_selection_mode_c[thread_selection_strategy]);
     kmp_affinity_map_mode_t affinity_map_mode = get_env_int_value(kmp_affinity_map_type_domain, "AFFINITY_MAP_MODE");
@@ -35,6 +36,15 @@ int init_task_affinity()
       .number_of_affinities = number_of_affinities
     };
     
+    /* 
+    int thread_selection_strategy = get_env_int_value(3, "THREAD_SELECTION_STRATEGY");
+    int affinity_map_mode = get_env_int_value(0, "AFFINITY_MAP_MODE");
+    int page_selection_strategy = get_env_int_value(1, "PAGE_SELECTION_MODE");
+    int page_weighting_strategy = get_env_int_value(1, "PAGE_WEIGHTING_STRATEGY");
+    int number_of_affinities = get_env_int_value(1, "NUMBER_OF_AFFINITIES");
+    kmpc_task_affinity_init(thread_selection_strategy, affinity_map_mode, page_selection_strategy*100+page_weighting_strategy , number_of_affinities);
+    */
+   
     kmpc_task_affinity_init(affinity_settings);
 
     return 1;
