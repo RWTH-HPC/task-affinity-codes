@@ -1,7 +1,11 @@
 #!/bin/bash
+#SBARCH --nodes=1
+#SBATCH --ntasks=20
+#SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
+#SBATCH --output=sbatch_output.txt
 
 PROG_CMD=./stream_task.exe
-PROG_VERSION=deb
+PROG_VERSION=rel
 NAME=$PROG_VERSION
 
 export KMP_TASK_STEALING_CONSTRAINT=0
@@ -21,7 +25,7 @@ export THREAD_SELECTION_STRATEGY=-1
 export AFFINITY_MAP_MODE=-1
 export PAGE_SELECTION_MODE=-1
 export PAGE_WEIGHTING_STRATEGY=-1
-export NUMBER_OF_AFFINITIES=-1
+export NUMBER_OF_AFFINITIES=20
 
 thread_selection_mode=( first random lowest_wl round_robin private )
 map_mode=(thread domain)
@@ -87,13 +91,13 @@ do
     run ".affinity"
 done
 
-for tsm in {0..4}
+for tsm in {0..4}               #Thread selecetion mode
 do
-  for mm in {0..1}
+  for mm in {0..1}              #Map Mode
+  do
+    for pss in {0..5}           #Page sellection mode
     do
-    for pss in {0..5}
-    do
-      for pws in {0..3}
+      for pws in {0..3}         #Page  Weight mode
       do
         #set_up_affinity $tsm $mm $pss $pws
         #run ".affinity"

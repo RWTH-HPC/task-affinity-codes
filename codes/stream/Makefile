@@ -32,10 +32,10 @@ ADD_COMPILE_FLAGS += -DNTIMES=10
 
 default: rel
 
-rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY task_affinity_support.c
+rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c
 rel.affinity: rel
 
-deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY task_affinity_support.c
+deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c
 deb.affinity: deb
 
 rel.baseline: PROG=stream_base
@@ -61,3 +61,4 @@ generic:
 
 clean:
 	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*
+
