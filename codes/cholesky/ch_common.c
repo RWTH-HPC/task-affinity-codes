@@ -4,6 +4,7 @@
 #include "ch_common.h"
 #include "cholesky.h"
 #include "timing.h"
+#include "task_affinity_support.h"
 
 #if (defined(DEBUG) || defined(USE_TIMING))
 _Atomic int cnt_pdotrf = 0;
@@ -120,6 +121,57 @@ void cholesky_regular(const int ts, const int nt, double* A[nt][nt])
 void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
 {
 	// TODO:
+#ifdef TASK_AFFINITY
+    init_task_affinity();
+#pragma omp parallel
+{
+#pragma omp single
+{
+    for (int k = 0; k < nt; k++) {
+    
+        kmpc_set_task_affinity(&A[k][k],nt - k);
+
+#pragma omp task depend(out: A[k][k])
+{
+        omp_potrf(A[k][k], ts, ts);
+#ifdef DEBUG
+        printf("potrf:out:A[%d][%d]\n", k, k);
+#endif
+}
+        for (int i = k + 1; i < nt; i++) {
+#pragma omp task depend(in: A[k][k]) depend(out: A[k][i])
+{
+            omp_trsm(A[k][k], A[k][i], ts, ts);
+#ifdef DEBUG
+        printf("trsm :in:A[%d][%d]:out:A[%d][%d]\n", k, k, k, i);
+#endif
+}
+        }
+        for (int i = k + 1; i < nt; i++) {
+            for (int j = k + 1; j < i; j++) {
+#pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i])
+{
+                omp_gemm(A[k][i], A[k][j], A[j][i], ts, ts);
+#ifdef DEBUG
+                printf("gemm :in:A[%d][%d]:A[%d][%d]:out:A[%d][%d]\n", k, i, k, j, j, i);
+#endif
+}
+            }
+#pragma omp task depend(in: A[k][i]) depend(out: A[i][i])
+{
+            omp_syrk(A[k][i], A[i][i], ts, ts);
+#ifdef DEBUG
+            printf("syrk :in:A[%d][%d]:out:A[%d][%d]\n", k, i, i, i);
+#endif
+}
+        }
+    }
+#pragma omp taskwait
+}
+}
+#else
+    printf("\nTask Affinity is not set, cholesy_affinity test was not executed\n");
+#endif
 }
 
 int main(int argc, char *argv[])
