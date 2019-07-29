@@ -80,6 +80,7 @@ compile ".affinity"
 for t in {1..10}                  #number of threads
 do
   export OMP_NUM_THREADS=8
+  echo ""
   echo "Number of threads:\t\t $t"
   for tsm in {0..4}               #Thread selecetion mode
   do
@@ -91,8 +92,7 @@ do
         do
           set_up_affinity $tsm $mm $pss $pws
           run ".affinity"
-          echo ""
-	done
+        done
       done
     done
   done
