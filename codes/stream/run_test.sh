@@ -1,8 +1,11 @@
 #!/bin/bash
 #SBARCH --nodes=1
-#SBATCH --ntasks=20
+#SBATCH --ntasks=24
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch_output.txt
+#SBATCH --time=00:10:00
+
+#duration of approximately 3 to 10 hours
 
 PROG_CMD=./stream_task.exe
 PROG_VERSION=rel
@@ -63,7 +66,7 @@ function set_up_affinity {
   export TASK_AFF_PAGE_WEIGHTING_STRATEGY=$4
   echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
 
-  NAME=${PROG_VERSION}___${thread_selection_mode[$THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
+  NAME=${PROG_VERSION}___${thread_selection_mode[$TASK_AFF_THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$TASK_AFF_AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$TASK_AFF_PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$TASK_AFF_PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
   echo "${NAME}"
 }
 
@@ -77,10 +80,9 @@ module load omp/task_aff.${PROG_VERSION}
 #run with default config
 compile ".affinity"
 
-for t in {1..10}                  #number of threads
+for t in {1..24}                  #number of threads
 do
-  export OMP_NUM_THREADS=8
-  echo ""
+  export OMP_NUM_THREADS=$t
   echo "Number of threads:\t\t $t"
   for tsm in {0..4}               #Thread selecetion mode
   do
@@ -92,6 +94,7 @@ do
         do
           set_up_affinity $tsm $mm $pss $pws
           run ".affinity"
+	  echo ""
         done
       done
     done
