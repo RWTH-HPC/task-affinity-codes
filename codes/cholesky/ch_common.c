@@ -4,7 +4,7 @@
 #include "ch_common.h"
 #include "cholesky.h"
 #include "timing.h"
-#include "task_affinity_support.h"
+#include "./../task_affinity_support/task_affinity_support.h"
 
 #if (defined(DEBUG) || defined(USE_TIMING))
 _Atomic int cnt_pdotrf = 0;
@@ -120,7 +120,6 @@ void cholesky_regular(const int ts, const int nt, double* A[nt][nt])
 
 void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
 {
-	// TODO:
 #ifdef TASK_AFFINITY
     init_task_affinity();
 #pragma omp parallel
@@ -242,7 +241,13 @@ int main(int argc, char *argv[])
 
     const float t3 = get_time();
     // TODO: implement cholesky affinity version here
+
+#ifdef TASK_AFFINITY
+    cholesky_affinity(ts, nt, (double* (*)[nt]) A_affinity);
+#else
     cholesky_regular(ts, nt, (double* (*)[nt]) A_affinity);
+#endif
+
     const float t4 = get_time() - t3;
 
     /* Verification */
