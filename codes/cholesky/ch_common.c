@@ -6,6 +6,7 @@
 #include "timing.h"
 #include "./../task_affinity_support/task_affinity_support.h"
 
+
 #if (defined(DEBUG) || defined(USE_TIMING))
 _Atomic int cnt_pdotrf = 0;
 _Atomic int cnt_trsm = 0;
@@ -120,15 +121,15 @@ void cholesky_regular(const int ts, const int nt, double* A[nt][nt])
 
 void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
 {
-#ifdef TASK_AFFINITY
-    init_task_affinity();
+	// TODO:
 #pragma omp parallel
 {
 #pragma omp single
 {
     for (int k = 0; k < nt; k++) {
-    
+#ifdef TASK_AFFINITY
         kmpc_set_task_affinity(&A[k][k],nt - k);
+#endif
 
 #pragma omp task depend(out: A[k][k])
 {
@@ -168,9 +169,6 @@ void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
 #pragma omp taskwait
 }
 }
-#else
-    printf("\nTask Affinity is not set, cholesy_affinity test was not executed\n");
-#endif
 }
 
 int main(int argc, char *argv[])
@@ -184,6 +182,9 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
+#ifdef TASK_AFFINITY
+    init_task_affinity();
+#endif
     const int  n = atoi(argv[1]); // matrix size
     const int ts = atoi(argv[2]); // tile size
     int check    = atoi(argv[3]); // check result?
@@ -241,10 +242,11 @@ int main(int argc, char *argv[])
 
     const float t3 = get_time();
     // TODO: implement cholesky affinity version here
-
 #ifdef TASK_AFFINITY
+    printf("\nrunning cholesky affinity...\n");
     cholesky_affinity(ts, nt, (double* (*)[nt]) A_affinity);
 #else
+    printf("\nrunning cholesky regular...\n");
     cholesky_regular(ts, nt, (double* (*)[nt]) A_affinity);
 #endif
 

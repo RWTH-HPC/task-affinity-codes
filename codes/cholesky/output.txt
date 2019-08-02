@@ -1,4 +1,0 @@
-nt = 30, ts = 512
-test:./ch_intel_timing-15360-512-1:threads: 1:result:successful:gflops_regular:32.843121:time:36.779682:gflops_affinity:35.161152:time_ser:34.354950
-count#pdotrf:60:count#trsm:870:count#gemm:8120:count#syrk:870
-potrf:0.004518:trsm:3.402639:gemm:63.970071:syrk:3.747625:comm:0.000000:create:0.000000:total:0.000000:wall:0.000000

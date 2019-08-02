@@ -5,7 +5,6 @@
 # include <float.h>
 # include <limits.h>
 # include <sys/time.h>
-# include "no_huge_page_alloc.h"
 #include "task_affinity_support.h"
 
 #ifdef TASK_AFFINITY
