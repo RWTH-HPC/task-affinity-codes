@@ -3,7 +3,7 @@
 #SBATCH --ntasks=24
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch_output.txt
-#SBATCH --time=00:10:00
+#SBATCH --time=00:30:00
 
 #duration of approximately 3 to 10 hours
 
@@ -15,7 +15,7 @@ export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=3
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=24
 #export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
@@ -71,16 +71,21 @@ function set_up_affinity {
 }
 
 make clean
-#module unload omp
-#compile_and_run ".baseline"
+module unload omp
+compile_and_run ".baseline"
+echo "\nrun task without affinity"
+compile_and_run ""
 
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
 
 #run with default config
 compile ".affinity"
+echo "\nrun default"
+run ".affinity"
 
-for t in {1..24}                  #number of threads
+
+for t in {8,16}                  #number of threads
 do
   export OMP_NUM_THREADS=$t
   echo "Number of threads:\t\t $t"

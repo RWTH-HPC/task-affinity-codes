@@ -48,7 +48,9 @@
 # include <limits.h>
 # include <sys/time.h>
 # include "no_huge_page_alloc.h"
+#ifdef TASK_AFFINITY
 #include "./../task_affinity_support/task_affinity_support.h"
+#endif
 //# include "callback.h"
 
 #ifndef T_AFF_INVERTED
@@ -281,8 +283,9 @@ int main()
 
 // choose which policy you want to use by specifying FLAG during compile process
 //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
+#ifdef TASK_AFFINITY
     init_task_affinity();
-
+#endif
 #ifdef _OPENMP
     printf(HLINE);
 #pragma omp parallel
