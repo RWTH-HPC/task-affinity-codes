@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PROG_VERSION=rel
+
 for target in intel 
 do
   # load default modules
@@ -17,5 +19,9 @@ do
   module li
 
   # make corresponding targets
+  module use -a ~/.modules
+  module load omp/task_aff.${PROG_VERSION}
+  TARGET=${target} make affinity
+  
   TARGET=${target} make
 done

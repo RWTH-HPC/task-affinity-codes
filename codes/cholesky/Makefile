@@ -10,8 +10,8 @@ endif
 # parameters and settings for execution
 RUN_SETTINGS    = OMP_PLACES=cores OMP_PROC_BIND=spread
 PROG_EXE        ?= ch_$(TARGET)
-MATRIX_SIZE     ?= 15360
-#MATRIX_SIZE     ?= 8000
+#MATRIX_SIZE     ?= 15360
+MATRIX_SIZE     ?= 8000
 BLOCK_SIZE      ?= 512
 BOOL_CHECK      ?= 1
 AFFINITY_FLAG=
@@ -45,4 +45,4 @@ run-timing:
 	$(RUN_SETTINGS) ./$(PROG_EXE)_timing $(MATRIX_SIZE) $(BLOCK_SIZE) $(BOOL_CHECK)
 
 clean:
-	rm -f *.o ch_$(TARGET) ch_$(TARGET)_timing
+	rm -f *.o ch_$(TARGET) ch_$(TARGET)_timing ch_$(TARGET)_aff ch_$(TARGET)_timing_aff

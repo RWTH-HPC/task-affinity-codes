@@ -66,7 +66,7 @@ function set_up_affinity {
   export TASK_AFF_PAGE_WEIGHTING_STRATEGY=$4
   echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
 
-  NAME=${PROG_VERSION}___${thread_selection_mode[$TASK_AFF_THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$TASK_AFF_AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$TASK_AFF_PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$TASK_AFF_PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
+  NAME=${PROG_VERSION}___${5}${1}${2}${3}${4}___${thread_selection_mode[$TASK_AFF_THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$TASK_AFF_AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$TASK_AFF_PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$TASK_AFF_PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
   echo "${NAME}"
 }
 
@@ -97,7 +97,7 @@ do
       do
         for pws in {0..3}         #Page  Weight mode
         do
-          set_up_affinity $tsm $mm $pss $pws
+          set_up_affinity $tsm $mm $pss $pws $t
           run ".affinity"
 	  echo ""
         done

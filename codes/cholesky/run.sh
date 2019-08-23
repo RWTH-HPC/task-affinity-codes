@@ -5,6 +5,8 @@
 #SBATCH --output=sbatch_output.txt
 #SBATCH --time=00:10:00
 
+PROG_VERSION=rel
+
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=3
 export OMP_PLACES=cores
@@ -44,10 +46,16 @@ function set_up_affinity {
   echo ""
 }
 
+
+
+module use -a ~/.modules
+module load omp/task_aff.${PROG_VERSION}
+
 for t in {1..24}                  #number of threads
 do
   export OMP_NUM_THREADS=$t
   echo "\nNumber of threads:\t\t $t"
+  ./ch_intel ${MATRIX_SIZE} ${TITLE_SIZE} ${CHECK_RESULTS}
   for tsm in {0..4}               #Thread selecetion mode
   do
     for mm in {0..1}              #Map Mode

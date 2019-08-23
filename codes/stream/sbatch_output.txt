@@ -3,383 +3,148 @@
 (OK) Loading Intel suite, Version 18.0.3.222: compilers (C/C++/FORTRAN), MKL, TBB, IPP and DAAL
 (OK) Intel MPI Suite 2018.4.274 loaded.
 rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*
++(0):ERROR:0: Unable to locate a modulefile for 'omp'
+Compiling affinity .baseline
+icc -Wall -mcmodel=medium -qopenmp -O3 -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=134217728 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_base.c 
+Elapsed time for program	0.588606	sec
+\nrun task without affinity
+Compiling affinity 
+icc -Wall -mcmodel=medium -qopenmp -O3 -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=134217728 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_task.c 
+Elapsed time for program	3.029103	sec
 Compiling affinity .affinity
 icc -Wall -mcmodel=medium -qopenmp -O3 -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=134217728 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe -DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c stream_task.c 
-Number of threads:\t\t 1
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+\nrun default
+Elapsed time for program	0.968867	sec
+Number of threads:\t\t 8
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t first_page_of_first_affinity
+Page weight strategy:\t\t first
+rel___80000___random___domain___divide_in_n___majority___THREADS-8
+Elapsed time for program	1.729968	sec
+
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t first_page_of_first_affinity
+Page weight strategy:\t\t majority
+rel___80001___random___domain___divide_in_n___by_affinity___THREADS-8
+Elapsed time for program	1.680422	sec
+
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t first_page_of_first_affinity
+Page weight strategy:\t\t by_affinity
+rel___80002___random___domain___divide_in_n___size___THREADS-8
+Elapsed time for program	1.731007	sec
+
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t first_page_of_first_affinity
+Page weight strategy:\t\t size
+rel___80003___random___domain___divide_in_n______THREADS-8
+Elapsed time for program	1.697122	sec
+
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t divide_in_n
+Page weight strategy:\t\t first
+rel___80010___random___domain___every_n_th___majority___THREADS-8
+Elapsed time for program	1.570487	sec
+
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t divide_in_n
 Page weight strategy:\t\t majority
-rel___random___domain___divide_in_n___majority___THREADS-1
-Elapsed time for program	9.212218	sec
+rel___80011___random___domain___every_n_th___by_affinity___THREADS-8
+Elapsed time for program	1.663732	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t divide_in_n
 Page weight strategy:\t\t by_affinity
-rel___random___domain___divide_in_n___by_affinity___THREADS-1
-Elapsed time for program	9.218277	sec
+rel___80012___random___domain___every_n_th___size___THREADS-8
+Elapsed time for program	1.710101	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t divide_in_n
 Page weight strategy:\t\t size
-rel___random___domain___divide_in_n___size___THREADS-1
-Elapsed time for program	9.212830	sec
+rel___80013___random___domain___every_n_th______THREADS-8
+Elapsed time for program	1.629889	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t 
-rel___random___domain___divide_in_n______THREADS-1
-Elapsed time for program	9.248701	sec
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t every_n_th
+Page weight strategy:\t\t first
+rel___80020___random___domain___first_and_last___majority___THREADS-8
+Elapsed time for program	1.555863	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t every_n_th
 Page weight strategy:\t\t majority
-rel___random___domain___every_n_th___majority___THREADS-1
-Elapsed time for program	9.214520	sec
+rel___80021___random___domain___first_and_last___by_affinity___THREADS-8
+Elapsed time for program	3.979935	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t every_n_th
 Page weight strategy:\t\t by_affinity
-rel___random___domain___every_n_th___by_affinity___THREADS-1
-Elapsed time for program	9.216453	sec
+rel___80022___random___domain___first_and_last___size___THREADS-8
+Elapsed time for program	4.102233	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t every_n_th
 Page weight strategy:\t\t size
-rel___random___domain___every_n_th___size___THREADS-1
-Elapsed time for program	9.341706	sec
+rel___80023___random___domain___first_and_last______THREADS-8
+Elapsed time for program	4.104184	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t 
-rel___random___domain___every_n_th______THREADS-1
-Elapsed time for program	9.343067	sec
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t first_and_last
+Page weight strategy:\t\t first
+rel___80030___random___domain___binary___majority___THREADS-8
+Elapsed time for program	1.556306	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t first_and_last
 Page weight strategy:\t\t majority
-rel___random___domain___first_and_last___majority___THREADS-1
-Elapsed time for program	9.360267	sec
+rel___80031___random___domain___binary___by_affinity___THREADS-8
+Elapsed time for program	1.382941	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t first_and_last
 Page weight strategy:\t\t by_affinity
-rel___random___domain___first_and_last___by_affinity___THREADS-1
-Elapsed time for program	9.329901	sec
+rel___80032___random___domain___binary___size___THREADS-8
+Elapsed time for program	1.395624	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t first_and_last
 Page weight strategy:\t\t size
-rel___random___domain___first_and_last___size___THREADS-1
-Elapsed time for program	9.244987	sec
+rel___80033___random___domain___binary______THREADS-8
+Elapsed time for program	1.372190	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t 
-rel___random___domain___first_and_last______THREADS-1
-Elapsed time for program	9.219175	sec
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
+Page selection strategy:\t binary
+Page weight strategy:\t\t first
+rel___80040___random___domain___first___majority___THREADS-8
+Elapsed time for program	1.563669	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t binary
 Page weight strategy:\t\t majority
-rel___random___domain___binary___majority___THREADS-1
-Elapsed time for program	9.216106	sec
+rel___80041___random___domain___first___by_affinity___THREADS-8
+Elapsed time for program	1.668124	sec
 
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
+Thread selection strategy:\t first
+Map mode:\t\t\t thread
 Page selection strategy:\t binary
 Page weight strategy:\t\t by_affinity
-rel___random___domain___binary___by_affinity___THREADS-1
-Elapsed time for program	9.220628	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t binary
-Page weight strategy:\t\t size
-rel___random___domain___binary___size___THREADS-1
-Elapsed time for program	9.262356	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t binary
-Page weight strategy:\t\t 
-rel___random___domain___binary______THREADS-1
-Elapsed time for program	9.216022	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t first
-Page weight strategy:\t\t majority
-rel___random___domain___first___majority___THREADS-1
-Elapsed time for program	9.231705	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t first
-Page weight strategy:\t\t by_affinity
-rel___random___domain___first___by_affinity___THREADS-1
-Elapsed time for program	9.215565	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t first
-Page weight strategy:\t\t size
-rel___random___domain___first___size___THREADS-1
-Elapsed time for program	9.304614	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t first
-Page weight strategy:\t\t 
-rel___random___domain___first______THREADS-1
-Elapsed time for program	9.373401	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t 
-Page weight strategy:\t\t majority
-rel___random___domain______majority___THREADS-1
-Elapsed time for program	9.343004	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t 
-Page weight strategy:\t\t by_affinity
-rel___random___domain______by_affinity___THREADS-1
-Elapsed time for program	9.337036	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t 
-Page weight strategy:\t\t size
-rel___random___domain______size___THREADS-1
-Elapsed time for program	9.305371	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t domain
-Page selection strategy:\t 
-Page weight strategy:\t\t 
-rel___random___domain_________THREADS-1
-Elapsed time for program	9.215243	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t majority
-rel___random______divide_in_n___majority___THREADS-1
-Elapsed time for program	9.270734	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t by_affinity
-rel___random______divide_in_n___by_affinity___THREADS-1
-Elapsed time for program	9.223502	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t size
-rel___random______divide_in_n___size___THREADS-1
-Elapsed time for program	9.227239	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t 
-rel___random______divide_in_n______THREADS-1
-Elapsed time for program	9.217244	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t majority
-rel___random______every_n_th___majority___THREADS-1
-Elapsed time for program	9.224339	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t by_affinity
-rel___random______every_n_th___by_affinity___THREADS-1
-Elapsed time for program	9.253886	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t size
-rel___random______every_n_th___size___THREADS-1
-Elapsed time for program	9.327111	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t 
-rel___random______every_n_th______THREADS-1
-Elapsed time for program	9.340751	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t majority
-rel___random______first_and_last___majority___THREADS-1
-Elapsed time for program	9.350450	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t by_affinity
-rel___random______first_and_last___by_affinity___THREADS-1
-Elapsed time for program	9.337456	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t size
-rel___random______first_and_last___size___THREADS-1
-Elapsed time for program	9.333281	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t 
-rel___random______first_and_last______THREADS-1
-Elapsed time for program	9.265222	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t binary
-Page weight strategy:\t\t majority
-rel___random______binary___majority___THREADS-1
-Elapsed time for program	9.221683	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t binary
-Page weight strategy:\t\t by_affinity
-rel___random______binary___by_affinity___THREADS-1
-Elapsed time for program	9.221596	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t binary
-Page weight strategy:\t\t size
-rel___random______binary___size___THREADS-1
-Elapsed time for program	9.218814	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t binary
-Page weight strategy:\t\t 
-rel___random______binary______THREADS-1
-Elapsed time for program	9.224047	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first
-Page weight strategy:\t\t majority
-rel___random______first___majority___THREADS-1
-Elapsed time for program	9.251066	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first
-Page weight strategy:\t\t by_affinity
-rel___random______first___by_affinity___THREADS-1
-Elapsed time for program	9.352876	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first
-Page weight strategy:\t\t size
-rel___random______first___size___THREADS-1
-Elapsed time for program	9.331736	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t first
-Page weight strategy:\t\t 
-rel___random______first______THREADS-1
-Elapsed time for program	9.368634	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t 
-Page weight strategy:\t\t majority
-rel___random_________majority___THREADS-1
-Elapsed time for program	9.344756	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t 
-Page weight strategy:\t\t by_affinity
-rel___random_________by_affinity___THREADS-1
-Elapsed time for program	9.345564	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t 
-Page weight strategy:\t\t size
-rel___random_________size___THREADS-1
-Elapsed time for program	9.262181	sec
-
-Thread selection strategy:\t random
-Map mode:\t\t\t 
-Page selection strategy:\t 
-Page weight strategy:\t\t 
-rel___random____________THREADS-1
-Elapsed time for program	9.272991	sec
-
-Thread selection strategy:\t lowest_wl
-Map mode:\t\t\t domain
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t majority
-rel___lowest_wl___domain___divide_in_n___majority___THREADS-1
-Elapsed time for program	9.222994	sec
-
-Thread selection strategy:\t lowest_wl
-Map mode:\t\t\t domain
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t by_affinity
-rel___lowest_wl___domain___divide_in_n___by_affinity___THREADS-1
-Elapsed time for program	9.221883	sec
-
-Thread selection strategy:\t lowest_wl
-Map mode:\t\t\t domain
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t size
-rel___lowest_wl___domain___divide_in_n___size___THREADS-1
-Elapsed time for program	9.266118	sec
-
-Thread selection strategy:\t lowest_wl
-Map mode:\t\t\t domain
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t 
-rel___lowest_wl___domain___divide_in_n______THREADS-1
-Elapsed time for program	9.292662	sec
-
-Thread selection strategy:\t lowest_wl
-Map mode:\t\t\t domain
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t majority
-rel___lowest_wl___domain___every_n_th___majority___THREADS-1
-Elapsed time for program	9.376299	sec
-
-Thread selection strategy:\t lowest_wl
-Map mode:\t\t\t domain
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t by_affinity
-rel___lowest_wl___domain___every_n_th___by_affinity___THREADS-1
-slurmstepd: error: *** JOB 6069261 ON ncm0892 CANCELLED AT 2019-07-29T19:58:36 DUE TO TIME LIMIT ***
+rel___80042___random___domain___first___size___THREADS-8
+slurmstepd: error: *** JOB 6506671 ON ncm0204 CANCELLED AT 2019-08-06T12:08:45 ***
