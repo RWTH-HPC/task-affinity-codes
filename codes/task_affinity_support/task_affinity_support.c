@@ -32,7 +32,8 @@ int init_task_affinity()
       .affinity_map_mode = affinity_map_mode,
       .page_selection_strategy = page_selection_strategy,
       .page_weighting_strategy = page_weighting_strategy,
-      .number_of_affinities = number_of_affinities
+      .number_of_affinities = number_of_affinities,
+      .use_combined_map = 0
     };
     
     /* 
