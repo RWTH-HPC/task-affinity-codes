@@ -3,5 +3,5 @@
 #ifndef TASK_AFFINITY_SUPPORT
 #define TASK_AFFINITY_SUPPORT
     extern int init_task_affinity();
-    extern int get_env_int_value(int default_value,  char *tmp_env);
+    extern double get_env_int_value(double default_value,  char *tmp_env);
 #endif

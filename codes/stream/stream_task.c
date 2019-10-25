@@ -445,6 +445,7 @@ int main()
 }
 	times[0][k] = mysecond() - times[0][k];
 
+
   fprintf(stderr, "---------- Scale ...\n");
 	times[1][k] = mysecond();
 
@@ -482,6 +483,7 @@ int main()
     }
 #endif
 }
+
 	times[1][k] = mysecond() - times[1][k];
 
   fprintf(stderr, "---------- Add ...\n");

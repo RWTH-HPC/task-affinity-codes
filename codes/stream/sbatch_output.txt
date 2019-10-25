@@ -2,149 +2,28 @@
 (OK) Unloading Intel Suite 19.0.1.144
 (OK) Loading Intel suite, Version 18.0.3.222: compilers (C/C++/FORTRAN), MKL, TBB, IPP and DAAL
 (OK) Intel MPI Suite 2018.4.274 loaded.
-rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*
+rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_* combined_map_stats*
 +(0):ERROR:0: Unable to locate a modulefile for 'omp'
 Compiling affinity .baseline
-icc -Wall -mcmodel=medium -qopenmp -O3 -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=134217728 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_base.c 
-Elapsed time for program	0.588606	sec
-\nrun task without affinity
-Compiling affinity 
-icc -Wall -mcmodel=medium -qopenmp -O3 -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=134217728 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_task.c 
-Elapsed time for program	3.029103	sec
+icc -Wall -mcmodel=medium -qopenmp -O3  -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=2147483648 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_base.c 
+Elapsed time for program	4,480364	sec
+
+run task without affinity
 Compiling affinity .affinity
-icc -Wall -mcmodel=medium -qopenmp -O3 -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=134217728 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe -DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c stream_task.c 
-\nrun default
-Elapsed time for program	0.968867	sec
-Number of threads:\t\t 8
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_page_of_first_affinity
-Page weight strategy:\t\t first
-rel___80000___random___domain___divide_in_n___majority___THREADS-8
-Elapsed time for program	1.729968	sec
+icc -Wall -mcmodel=medium -qopenmp -O3  -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=2147483648 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe -DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c -D_FILTER_EXEC_TIMES stream_task.c 
+Thread selection strategy:	 lowest_wl
+Map mode:			 thread
+Page selection strategy:	 first_page_of_first_affinity
+Page weight strategy:		 first
+rel___642000___lowest_wl___thread___first_page_of_first_affinity___first___THREADS-64
+Elapsed time for program	12,621066	sec
 
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_page_of_first_affinity
-Page weight strategy:\t\t majority
-rel___80001___random___domain___divide_in_n___by_affinity___THREADS-8
-Elapsed time for program	1.680422	sec
 
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_page_of_first_affinity
-Page weight strategy:\t\t by_affinity
-rel___80002___random___domain___divide_in_n___size___THREADS-8
-Elapsed time for program	1.731007	sec
+Thread selection strategy:	 lowest_wl
+Map mode:			 domain
+Page selection strategy:	 first_page_of_first_affinity
+Page weight strategy:		 first
+rel___642100___lowest_wl___domain___first_page_of_first_affinity___first___THREADS-64
+Elapsed time for program	24,872742	sec
 
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_page_of_first_affinity
-Page weight strategy:\t\t size
-rel___80003___random___domain___divide_in_n______THREADS-8
-Elapsed time for program	1.697122	sec
 
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t first
-rel___80010___random___domain___every_n_th___majority___THREADS-8
-Elapsed time for program	1.570487	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t majority
-rel___80011___random___domain___every_n_th___by_affinity___THREADS-8
-Elapsed time for program	1.663732	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t by_affinity
-rel___80012___random___domain___every_n_th___size___THREADS-8
-Elapsed time for program	1.710101	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t divide_in_n
-Page weight strategy:\t\t size
-rel___80013___random___domain___every_n_th______THREADS-8
-Elapsed time for program	1.629889	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t first
-rel___80020___random___domain___first_and_last___majority___THREADS-8
-Elapsed time for program	1.555863	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t majority
-rel___80021___random___domain___first_and_last___by_affinity___THREADS-8
-Elapsed time for program	3.979935	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t by_affinity
-rel___80022___random___domain___first_and_last___size___THREADS-8
-Elapsed time for program	4.102233	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t every_n_th
-Page weight strategy:\t\t size
-rel___80023___random___domain___first_and_last______THREADS-8
-Elapsed time for program	4.104184	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t first
-rel___80030___random___domain___binary___majority___THREADS-8
-Elapsed time for program	1.556306	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t majority
-rel___80031___random___domain___binary___by_affinity___THREADS-8
-Elapsed time for program	1.382941	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t by_affinity
-rel___80032___random___domain___binary___size___THREADS-8
-Elapsed time for program	1.395624	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t first_and_last
-Page weight strategy:\t\t size
-rel___80033___random___domain___binary______THREADS-8
-Elapsed time for program	1.372190	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t binary
-Page weight strategy:\t\t first
-rel___80040___random___domain___first___majority___THREADS-8
-Elapsed time for program	1.563669	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t binary
-Page weight strategy:\t\t majority
-rel___80041___random___domain___first___by_affinity___THREADS-8
-Elapsed time for program	1.668124	sec
-
-Thread selection strategy:\t first
-Map mode:\t\t\t thread
-Page selection strategy:\t binary
-Page weight strategy:\t\t by_affinity
-rel___80042___random___domain___first___size___THREADS-8
-slurmstepd: error: *** JOB 6506671 ON ncm0204 CANCELLED AT 2019-08-06T12:08:45 ***
