@@ -6,7 +6,7 @@ rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* 
 +(0):ERROR:0: Unable to locate a modulefile for 'omp'
 Compiling affinity .baseline
 icc -Wall -mcmodel=medium -qopenmp -O3  -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=2147483648 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_base.c 
-Elapsed time for program	4,480364	sec
+Elapsed time for program	4,491477	sec
 
 run task without affinity
 Compiling affinity .affinity
@@ -16,7 +16,7 @@ Map mode:			 thread
 Page selection strategy:	 first_page_of_first_affinity
 Page weight strategy:		 first
 rel___642000___lowest_wl___thread___first_page_of_first_affinity___first___THREADS-64
-Elapsed time for program	12,621066	sec
+Elapsed time for program	12,028516	sec
 
 
 Thread selection strategy:	 lowest_wl
@@ -24,6 +24,6 @@ Map mode:			 domain
 Page selection strategy:	 first_page_of_first_affinity
 Page weight strategy:		 first
 rel___642100___lowest_wl___domain___first_page_of_first_affinity___first___THREADS-64
-Elapsed time for program	24,872742	sec
+Elapsed time for program	8,976265	sec
 
 

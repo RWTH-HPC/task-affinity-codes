@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch_output.txt
-#SBATCH --time=00:10:00
+#SBATCH --time=00:02:00
 #SBATCH --exclusive
 
 
@@ -56,6 +56,7 @@ function run {
   grep "Elapsed time" output_${NAME}.txt
   grep ": corr_domain" output_${NAME}.txt > output_corr_domain_${NAME}.txt
   grep ": in_corr_domain" output_${NAME}.txt > output_in_corr_domain_${NAME}.txt
+  grep -e "count_overall" -e "count_task" output_${NAME}.txt > output_stats_${NAME}.txt
   #grep "_affinity_schedule" output_${NAME}.txt
   #grep "combined_map_strat" output_${NAME}.txt > combined_map_stats_${NAME}.txt
   #grep "T#0" output_${NAME}.txt > stats_${NAME}.txt
@@ -114,13 +115,13 @@ echo "\n"
 #do
 #  export TASK_AFF_THRESHOLD=$(($threshold/10.0))
 #  echo "$TASK_AFF_THRESHOLD"
-  #set_up_affinity 0 2 0 0 64 ${threshold}
+#  set_up_affinity 2 2 0 0 64 ${threshold}
   #for i in {0..10}
   #do
-  #    run ".affinity"
+#      run ".affinity"
   #done
-#  grep "combined_map" stats_${NAME}.txt
-#  echo "\n--------\n\n"
+  #grep "combined_map" stats_${NAME}.txt
+  echo "\n--------\n\n"
 #done
 
 

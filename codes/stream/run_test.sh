@@ -99,13 +99,13 @@ compile ".affinity"
 # echo ""
 
 set_up_affinity 2 0 0 0 16               #thread(2)=lowest, page_sel(0)=first_of_every_page, page_weight(1)=Majority
-#for i in {0..1}
+#for i in {0..5}
 #do
   run ".affinity"
 #done
 echo "\n"
 set_up_affinity 2 1 0 0 16
-#for i in {0..1}
+#for i in {0..5}
 #do
   run ".affinity"
 #done
