@@ -370,7 +370,7 @@ int main()
       long tmp_idx_end = MIN((ntask+1)*step-1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
     int len = (tmp_idx_end - tmp_idx_start + 1) * size;
-    //kmpc_set_task_affinity(&a[tmp_idx_start], len);
+    kmpc_set_task_affinity(&a[tmp_idx_start], len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
@@ -429,8 +429,8 @@ int main()
       long tmp_idx_end = MIN((ntask+1)*step -1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
       int len = (tmp_idx_end - tmp_idx_start + 1) * size; //bytes used
-      kmpc_set_task_affinity(&c[tmp_idx_start], len);
       kmpc_set_task_affinity(&a[tmp_idx_start], len);
+      kmpc_set_task_affinity(&c[tmp_idx_start], len);
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
