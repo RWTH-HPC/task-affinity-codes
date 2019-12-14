@@ -23,8 +23,10 @@ int init_task_affinity()
     printf("Selected Strategy was: %s\n", kmp_affinity_page_selection_strategy_c[page_selection_strategy]);
     kmp_affinity_page_weighting_strategy_t page_weighting_strategy = get_env_int_value(kmp_affinity_page_weight_mode_majority, "TASK_AFF_PAGE_WEIGHTING_STRATEGY");
     printf("Selected Strategy was: %s\n", kmp_affinity_page_weighting_strategy_c[page_weighting_strategy]);
-    int number_of_affinities = get_env_int_value(1, "NUMBER_OF_AFFINITIES");
+    int number_of_affinities = get_env_int_value(1, "TASK_AFF_NUMBER_OF_AFFINITIES");
     printf("Chosen Number of affinities: %d\n", number_of_affinities);
+    double threshold_for_thread_selection = get_env_int_value(0.3, "TASK_AFF_THRESHOLD");
+    printf("Chosen threshold was: %lf\n", threshold_for_thread_selection);
 
     kmp_affinity_settings_t affinity_settings = 
     {
@@ -33,7 +35,7 @@ int init_task_affinity()
       .page_selection_strategy = page_selection_strategy,
       .page_weighting_strategy = page_weighting_strategy,
       .number_of_affinities = number_of_affinities,
-      .use_combined_map = 0
+      .threshold_for_thread_selection = threshold_for_thread_selection,
     };
     
     /* 
@@ -53,7 +55,7 @@ int init_task_affinity()
 #endif
 }
 
-int get_env_int_value(int default_value, char *env)
+double get_env_int_value(double default_value, char *env)
 {
     
     printf("%s is set as: ", env);
@@ -65,7 +67,7 @@ int get_env_int_value(int default_value, char *env)
         return default_value;
     }
 
-    int value = atoi(env);
+    double value = atoi(env);
 
     if (value < 0) 
     {

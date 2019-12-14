@@ -1,0 +1,29 @@
+(OK) Unloading intelmpi 2018.4.274
+(OK) Unloading Intel Suite 19.0.1.144
+(OK) Loading Intel suite, Version 18.0.3.222: compilers (C/C++/FORTRAN), MKL, TBB, IPP and DAAL
+(OK) Intel MPI Suite 2018.4.274 loaded.
+rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_* combined_map_stats*
++(0):ERROR:0: Unable to locate a modulefile for 'omp'
+Compiling affinity .baseline
+icc -Wall -mcmodel=medium -qopenmp -O3  -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=2147483648 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_base.c 
+Elapsed time for program	4,491477	sec
+
+run task without affinity
+Compiling affinity .affinity
+icc -Wall -mcmodel=medium -qopenmp -O3  -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=2147483648 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe -DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c -D_FILTER_EXEC_TIMES stream_task.c 
+Thread selection strategy:	 lowest_wl
+Map mode:			 thread
+Page selection strategy:	 first_page_of_first_affinity
+Page weight strategy:		 first
+rel___642000___lowest_wl___thread___first_page_of_first_affinity___first___THREADS-64
+Elapsed time for program	12,028516	sec
+
+
+Thread selection strategy:	 lowest_wl
+Map mode:			 domain
+Page selection strategy:	 first_page_of_first_affinity
+Page weight strategy:		 first
+rel___642100___lowest_wl___domain___first_page_of_first_affinity___first___THREADS-64
+Elapsed time for program	8,976265	sec
+
+

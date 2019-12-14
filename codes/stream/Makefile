@@ -32,10 +32,10 @@ ADD_COMPILE_FLAGS += -DNTIMES=10
 
 default: rel
 
-rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c
+rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c -D_FILTER_EXEC_TIMES
 rel.affinity: rel
 
-deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c
+deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c -D_FILTER_EXEC_TIMES
 deb.affinity: deb
 
 rel.baseline: PROG=stream_base
@@ -53,12 +53,12 @@ deb.gcc: deb
 deb: FLAGS_OPTIMIZATION=-g -O0
 deb: generic
 
-rel: FLAGS_OPTIMIZATION=-O3
+rel: FLAGS_OPTIMIZATION=-O3 #-g
 rel: generic
 
 generic:
 	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION) ${ADD_COMPILE_FLAGS} -o stream_task.exe ${AFFINITY_FLAG} ${PROG}${FILE_ENDING} 
 
 clean:
-	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_*
+	rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* core.* stats_* combined_map_stats*
 

@@ -1,16 +1,14 @@
 #!/bin/zsh
 
 #SBATCH --account=jara0001
-#SBATCH --partition=c16m
+#SBATCH --partition=c16s
 #SBARCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=24
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch_output.txt
-#SBATCH --time=00:02:00
+#SBATCH --time=00:30:00
 #SBATCH --exclusive
 
-#duration of approximately 3 to 10 hours
 
 PROG_CMD=./stream_task.exe
 PROG_VERSION=rel
@@ -18,24 +16,26 @@ PROG_VERSION=rel
 NAME=$PROG_VERSION
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-export KMP_A_DEBUG=3
+#export KMP_A_DEBUG=2
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=64
 #export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
 export THIRD_INVERTED=0
+export KMP_AFFINITY=verbose
 export T_AFF_SINGLE_CREATOR=1
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=$((2**27))
-export STREAM_ARRAY_SIZE=$((2**30))
+export STREAM_ARRAY_SIZE=$((2**31))
 
 export TASK_AFF_THREAD_SELECTION_STRATEGY=-1
 export TASK_AFF_AFFINITY_MAP_MODE=-1
 export TASK_AFF_PAGE_SELECTION_MODE=-1
 export TASK_AFF_PAGE_WEIGHTING_STRATEGY=-1
 export TASK_AFF_NUMBER_OF_AFFINITIES=1
+
 
 thread_selection_mode=( first random lowest_wl round_robin private )
 map_mode=(thread domain combined)
@@ -98,30 +98,31 @@ compile ".affinity"
 # run ".affinity"
 # echo ""
 
-set_up_affinity 2 0 0 0 16               #thread(2)=lowest, page_sel(0)=first_of_every_page, page_weight(1)=Majority
-#for i in {0..5}
-#do
+set_up_affinity 2 0 0 0 64               #thread(2)=lowest, page_sel(0)=first_of_every_page, page_weight(1)=Majority
+for i in {0..2}
+do
   run ".affinity"
-#done
+done
 echo "\n"
-set_up_affinity 2 1 0 0 16
-#for i in {0..5}
-#do
+set_up_affinity 2 1 0 0 64
+for i in {0..2}
+do
   run ".affinity"
-#done
+done
 echo "\n"
-#for threshold in {0..10}
-#do
- # export TASK_AFF_THRESHOLD=$(($threshold/10.0))
-  #echo "$TASK_AFF_THRESHOLD"
-  #set_up_affinity 2 2 0 0 16 ${threshold}
-  #for i in {0..10}
-  #do
-  # run ".affinity" 
-  #done
+
+for threshold in {0..10}
+do
+  export TASK_AFF_THRESHOLD=$(($threshold/10.0))
+  echo "$TASK_AFF_THRESHOLD"
+  set_up_affinity 2 2 0 0 64 ${threshold}
+  for i in {0..2}
+  do
+      run ".affinity"
+  done
   #grep "combined_map" stats_${NAME}.txt
-  #echo "\n--------\n\n"
-#done
+  echo "\n--------\n\n"
+done
 
 
 
