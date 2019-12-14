@@ -7,7 +7,11 @@
 #SBATCH --cpus-per-task=24
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch_output.txt
+<<<<<<< HEAD
 #SBATCH --time=00:02:00
+=======
+#SBATCH --time=00:30:00
+>>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 #SBATCH --exclusive
 
 #duration of approximately 3 to 10 hours

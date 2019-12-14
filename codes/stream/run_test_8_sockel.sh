@@ -6,7 +6,11 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch_output.txt
+<<<<<<< HEAD
 #SBATCH --time=00:30:00
+=======
+#SBATCH --time=00:02:00
+>>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 #SBATCH --exclusive
 
 
@@ -99,6 +103,7 @@ compile ".affinity"
 # echo ""
 
 set_up_affinity 2 0 0 0 64               #thread(2)=lowest, page_sel(0)=first_of_every_page, page_weight(1)=Majority
+<<<<<<< HEAD
 for i in {0..2}
 do
   run ".affinity"
@@ -123,6 +128,32 @@ do
   #grep "combined_map" stats_${NAME}.txt
   echo "\n--------\n\n"
 done
+=======
+#for i in {0..1}
+#do
+  run ".affinity"
+#done
+echo "\n"
+set_up_affinity 2 1 0 0 64
+#for i in {0..1}
+#do
+  run ".affinity"
+#done
+echo "\n"
+
+#for threshold in {0..10}
+#do
+#  export TASK_AFF_THRESHOLD=$(($threshold/10.0))
+#  echo "$TASK_AFF_THRESHOLD"
+#  set_up_affinity 2 2 0 0 64 ${threshold}
+  #for i in {0..10}
+  #do
+#      run ".affinity"
+  #done
+  #grep "combined_map" stats_${NAME}.txt
+  echo "\n--------\n\n"
+#done
+>>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 
 
 

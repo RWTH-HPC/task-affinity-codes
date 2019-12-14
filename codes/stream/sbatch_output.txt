@@ -6,7 +6,11 @@ rm -f *.exe *.o *~ bla* nr_* output_* pushed_* evol* starts* task_exe* likwid_* 
 +(0):ERROR:0: Unable to locate a modulefile for 'omp'
 Compiling affinity .baseline
 icc -Wall -mcmodel=medium -qopenmp -O3  -I../01_util/ -qopt-streaming-stores=always -DT_AFF_INVERTED=0 -DT_AFF_SINGLE_CREATOR=1 -DT_AFF_NUM_TASK_MULTIPLICATOR=16 -DSTREAM_ARRAY_SIZE=2147483648 -DTHIRD_INVERTED=0 -DNTIMES=10 -o stream_task.exe  stream_base.c 
+<<<<<<< HEAD
 Elapsed time for program	4,482212	sec
+=======
+Elapsed time for program	4,479092	sec
+>>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 
 run task without affinity
 Compiling affinity .affinity
@@ -16,9 +20,13 @@ Map mode:			 thread
 Page selection strategy:	 first_page_of_first_affinity
 Page weight strategy:		 first
 rel___642000___lowest_wl___thread___first_page_of_first_affinity___first___THREADS-64
+<<<<<<< HEAD
 Elapsed time for program	9,958415	sec
 Elapsed time for program	10,059053	sec
 Elapsed time for program	9,864246	sec
+=======
+Elapsed time for program	10,537761	sec
+>>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 
 
 Thread selection strategy:	 lowest_wl
@@ -26,6 +34,7 @@ Map mode:			 domain
 Page selection strategy:	 first_page_of_first_affinity
 Page weight strategy:		 first
 rel___642100___lowest_wl___domain___first_page_of_first_affinity___first___THREADS-64
+<<<<<<< HEAD
 Elapsed time for program	8,994969	sec
 Elapsed time for program	8,968003	sec
 Elapsed time for program	8,978373	sec
@@ -170,6 +179,11 @@ rel___64220010___lowest_wl___combined___first_page_of_first_affinity___first___T
 Elapsed time for program	8,954269	sec
 Elapsed time for program	8,983049	sec
 Elapsed time for program	9,030312	sec
+=======
+Elapsed time for program	8,987919	sec
+
+
+>>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 
 --------
 
