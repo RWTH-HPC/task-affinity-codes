@@ -1,68 +1,260 @@
-class Tasks:
-    ex_time = []
-    ex_time_total = 0
+import csv
+import os
+import platform
+import pathlib
+
+task_search_items = []
+thread_search_items = []
+
+class Object:
+    data = []
+
+    def __init__(self, length):
+        for i in range(length):
+            self.data.append(0)
+
+    def __add__(self, other):
+        for i in range(len(self.data)):
+            self.data[i] += other.data[i]
+        return self
+
+    def __eq__(self, other):
+        for i in range(len(self.data)):
+            if not self.data[i] == other.data[i]:
+                return False
+        return True
     
-    num_tasks = 0
+    def __gt__(self, other):
+        for i in range(len(self.data)):
+            if self.data[i] <= other.data[i]:
+                return False
+        return True
 
-    def sorted_add_to_list(value):
-        ex_time_total = ex_time_total + value
-        num_tasks = num_tasks + 1
+    def __lt__(self, other):
+        for i in range(len(self.data)):
+            if self.data[i] >= other.data[i]:
+                return False
+        return True
 
-        if num_tasks == 1:
-            ex_time.append(value)
-            return
-        
-        if value <= ex_time[0]: 
-            ex_time.insert(0, value)
-            return
+    def __ge__(self, other):
+        for i in range(len(self.data)):
+            if self.data[i] < other.data[i]:
+                return False
+        return True
 
-        if value >= ex_time[-1]:
-             ex_time.append(value)
-             return
+    def __le__(self, other):
+        for i in range(len(self.data)):
+            if self.data[i] > other.data[i]:
+                return False
+        return True
 
-        for i in range(num_tasks)
-            if value <= ex_time[i]:
-                ex_time.insert(i, value)
-                return
-        
-    def get_min()
-        return ex_time[0]
+    def set_data(self, data, search_criteria):
+        for i in range(len(search_criteria)):
+            if search_criteria[i] in data[2]:
+                tmp = data[2].partition("TASK_EXECUTION_TIME of task ")[2][0:7]
+                self.data[i] = tmp
+                #print(search_criteria[i] + "\t" + data[3])
+                return True
+        return False
 
-    def get_max()
-        return ex_time[-1]
+    def merge(self, other):
+        tmp = []
+        for i in range(len(self.data)):
+            if not other.data[i] == 0:
+                if not self.data[i] == 0:
+                    return False
+                tmp.append(other.data[i])
+            else:
+                tmp.append(self.data[i])
+        self.data = tmp
+        return True
 
-    def get_median()
-        return ex_time[round( num_tasks / 2 )]
+class Thread(Object):
+    thread_id = ""
+
+    def __init__(self):
+        super().__init__(len(thread_search_items))
+
+    def set_thread_data(self, data):
+        if super().set_data(data, thread_search_items):
+            #print("Thread:")
+            self.thread_id = data[1]
+            return True
+        return False
+
+class Task(Object):
+    task_id = ""
+    domain = -2
     
-    def get_mean()
-        return ex_time_total / num_tasks
+    def __init__(self):
+        for i in range(len(task_search_items)):
+            self.data.append(0)
+        #super().__init__(len(task_search_items))
 
-class Thread:
-    tasks_generated = 0
-    tasks_started_with_affinity = 0
-    tasks_started_at_correct_thread = 0
-    tasks_started_at_correct_domain = 0
-
-    def __add__(self, a):
-        new = Thread()
-        new.tasks_generated = self.tasks_generated + a.tasks_generated
-        new.tasks_started_with_affinity = self.tasks_started_with_affinity + a.tasks_started_with_affinity
-        new.tasks_started_at_correct_thread = self.tasks_started_at_correct_thread + a.tasks_started_at_correct_thread
-        new.tasks_started_at_correct_domain = self.tasks_started_at_correct_domain + a.tasks_started_at_correct_domain
-        return new
-
+    def set_task_data(self, data):
+        if self.set_data(data, task_search_items):
+            #print("Task:")
+            tmp_task_id = data[2].partition("TASK_EXECUTION_TIME of task ")[2][0:7]
+            self.task_id = tmp_task_id
+            if "data domain = " in data[2]:
+                self.domain = data[2].partition("data domain = ")[2][0]
+            return 1
+        return 0
 
 class StratInfo:
-    tasks_on_corr_domain = Tasks()
-    tasks_on_in_corr_domain = Tasks()
+    task_data = []          #stores data from tasks witch are executed on correct domain
+    thread_data = []        #stores data from threads
+    strat_exec_time = []    #stores runtime from each run of one strategy
 
-    threads = []
-    total_thread_data = Thread()
-    num_threads = 0
+    strat_name = ""
 
-    def add_thread(thread):
-        num_threads = num_threads + 1
-        threads.append(thread)
-        total_thread_data = total_thread_data + thread
+    def create_strat_info(self, file_path, file_name):
+        file = open(file_path, "r")
+        line = file.readline()
+        self.strat_name = file_name.split("_")[1]
+
+        #task = Task()
+        #self.task_data.append(task)
+        #thread = Thread()
+        #self.thread_data.append(thread)
+
+        while line:
+            data = line.split("\t")
+
+            if len(data) > 2:
+
+                tmp_task = Task()
+                tmp_thread = Thread()
+
+                if len(self.task_data) > 1:
+                    print(str(self.task_data[0].data[0]) + "   ts  " + str(self.task_data[0].task_id))
+
+                if tmp_task.set_task_data(data):
+                    if len(self.task_data) > 1:
+                        print(str(self.task_data[0].data[0]) + "   aa  " + str(self.task_data[0].task_id))
+                    if len(self.task_data) == 0:
+                        #self.task_data[0].task_id = tmp_task.task_id
+                        #self.task_data[0].merge(tmp_task)
+                        self.task_data.append(tmp_task)
+                    elif self.task_data[-1].task_id == tmp_task.task_id:
+                        self.task_data[-1].merge(tmp_task)
+                    else:
+                        #print(self.task_data[-1].data[0])
+                        self.task_data.append(tmp_task)
+                        #for i in range(len(self.task_data)):
+                            #print(str(i) + "\t" + str(self.task_data[i].data[0]))
+                    
+
+                elif tmp_thread.set_thread_data(data):
+                    if len(self.thread_data) == 0:
+                        self.thread_data.append(tmp_thread)
+                    elif len(self.thread_data) == 1 or self.thread_data[-1].thread_id == tmp_thread.thread_id:
+                        self.thread_data[-1].merge(tmp_thread)
+                    else:
+                        self.thread_data.append(tmp_thread)
+                elif "Elapsed time for program" in data[0]:
+                    self.strat_exec_time.append(data[1])
+
+                #print(self.task_data[0].task_id)
+                #print(self.task_data[-1].task_id)
+            line = file.readline()
+            del data
+        
+        #print(self.task_data[100].data[0])
+
+    def get_task_data_array(self, data_id):
+        tmp = []
+        
+        print(len(self.task_data))
+
+        for i in range(len(self.task_data)): 
+            if data_id > len(self.task_data[i].data):
+                return []
+            #print(self.task_data[i].data[data_id])
+            tmp.append(self.task_data[i].task_id)
+
+        return tmp
+
+    def get_thread_data_array(self, id):
+        tmp = []
 
 
+        for i in range(len(self.thread_data)): 
+            if id > len(self.thread_data[i].data):
+                return []
+            tmp.append(self.thread_data[i].data[id])
+
+        return tmp
+
+class TestInfo:
+    test_name = ""
+    strats = []
+
+    def __init__(self, test_name):
+        self.test_name = test_name
+    
+    def create_test_info(self, folder_path):
+        for file_name in os.listdir(folder_path):
+            tmp_strat = StratInfo()
+            file_path = os.path.join(folder_path, file_name)
+            tmp_strat.create_strat_info(file_path, file_name)
+            self.strats.append(tmp_strat)
+
+#F_SIZE = 16
+
+#plt.rc('font', size=F_SIZE)             # controls default text sizes
+#plt.rc('axes', titlesize=F_SIZE)        # fontsize of the axes title
+#plt.rc('axes', labelsize=F_SIZE)        # fontsize of the x and y labels
+#plt.rc('xtick', labelsize=F_SIZE)       # fontsize of the tick labels
+#plt.rc('ytick', labelsize=F_SIZE)       # fontsize of the tick labels
+#plt.rc('legend', fontsize=F_SIZE)       # legend fontsize
+#plt.rc('figure', titlesize=F_SIZE)      # fontsize of the figure title
+
+
+def read_setup_file(source_folder):
+    setup_file = open(os.path.join(source_folder, "setup.txt"), "r")
+    line = setup_file.readline()
+
+    while line:
+        data = line.split("\t")
+        data[1] = data[1].replace("\n","")
+
+        if "Thread" in data[0]:
+            thread_search_items.append(data[1])
+            #print(data[1])
+        elif "Task" in data[0]: 
+            task_search_items.append(data[1])
+            #print(data[1])
+
+        line = setup_file.readline()
+    
+
+if __name__ == "__main__":
+    tests = []
+
+    #source_folder = os.path.dirname(os.path.abspath(__file__))
+    source_folder = "C:\\Users\\rober\\Desktop\\repos\\hpc\\ba-raimbault-task-affinity\\codes\\task_affinity_eval"
+    source_benchmark_folder  = os.path.join(source_folder, "result_benchmarks")
+    target_folder_data  = os.path.join(source_folder, "result_data")
+    target_folder_plot  = os.path.join(source_folder, "result_plots")
+
+    if not os.path.exists(source_benchmark_folder):
+        os.makedirs(source_benchmark_folder)
+    if not os.path.exists(target_folder_data):
+        os.makedirs(target_folder_data)
+    if not os.path.exists(target_folder_plot):
+        os.makedirs(target_folder_plot)
+
+    read_setup_file(source_folder)
+
+    for folder_name in os.listdir(source_benchmark_folder):
+        tmp_test = TestInfo(folder_name)
+        folder_path = os.path.join(source_benchmark_folder, folder_name)
+        tmp_test.create_test_info(folder_path)
+        tests.append(tmp_test)
+
+    for test in tests:
+        print(test.test_name)
+        for strat in test.strats:
+            #print(strat.get_task_data_array(0))
+            strat.get_task_data_array(0)
