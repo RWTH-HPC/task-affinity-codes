@@ -7,9 +7,9 @@ task_search_items = []
 thread_search_items = []
 
 class Object:
-    data = []
 
     def __init__(self, length):
+        self.data = []
         for i in range(length):
             self.data.append(0)
 
@@ -72,6 +72,9 @@ class Object:
 class Thread(Object):
     thread_id = ""
 
+    map_data = {}
+    # key: search string
+    # value: array
     def __init__(self):
         super().__init__(len(thread_search_items))
 
@@ -253,6 +256,8 @@ if __name__ == "__main__":
         tmp_test.create_test_info(folder_path)
         tests.append(tmp_test)
 
+
+    
     for test in tests:
         print(test.test_name)
         for strat in test.strats:
