@@ -680,7 +680,9 @@ void sim_village_main_par(struct Village *top)
    #ifndef SCHEDULE_NUM
    #   define SCHEDULE_NUM 20
    #endif
-
+   
+   init_task_affinity();
+   /*
    #ifdef TASK_AFF_DOMAIN_FIRST
      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
    #endif
@@ -707,7 +709,7 @@ void sim_village_main_par(struct Village *top)
    #endif
    #ifdef TASK_AFF_THREAD_RR
      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
+   #endif*/
 
 printf("Last Patient id = %d\n", sim_pid);
 #pragma omp parallel

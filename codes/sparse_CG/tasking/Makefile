@@ -1,6 +1,7 @@
 #PROG=stream_task2
 PROG=solver
 FILE_ENDING=.c
+FLAGS_COMPILER=-Wall -mcmodel=medium
 CUR_COMPILER=$(CC)
 
 INCL_FLAGS=-I./../common -I./../../01_util -DPAGE_ALIGN -DNDEBUG
@@ -20,38 +21,29 @@ endif
 
 deb: deb.domain.lowest
 
-deb.domain.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
+rel.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../../task_affinity_support/task_affinity_support.c -D_FILTER_EXEC_TIMES
+rel.affinity: rel
 
-deb.domain.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
+deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../../task_affinity_support/task_affinity_support.c -D_FILTER_EXEC_TIMES
+deb.affinity: deb
 
-deb.domain.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
+rel.baseline: PROG=stream_base
+rel.baseline: rel
 
-deb.domain.private:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_PRIVATE -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
+deb.baseline: PROG=stream_base
+deb.baseline: deb
 
-deb.domain.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RR -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
+rel.gcc: FLAGS_COMPILER=-mcmodel=medium
+rel.gcc: rel
 
-deb.thread.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
+deb.gcc: FLAGS_COMPILER=-mcmodel=medium
+deb.gcc: deb
 
-deb.thread.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
+deb: FLAGS_OPTIMIZATION=-g -O0
+deb: generic
 
-deb.thread.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-deb.thread.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RR -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-deb.llvm:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
-
-deb.gcc:
-	$(CUR_COMPILER) -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
+rel: FLAGS_OPTIMIZATION=-O3 #-g
+rel: generic
 
 deb.baseline:
 	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS_OMP} ../common/solver.c -o ${PROG}.exe
@@ -59,46 +51,14 @@ deb.baseline:
 deb.optimal:
 	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -g -O0 ${ADD_COMPILE_FLAGS_OMP_DD} ../common/solver.c -o ${PROG}.exe
 
-rel: rel.domain.lowest
-
-rel.domain.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.domain.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.domain.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.domain.private:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_PRIVATE -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.domain.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_DOMAIN_RR -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.thread.rand:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RAND -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.thread.first:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_FIRST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.thread.lowest:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_LOWEST -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.thread.round_robin:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe -DTASK_AFFINITY -DTASK_AFF_THREAD_RR -DSCHEDULE_TYPE=${sched} -DSCHEDULE_NUM=${num}
-
-rel.llvm:
-	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
-
-rel.gcc:
-	$(CUR_COMPILER) -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe
-
 rel.baseline:
 	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS_OMP} ../common/solver.c -o ${PROG}.exe
 
 rel.optimal:
 	$(CUR_COMPILER) -Wall -mcmodel=medium $(FLAGS_OPENMP) -O3 ${ADD_COMPILE_FLAGS_OMP_DD} ../common/solver.c -o ${PROG}.exe
+
+generic:
+	$(CUR_COMPILER) $(FLAGS_COMPILER) $(FLAGS_OPENMP) $(FLAGS_OPTIMIZATION)  ${ADD_COMPILE_FLAGS} ${PROG}${FILE_ENDING} -o ${PROG}.exe ${AFFINITY_FLAG}
 
 clean:
 	rm -f *.exe *.o *~ bla* nr_* output* pushed_* evol* starts* task_exe* likwid_*

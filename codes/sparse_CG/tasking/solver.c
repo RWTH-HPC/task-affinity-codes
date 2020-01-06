@@ -242,7 +242,10 @@ cg(const struct MatrixCRS* A, const floatType* b, floatType* x,
 	#ifndef SCHEDULE_NUM
 	#   define SCHEDULE_NUM 20
 	#endif
-
+	
+    init_task_affinity();
+	
+	/*
 	#ifdef TASK_AFF_DOMAIN_FIRST
 	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
 	#endif
@@ -270,7 +273,7 @@ cg(const struct MatrixCRS* A, const floatType* b, floatType* x,
 	#ifdef TASK_AFF_THREAD_RR
 	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
 	#endif
-
+	*/
 	#ifdef _FILTER_EXEC_TIMES
 	  kmpc_task_affinity_taskexectimes_set_enabled(0);
 	#endif

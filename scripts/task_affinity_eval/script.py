@@ -32,6 +32,8 @@ class Item:
         return Item('', value, absolute_time, mean_time)
 
     def __div__(self, devidor):
+        if devidor == 0:
+            return Item('', 0, 0, 0)
         value = self.value/devidor
         absolute_time = self.absolute_time/devidor
         mean_time = self.mean_time/devidor
@@ -82,7 +84,7 @@ class Run:
                 self.elapsed_time = data[1]
                 #print(self.elapsed_time)
 
-            if len(data) > 1:
+            if len(data) > 3:
                 thread_id = data[1]
                 task_id = data[2].partition(" of task ")[2][0:7]
                 
@@ -214,6 +216,7 @@ class Test:
     def __init__(self, name):
         self.name = name
         self.strategies = {}
+        self.plot_number = 112
 
     def read_data(self, folder_path):
         for file_name in os.listdir(folder_path): #filename structure = strategy_runnumber_extrainformation.txt 
@@ -225,7 +228,6 @@ class Test:
                 self.strategies[strat_name] = Strategy(strat_name)
 
             self.strategies[strat_name].add_run(file)
-
 
     def print_timings(self, plot_folder):
         data = []
@@ -239,21 +241,24 @@ class Test:
         title = self.name + '_elapsed_time_plot'
 
         mpl.use('agg')
-        fig = plt.figure(1, figsize=(10,10))
-        ax = fig.add_subplot(111)
+        fig = plt.figure(self.plot_number, figsize=(10,10))
+        self.plot_number = self.plot_number + 1
+        ax = fig.add_subplot()
         ax.yaxis.grid(True, linestyle='-',which='major')
         ax.set_title(title)
         ax.set_ylabel('seconds')
         ax.boxplot(data, labels=label)
         fig.savefig(os.path.join(plot_folder,title + '.png'), bbox_inches='tight')
+        fig.clear()
 
     def print_thread_stats(self, plot_folder):
         if len(thread_search_items) < 1:
             return False
 
-        fig1 = plt.figure(2, figsize=(10,10))
+        fig1 = plt.figure(self.plot_number, figsize=(10,10))
+        self.plot_number = self.plot_number + 1
         ax1 = fig1.add_subplot()
-        ax1.set_title('thread stats')
+        ax1.set_title(self.name + ' thread stats')
         index = np.arange(len(thread_search_items))
         bar_width = 0.2
         opacity = 0.8
@@ -281,14 +286,16 @@ class Test:
         plt.xticks(index + bar_width, thread_search_items, rotation=90)
         plt.legend()
         fig1.savefig(os.path.join(plot_folder,title + '.png'), bbox_inches='tight')
+        fig1.clear()
 
     def print_task_stats(self, plot_folder):
         if len(task_search_items) < 1:
             return False
 
-        fig2 = plt.figure(3, figsize=(10,10))
+        fig2 = plt.figure(self.plot_number, figsize=(10,10))
+        self.plot_number = self.plot_number + 1
         ax2 = fig2.add_subplot()
-        ax2.set_title('task execution time')
+        ax2.set_title(self.name + ' task execution time')
         ax2.set_ylabel('seconds')
         index = np.arange(len(task_search_items)*2)
         bar_width = 0.2
@@ -321,7 +328,46 @@ class Test:
         plt.xticks(index + bar_width, ('corr domain', 'in corr domain'), rotation=90)
         plt.legend()
         fig2.savefig(os.path.join(plot_folder,title + '.png'), bbox_inches='tight')
+        fig2.clear()
 
+    def print_detailed_infos(self, data_folder):
+        with open(os.path.join(data_folder, self.name + "_data.csv"), mode='w', newline='') as f:
+            writer = csv.writer(f, delimiter=',')
+            writer.writerow(['Thread Data:'])
+            writer.writerow(["Strategy","Thread ID", "counter",  "value", "exec_time", "mean_time"])
+            for strat_key in test.strategies.keys():
+                strat = test.strategies[strat_key]
+                for run in strat.runs:
+                    run_info = test.name + "\t" + strat.name + "\t"
+                    for thread_key in run.thread_info.keys():
+                        thread = run.thread_info[thread_key].data
+                        for thread_search_item in thread_search_items:
+                            items = thread[thread_search_item]
+                            for item in items:
+                                writer.writerow([strat.name, thread_key, thread_search_item, item.value, item.absolute_time, item.mean_time])
+                                # item = item
+                                # print(run_info + item.index + "\t" + thread_search_item + "\t" + str(item.value))
+            writer.writerow([])
+            writer.writerow(['Task Data:'])
+            writer.writerow(["Strategy","Task ID", "counter",  "value", "exec_time", "mean_time"])
+            for strat_key in test.strategies.keys():
+                strat = test.strategies[strat_key]
+                for run in strat.runs:
+                    run_info = test.name + "\t" + strat.name + "\t"
+                    for task_key in run.task_info.keys():
+                        task = run.task_info[task_key].data
+                        for task_search_item in task_search_items:
+                            items = task[task_search_item]
+                            for item in items:
+                                writer.writerow([strat.name, task_key, task_search_item + " corr_domain", item.value, item.absolute_time, item.mean_time])
+                    for task_key in run.task_incorr_info.keys():
+                        task = run.task_incorr_info[task_key].data
+                        for task_search_item in task_search_items:
+                            items = task[task_search_item]
+                            for item in items:
+                                writer.writerow([strat.name, task_key, task_search_item + " incorr_domain", item.value, item.absolute_time, item.mean_time])
+            writer.writerow([])
+                
 def read_setup_file(folder):
     setup_file = open(os.path.join(source_folder, "setup.txt"), "r")
     line = setup_file.readline()
@@ -340,11 +386,6 @@ def read_setup_file(folder):
 
         line = setup_file.readline()
         
-
-def create_csv(folder):
-    with open(tmp_target_file_path, mode='w', newline='') as f:
-        writer = csv.writer(f, delimiter=',')
-
 if __name__ == "__main__":
     Tests = {}
 
@@ -376,6 +417,7 @@ if __name__ == "__main__":
         test.print_timings(target_folder_plot)
         test.print_thread_stats(target_folder_plot)
         test.print_task_stats(target_folder_plot)
+        test.print_detailed_infos(target_folder_data)
         # for strat_key in test.strategies.keys():
         #     strat = test.strategies[strat_key]
         #     print(strat.name)

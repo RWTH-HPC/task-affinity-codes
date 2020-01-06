@@ -1,13 +1,13 @@
-#!/bin/bash
-#BSUB -P thes0466
-#BSUB -W 01:00
-#BSUB -m c144m1024
-#BSUB -a openmp
-#BSUB -n 1
-#BSUB -x
-#BSUB -o output_batch
-#BSUB -J spmxvB
-#BSUB -M 524288
+#!/bin/zsh
+
+#SBATCH --account=jara0001
+#SBATCH --partition=c16s
+#SBARCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
+#SBATCH --output=sbatch_output.txt
+#SBATCH --time=00:30:00
+#SBATCH --exclusive
 
 #PROG_CMD="./solver.exe ../DATA/G3_circuit.mtxdump"
 #PROG_CMD="./solver.exe ../DATA/Serena.mtxdump"
@@ -22,41 +22,66 @@ export KMP_TASK_STEALING_CONSTRAINT=0
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 #export OMP_NUM_THREADS=12
-export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=64
 
 # additionally specify number of tasks
 export CG_NUM_TASKS=$(($OMP_NUM_THREADS * 16))//16
 export PAR_PRODUCER=1
 
+
+export TASK_AFF_THREAD_SELECTION_STRATEGY=-1
+export TASK_AFF_AFFINITY_MAP_MODE=-1
+export TASK_AFF_PAGE_SELECTION_MODE=-1
+export TASK_AFF_PAGE_WEIGHTING_STRATEGY=-1
+export TASK_AFF_NUMBER_OF_AFFINITIES=1
+
+
 module switch intel intel/18.0
 
-#source /home/jk869269/util/bash/ompGetCoresForSpread.sh
-#TMP_CORES=$(ompGetCoresForSpread ${OMP_NUM_THREADS})
-#module load likwid
+thread_selection_mode=( first random lowest_wl round_robin private )
+map_mode=(thread domain combined)
+page_selection_strategy=(first_page_of_first_affinity divide_in_n every_n_th first_and_last binary first)
+page_weight_strategy=(first majority by_affinity size)
 
-function eval_run {
-  make ${PROG_VERSION}."$1" sched=$2 num=$3
+function compile {
+  echo "Compiling affinity $1"
+  make ${PROG_VERSION}"$1"
+}
 
-  curname=$1
-  if [ -n "$2" ] && [ -n "$3" ]; then
-    curname="$1.$4.$3"
-  fi
-  echo "Executing affinity ${curname}"
+function run {
+  no_numa_balancing "${PROG_CMD}" &> ${NAME}_$2_output.txt
+  sed -i 's/\./\,/g' ${NAME}_$2_output.txt
+  grep "Elapsed time" ${NAME}_$2_output.txt
+  #grep ": corr_domain" output_${NAME}.txt > output_corr_domain_${NAME}.txt
+  #grep ": in_corr_domain" output_${NAME}.txt > output_in_corr_domain_${NAME}.txt
+  #grep -e "count_overall" -e "count_task" output_${NAME}.txt > output_stats_${NAME}.txt
+  #grep "_affinity_schedule" output_${NAME}.txt
+  #grep "combined_map_strat" output_${NAME}.txt > combined_map_stats_${NAME}.txt
+  #grep "T#0" output_${NAME}.txt > stats_${NAME}.txt
+  #grep "combined_map" stats_${NAME}.txt
+}
 
-  #{ timex -v likwid-perfctr -f -g NUMA -c ${TMP_CORES} -O -f -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
-  #{ timex -v likwid-perfctr -f -g CYCLE_ACTIVITY -c ${TMP_CORES} -O -f -o likwid_${curname}.csv no_numa_balancing "${PROG_CMD}" ; } &> output_${curname}.txt
-  #sed -i 's/,/\t/g' likwid_${curname}.csv
-  #sed -i 's/\./,/g' likwid_${curname}.csv
 
-  #no_numa_balancing numamem -s 1 "${PROG_CMD}" &> output_${curname}.txt
-  no_numa_balancing "${PROG_CMD}" &> output_${curname}.txt
-  grep "Elapsed time" output_${curname}.txt
-  #grep "TASK AFFINITY:" output_${curname}.txt > bla_${curname}
-  #grep "stole task" output_${curname}.txt > nr_steals_${curname}
-  #grep "TASK_SUCCESSFULLY_PUSHED" output_${curname}.txt > pushed_${curname}
-  #grep "task_aff_stats" output_${curname}.txt > evol_${curname}
-  #grep "__kmp_task_start(enter_aff)" output_${curname}.txt > starts_${curname}
-  #grep "TASK_EXECUTION_TIME"  output_${curname}.txt > task_execution_times_${curname}
+function compile_and_run {
+  compile "$1"
+  run "$1"
+}
+
+function set_up_affinity {
+  export TASK_AFF_THREAD_SELECTION_STRATEGY=$1
+  echo "Thread selection strategy:\t ${thread_selection_mode[$1+1]}"
+  export TASK_AFF_AFFINITY_MAP_MODE=$2
+  echo "Map mode:\t\t\t ${map_mode[$2+1]}"
+  export TASK_AFF_PAGE_SELECTION_MODE=$3
+  echo "Page selection strategy:\t ${page_selection_strategy[$3+1]}"
+  export TASK_AFF_PAGE_WEIGHTING_STRATEGY=$4
+  echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
+
+  #NAME=${PROG_VERSION}___${5}${1}${2}${3}${4}${6}${7}___${thread_selection_mode[$TASK_AFF_THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$TASK_AFF_AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$TASK_AFF_PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$TASK_AFF_PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
+  
+
+  NAME=Sparce_CG_${map_mode[$2+1]}
+  echo "${NAME}"
 }
 
 make clean
@@ -68,77 +93,30 @@ module unload omp
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
 #make -C ~ task.${PROG_VERSION}
-if [[ $? -ne 0 ]] ; then
-    exit 1
-fi
 
-#eval_run "llvm"
-#eval_run "gcc"
-#eval_run "domain.lowest"
-#eval_run "domain.rand"
-#eval_run "domain.round_robin"
-#eval_run "thread.lowest"
-#eval_run "thread.rand"
-#eval_run "thread.round_robin"
+compile ".affinity"
+set_up_affinity 2 0 0 0 64 #thread
+for i in {0..10}
+do
+  run ".affinity" ${i}
+done
+echo "\n"
 
-#STRATS NAME TO NUMBER CONVERTER
-first=0
-first1=99
-divn=1
-divn2=11
-divn3=12
-step=2
-step2=21
-fal=3
-bin=4
+set_up_affinity 2 1 0 0 64 #domain
+for i in {0..10}
+do
+  run ".affinity" ${i}
+done
+echo "\n"
 
-first=00
-none=01
-aff=02
-aff2=21
-size=03
-size2=31
-size3=32
-#divn 1, step 2, fal 3, first 0
-#none 1, aff 2, size 3, first 0
-
-eval_run "domain.lowest" $divn3$none 5 "divn3_size"
-eval_run "domain.lowest" $fal$none 2 "fal_none"
-eval_run "domain.lowest" $first1$first 1 "first1_first"
-eval_run "thread.rand" $fal$size2 2 "fal_size2"
-eval_run "domain.lowest" $first$first 3 "first_first"
-eval_run "domain.lowest" $step$size 3 "step_size"
-#eval_run "domain.lowest" $first0$first 1 "first0_first"
-#eval_run "domain.lowest" $divn2$size 20 "divn2_size"
-
-: << 'COMT'
-eval_run "domain.lowest" $first$first 10 "first_first"
-eval_run "domain.lowest" $bin$none 10 "bin.none"
-
-eval_run "domain.lowest" $divn$first 10 "divn_first"
-eval_run "domain.lowest" $divn$none 10 "divn_none"
-
-eval_run "thread.lowest" $divn$none 10 "divn_none"
-eval_run "domain.rand" $divn$none 10 "divn_none"
-
-eval_run "domain.lowest" $divn$aff 10 "divn_aff"
-
-eval_run "domain.lowest" $divn$size 1 "divn_size"
-eval_run "domain.lowest" $divn$size 2 "divn_size"
-eval_run "domain.lowest" $divn$size 4 "divn_size"
-eval_run "domain.lowest" $divn$size 8 "divn_size"
-eval_run "domain.lowest" $divn$size 16 "divn_size"
-eval_run "domain.lowest" $divn$size 32 "divn_size"
-eval_run "domain.lowest" $divn$size 64 "divn_size"
-eval_run "domain.lowest" $divn$size 100 "divn_size"
-
-eval_run "domain.lowest" $step$first 10 "step_first"
-eval_run "domain.lowest" $step$none 10 "step_none"
-eval_run "domain.lowest" $step$aff 10 "step_aff"
-eval_run "domain.lowest" $step$size 10 "step_size"
-
-eval_run "domain.lowest" $fal$first 10 "fal_first"
-eval_run "domain.lowest" $fal$none 10 "fal_none"
-eval_run "domain.lowest" $fal$aff 10 "fal_aff"
-eval_run "domain.lowest" $fal$size 10 "fal_size"
-COMT
+for threshold in {4..4}
+do
+  export TASK_AFF_THRESHOLD=$(($threshold/10.0))
+  set_up_affinity 2 2 0 0 64 ${threshold}
+  for i in {0..10}
+  do
+      run ".affinity" ${i}
+  done
+  #grep "combined_map" stats_${NAME}.txt
+  echo "\n--------\n\n"
+done
