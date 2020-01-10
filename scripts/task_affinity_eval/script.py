@@ -17,6 +17,10 @@ plt.rc('figure', titlesize=F_SIZE)      # fontsize of the figure title
 task_search_items = []
 thread_search_items = []
 
+average_plot_items = []
+absolute_plot_items = []
+box_plot_items = []
+timings_items = []
 
 class Item:
     def __init__(self, index, value, absolute_time, mean_time):
@@ -39,40 +43,50 @@ class Item:
         mean_time = self.mean_time/devidor
         return Item('', value, absolute_time, mean_time)
 
-class Object:
-    def __init__(self, ID, item_list):
+class Info_Object:
+    def __init__(self, index):
         self.data = {}
-        self.ID = ""
+        self.index = index
 
-        for key in item_list:
-            self.data[key] = []
+    def add_data(self, ID, data_array):
+        item = Item(ID, data_array[0], 0, 0)
+        
+        if len(data_array) == 3:
+            item.absolute_time = data_array[1]
+            item.absolute_time = data_array[2]
 
-    def add_data(self, ID, key_line, value, mean, ms):
-        for key in self.data.keys():
-            if key in key_line:
-                self.data[key].append(Item(ID, value, mean, ms))
-                #print(str(ID) + "\t" + str(value))
-                return True
+        if ID not in self.data.keys():
+            self.data[ID] = [item]
+        else:
+            self.data[ID].append(item)
 
-        return False
+    def get_data(self):
+        
+        data_pack = [[],[],[],[]] #for id, value, absolute_time, means
 
-class Thread(Object):
-    def __init__(self, thread_id):
-        super().__init__(thread_id, thread_search_items)
+        for item_id in self.data.keys():
+            for item in self.data[item_id]:
+                data_pack[0].append(item.index)
+                data_pack[1].append(item.value)
+                data_pack[2].append(item.absolute_time)
+                data_pack[3].append(item.mean_time)
+                #print(self.index + "\t" + str(item.index) + "\t" + str(item.value))
 
-class Task(Object):
-    def __init__(self, task_id):
-        super().__init__(task_id, task_search_items)
-    
-    def add_data(self, ID, key_line, value):
-        return super().add_data(ID, key_line, value, 0, 0)
-
+        return data_pack
+        
 class Run:
 
     def __init__(self):
         self.thread_info = {}
-        self.task_info = {}
-        self.task_incorr_info = {}
+        self.task_info = [{}, {}]   #correct domain, incorrect domain
+
+        for key in thread_search_items:
+            self.thread_info[key] = Info_Object(key)
+        
+        for key in task_search_items:
+            self.task_info[0][key] = Info_Object(key)
+            self.task_info[1][key] = Info_Object(key)
+
         self.elapsed_time = 0
 
     def extract_data(self, file):
@@ -88,66 +102,26 @@ class Run:
                 thread_id = data[1]
                 task_id = data[2].partition(" of task ")[2][0:7]
                 
-                
-                if task_id in self.task_info.keys():
-                    new_task = self.task_info[task_id]
-                else:
-                    new_task = Task(task_id)   
+                for key in thread_search_items:
+                    if key == data[2]:
+                        self.thread_info[key].add_data(thread_id, [data[3], data[4], data[6]])
 
-                if task_id in self.task_incorr_info.keys():
-                    new_task_incorr = self.task_incorr_info[task_id]
-                else:
-                    new_task_incorr = Task(task_id)   
-
-                if thread_id in self.thread_info.keys():
-                    new_thread = self.thread_info[thread_id]
-                else:
-                    new_thread = Thread(thread_id)
-
-                if len(data) > 3:
-                    value = data[3]
-
-                    if not task_id == "":
+                for key in task_search_items:
+                    if key in data[2]:
                         if 'in_corr_domain' in line:
-                            if new_task_incorr.add_data(task_id, data[2], value):
-                                self.task_incorr_info[task_id] = new_task_incorr
+                            task_info_list_indicator = 1
                         else:
-                            if new_task.add_data(task_id, data[2], value):
-                                self.task_info[task_id] = new_task
-
-                    if len(data) > 6:
-                        mean = data[4]
-                        ms = data[6]
-
-                        if new_thread.add_data(thread_id, data[2], value, mean, ms):
-                            self.thread_info[thread_id] = new_thread
+                            task_info_list_indicator = 0
+                        self.task_info[task_info_list_indicator][key].add_data(task_id, [data[3]])
 
             line = file.readline()
 
-    def get_total_thread_stats_by_key(self, key):
-        result = Item('', 0, 0, 0)
-
+    def get_data_by_key(self, key):
         if key in thread_search_items:
-            for thread_id in self.thread_info.keys():
-                #print(thread_id + '\t' + key + '\t' + str(self.thread_info[thread_id].data[key][0].value))
-                #print(self.thread_info[thread_id].data[key].index)
-                result = result + self.thread_info[thread_id].data[key][0]
-
-        return result
-
-    def get_total_task_stats_by_key(self, key, corr_domain):
-        result = Item('', 0, 0, 0)
-
+            return self.thread_info[key].get_data()
+        
         if key in task_search_items:
-            if corr_domain:
-                for task_id in self.task_info.keys():
-                    result = result + self.task_info[task_id].data[key][0]
-            else:
-                for task_id in self.task_incorr_info.keys():
-                    result = result + self.task_incorr_info[task_id].data[key][0]
-                    #result = result + self.task_incorr_info[task_id].data[key][0]
-
-        return result
+            return [self.task_info[0][key].get_data(), self.task_info[1][key].get_data()]
 
 class Strategy:
 
@@ -165,51 +139,50 @@ class Strategy:
         data = []
         for run in self.runs:
             elapsed = float(run.elapsed_time.replace(',', '.', 1))
-            #print(elapsed)
             data.append(elapsed)
 
         return data
 
-    def get_mean_thread_stats(self):
-        output = {}
-        for thread_items in thread_search_items:
-            item = Item('',0,0,0)
-            count = 0
-            for run in self.runs:
-                item = item + run.get_total_thread_stats_by_key(thread_items)
-                count = count + 1
-            if count > 0:
-                item = item.__div__(count)
-            output[thread_items] = item
-        return output
-            
-    def get_mean_task_stats_corr_domain(self):
-        output = {}
-        for task_items in task_search_items:
-            item = Item('',0,0,0)
-            count = 0
-            for run in self.runs:
-                #tmp = run.get_total_stats_by_key(task_items).__div__(len(run.task_info.keys()))
-                item = item + run.get_total_task_stats_by_key(task_items, True).__div__(len(run.task_info.keys()))
-                count = count + 1
-            if count > 0:
-                item = item.__div__(count)
-            output[task_items] = item
-        return output
+    def get_total_thread_stats_by_key(self, key):
+        stat_array = [[],[],[],[]]
+        for run in self.runs:
+            for thread_list in run.get_data_by_key(key):
+                for thread in thread_list:
+                    stat_array[0].append((thread[0]))
+                    for i in range(1, 3):
+                        stat_array[i].append(float(thread[i]))
 
-    def get_mean_task_stats_incorr_domain(self):
-        output = {}
-        for task_items in task_search_items:
-            item = Item('',0,0,0)
-            count = 0
-            for run in self.runs:
-                #tmp = run.get_total_stats_by_key(task_items).__div__(len(run.task_info.keys()))
-                item = item + run.get_total_task_stats_by_key(task_items, False).__div__(len(run.task_incorr_info.keys()))
-                count = count + 1
-            if count > 0:
-                item = item.__div__(count)
-            output[task_items] = item
-        return output
+        return stat_array
+
+    def get_mean_thread_stats_by_key(self, key):
+        output = []
+        counter = 0
+        thread_data = [[],[],[],[]]
+        for run in self.runs:
+            new_thread_data = run.get_data_by_key(key)
+            if counter == 0:
+                thread_data = run.get_data_by_key(key)
+            else:
+                counter = counter + 1
+                
+                divider = 1
+                if counter == len(self.runs):
+                    divider = len(self.runs)
+
+                for i in range(len(thread_data[0])):
+                    for j in range(1, 3):
+                        thread_data[j][i] = (float(thread_data[j][i]) + float(new_thread_data[j]))/divider
+
+        return thread_data
+
+    def get_total_task_stats_by_key(self, key):
+        stat_array = [[],[]]
+        for run in self.runs:
+            for task_list in run.get_data_by_key(key)[0][1]:
+                stat_array[0].append(float(task_list))
+            for task_list in run.get_data_by_key(key)[1][1]:
+                stat_array[1].append(float(task_list))
+        return stat_array
 
 class Test:
 
@@ -240,95 +213,184 @@ class Test:
         
         title = self.name + '_elapsed_time_plot'
 
+        self.print_box_plot(title, data, label, "seconds", plot_folder)
+
+    def print_box_plot(self, title, data_array, label_array, ylabel, plot_folder):
         mpl.use('agg')
+
         fig = plt.figure(self.plot_number, figsize=(10,10))
         self.plot_number = self.plot_number + 1
+
         ax = fig.add_subplot()
         ax.yaxis.grid(True, linestyle='-',which='major')
+        plt.xticks(rotation=90)
         ax.set_title(title)
-        ax.set_ylabel('seconds')
-        ax.boxplot(data, labels=label)
+        ax.set_ylabel(ylabel)
+        ax.boxplot(data_array, labels=label_array)
+
+        fig.savefig(os.path.join(plot_folder,title + '.png'), bbox_inches='tight')
+        fig.clear()
+        
+    def print_bar_plot(self, title, data_array, strat_array, labels, ylabel, plot_folder):
+
+        fig = plt.figure(self.plot_number, figsize=(10,10))
+        self.plot_number = self.plot_number + 1
+
+        index = np.arange(len(labels))
+
+        bar_width = 0.2
+        opacity = 0.8
+        count = 0
+
+        ax = fig.add_subplot()
+        ax.set_title(title)
+        ax.yaxis.grid(True, linestyle='-',which='major')
+        ax.set_ylabel(ylabel)
+
+        for i in range(len(data_array)):
+            ax.bar(index + bar_width*count*1.2, data_array[i], bar_width, label=strat_array[i])
+            count = count + 1
+
+        plt.xticks(index + bar_width, labels, rotation=90)
+        plt.legend()
         fig.savefig(os.path.join(plot_folder,title + '.png'), bbox_inches='tight')
         fig.clear()
 
-    def print_thread_stats(self, plot_folder):
-        if len(thread_search_items) < 1:
-            return False
+    def print_stats(self, plot_folder):
+        total_data = {}
+        total_label = []
+        total_key = []
+        mean_data = {}
+        mean_label = []
+        mean_key = []
+        box_data = []
+        box_label = []
+        
 
-        fig1 = plt.figure(self.plot_number, figsize=(10,10))
-        self.plot_number = self.plot_number + 1
-        ax1 = fig1.add_subplot()
-        ax1.set_title(self.name + ' thread stats')
-        index = np.arange(len(thread_search_items))
-        bar_width = 0.2
-        opacity = 0.8
-        count = 0
-
-        title = self.name + '_thread_stats'
-
-        for strat_key in self.strategies.keys():
+        for strat_key in self.strategies:
             strat = self.strategies[strat_key]
-            stats = strat.get_mean_thread_stats()
-            data = []
-            for item in thread_search_items:
-                #print (strat.name + "\t" + item + "\t" + str(stats[item].value))
-                data.append(stats[item].value)
+            total_data[strat_key] = []
+            mean_data[strat_key] = []
 
-            # stats = strat.get_mean_task_stats()
-            # for item in task_search_items:
-            #     data.append(stats[item].value)
+        for key in thread_search_items:
+            index = 1
+            total_label = []
+            mean_label = []
+            for strat_key in self.strategies:
+                strat = self.strategies[strat_key]
+                tmp_mn = strat.get_mean_thread_stats_by_key(key)
 
-            #print(strat.name + "\t" + data)
-            ax1.bar(index + bar_width*count*1.2, data, bar_width, label=strat_key)
-            count = count + 1
+                if key in absolute_plot_items:
+                    total_data[strat_key].append(sum(tmp_mn[index]))
+                    total_label.append(strat_key)
+                    if key not in total_key:
+                        total_key.append(key)
+                if key in average_plot_items:
+                    mean_data[strat_key].append(sum(tmp_mn[index]) /  len(tmp_mn[index]))
+                    mean_label.append(strat_key)
+                    if key not in mean_key:
+                        mean_key.append(key)
+                if key in box_plot_items:
+                    box_data.append(tmp_mn[index])
+                    box_label.append(strat_key)
+            if len(box_data) > 0:
+                self.print_box_plot(self.name + "_box_plot_" + key, box_data, box_label, "count", plot_folder)
+                box_data = []
+                box_label = []
 
-        ax1.yaxis.grid(True, linestyle='-',which='major')
-        plt.xticks(index + bar_width, thread_search_items, rotation=90)
-        plt.legend()
-        fig1.savefig(os.path.join(plot_folder,title + '.png'), bbox_inches='tight')
-        fig1.clear()
 
-    def print_task_stats(self, plot_folder):
-        if len(task_search_items) < 1:
-            return False
-
-        fig2 = plt.figure(self.plot_number, figsize=(10,10))
-        self.plot_number = self.plot_number + 1
-        ax2 = fig2.add_subplot()
-        ax2.set_title(self.name + ' task execution time')
-        ax2.set_ylabel('seconds')
-        index = np.arange(len(task_search_items)*2)
-        bar_width = 0.2
-        opacity = 0.8
-        count = 0
-
-        title = self.name + '_task_stats'
-
-        for strat_key in self.strategies.keys():
+        
+        tmp_total_data = []
+        tmp_mean_data = []
+        for strat_key in self.strategies:
+            tmp = []
             strat = self.strategies[strat_key]
-            stats_corr = strat.get_mean_task_stats_corr_domain()
-            stats_incorr = strat.get_mean_task_stats_incorr_domain()
+            for item in total_data[strat_key]:
+                tmp.append(item)
+            if len(tmp) > 0:
+                tmp_total_data.append(tmp)
+            tmp = []
+            for item in mean_data[strat_key]:
+                tmp.append(item)
+            if len(tmp) > 0:
+                tmp_mean_data.append(tmp)
 
-            data = []
-            for item in task_search_items:
-                #print (strat.name + "\t" + item + "\t" + str(stats[item].value))
-                data.append(stats_corr[item].value)
+        
+        if len(tmp_total_data) > 0:
+            self.print_bar_plot(self.name + "_bar_plot_absolute_", tmp_total_data, total_label, total_key, "count", plot_folder)
+        if len(tmp_mean_data) > 0:
+            self.print_bar_plot(self.name + "_bar_plot_mean_", tmp_mean_data, mean_label, mean_key, "count", plot_folder)
 
-            for item in task_search_items:
-                data.append(stats_incorr[item].value)
-            # stats = strat.get_mean_task_stats()
-            # for item in task_search_items:
-            #     data.append(stats[item].value)
 
-            #print(strat.name + "\t" + data)
-            ax2.bar(index + bar_width*count*1.2, data, bar_width, label=strat_key)
-            count = count + 1
 
-        ax2.yaxis.grid(True, linestyle='-',which='major')
-        plt.xticks(index + bar_width, ('corr domain', 'in corr domain'), rotation=90)
-        plt.legend()
-        fig2.savefig(os.path.join(plot_folder,title + '.png'), bbox_inches='tight')
-        fig2.clear()
+        total_data = {}
+        total_label = []
+        total_key = []
+        mean_data = {}
+        mean_label = []
+        mean_key = []
+        box_data = []
+        box_label = []
+        
+
+        for strat_key in self.strategies:
+            strat = self.strategies[strat_key]
+            total_data[strat_key] = []
+            mean_data[strat_key] = []
+
+        
+        for key in task_search_items:
+            index = 1
+            total_label = []
+            mean_label = []
+            for strat_key in self.strategies:
+                strat = self.strategies[strat_key]
+                tmp_mn = strat.get_total_task_stats_by_key(key)
+
+                if key in absolute_plot_items:
+                    total_data[strat_key].append(sum(tmp_mn[0]))
+                    total_data[strat_key].append(sum(tmp_mn[1]))
+                    total_label.append(strat_key + "_corr")
+                    total_label.append(strat_key + "_incorr")
+                    total_key.append(key + "_corr")
+                    total_key.append(key + "_incorr")
+                if key in average_plot_items:
+                    mean_data[strat_key].append(sum(tmp_mn[0]) /  len(tmp_mn[0]))
+                    mean_data[strat_key].append(sum(tmp_mn[1]) /  len(tmp_mn[0]))
+                    mean_label.append(strat_key)
+                    mean_key.append(key + "_corr")
+                    mean_key.append(key + "_incorr")
+                if key in box_plot_items:
+                    box_data.append(tmp_mn[0])
+                    box_data.append(tmp_mn[1])
+                    box_label.append(strat_key + "_corr")
+                    box_label.append(strat_key + "_incorr")
+
+            if len(box_data) > 0:
+                self.print_box_plot(self.name + "_box_plot_" + key, box_data, box_label, "count", plot_folder)
+                box_data = []
+                box_label = []
+
+
+        tmp_total_data = []
+        tmp_mean_data = []
+        for strat_key in self.strategies:
+            tmp = []
+            strat = self.strategies[strat_key]
+            for item in total_data[strat_key]:
+                tmp.append(item)
+            if len(tmp) > 0:
+                tmp_total_data.append(tmp)
+            tmp = []
+            for item in mean_data[strat_key]:
+                tmp.append(item)
+            if len(tmp) > 0:
+                tmp_mean_data.append(tmp)
+
+        # if len(tmp_total_data) > 0:
+        #     self.print_bar_plot(self.name + "_bar_plot_absolute_", tmp_total_data, total_label, total_key, "count", plot_folder)
+        # if len(tmp_mean_data) > 0:
+        #     self.print_bar_plot(self.name + "_bar_plot_mean_", tmp_mean_data, mean_label, mean_key, "count", plot_folder)
 
     def print_detailed_infos(self, data_folder):
         with open(os.path.join(data_folder, self.name + "_data.csv"), mode='w', newline='') as f:
@@ -377,12 +439,35 @@ def read_setup_file(folder):
         data[1] = data[1].replace("\n","")
 
         if not "#" in data[0][0]:
+            found = False
             if "Thread" in data[0]:
                 thread_search_items.append(data[1])
+                found = True
                 #print(data[1])
             elif "Task" in data[0]: 
                 task_search_items.append(data[1])
+                found = True
                 #print(data[1])
+
+            if found:
+                if len(data) == 2:
+                    if data[1] not in absolute_plot_items:
+                        absolute_plot_items.append(data[1])
+                for i in range (2, len(data)):
+                    data[i] = data[i].replace('\n', '')
+                    print(data[i] + "\t" + data[1])
+                    if "box_plot" in data[i]:
+                        if data[i] not in box_plot_items:
+                            box_plot_items.append(data[1])
+                    elif "mean" in data[i]:
+                        if data[i] not in average_plot_items:
+                            average_plot_items.append(data[1])
+                    elif "total":
+                        if data[i] not in absolute_plot_items:
+                            absolute_plot_items.append(data[1])
+                    elif "Timings":
+                        if data[i] not in timings_items:
+                            timings_items.append(data[1])
 
         line = setup_file.readline()
         
@@ -407,37 +492,10 @@ if __name__ == "__main__":
     for folder_name in os.listdir(source_benchmark_folder):
         Tests[folder_name] = Test(folder_name)
         Tests[folder_name].read_data(os.path.join(source_benchmark_folder, folder_name))
-        
-    #for test_key in Tests.keys():
-    #    create_csv(target_folder_data, Tests[test_key])
-        
+    
 
     for test_key in Tests.keys():
         test = Tests[test_key]
         test.print_timings(target_folder_plot)
-        test.print_thread_stats(target_folder_plot)
-        test.print_task_stats(target_folder_plot)
-        test.print_detailed_infos(target_folder_data)
-        # for strat_key in test.strategies.keys():
-        #     strat = test.strategies[strat_key]
-        #     print(strat.name)
-        #     #strat.print_timings()
-        #     for run in strat.runs:
-        #         run_info = test.name + "\t" + strat.name + "\t"
-        #         for thread_key in run.thread_info.keys():
-        #             thread = run.thread_info[thread_key].data
-        #             for thread_search_item in thread_search_items:
-        #                 items = thread[thread_search_item]
-        #                 for item in items:
-        #                     item = item
-        #                     print(run_info + item.index + "\t" + thread_search_item + "\t" + str(item.value))
-    #             for task_key in run.task_info.keys():
-    #                 task = run.task_info[task_key].data
-    #                 for task_search_item in task_search_items:
-    #                     items = task[task_search_item]
-    #                     for item in items:
-    #                         item = item
-    #                         #print(test.name + "\t" + strat.name + "\t" + item.index + "\t" + task_search_item + "\t" + str(item.value))
-    #             #for task in run.task_info.keys():
-    #                 #print(run.task_info[task].ID + "\t" + str(run.task_info[task].data["TASK_EXECUTION_TIME"][0].value))
-
+        test.print_stats(target_folder_plot)
+        #test.print_detailed_infos(target_folder_data)
