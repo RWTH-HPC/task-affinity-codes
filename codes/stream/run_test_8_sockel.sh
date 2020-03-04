@@ -5,12 +5,8 @@
 #SBARCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
-#SBATCH --output=sbatch_output.txt
-<<<<<<< HEAD
-#SBATCH --time=00:30:00
-=======
-#SBATCH --time=00:02:00
->>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
+#SBATCH --output=sbatch.txt
+#SBATCH --time=10:00:00
 #SBATCH --exclusive
 
 
@@ -27,12 +23,13 @@ export OMP_NUM_THREADS=64
 #export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
-export THIRD_INVERTED=0
+export THIRD_INVERTED=1
 export KMP_AFFINITY=verbose
 export T_AFF_SINGLE_CREATOR=1
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
 #export STREAM_ARRAY_SIZE=$((2**27))
 export STREAM_ARRAY_SIZE=$((2**31))
+
 
 export TASK_AFF_THREAD_SELECTION_STRATEGY=-1
 export TASK_AFF_AFFINITY_MAP_MODE=-1
@@ -40,14 +37,10 @@ export TASK_AFF_PAGE_SELECTION_MODE=-1
 export TASK_AFF_PAGE_WEIGHTING_STRATEGY=-1
 export TASK_AFF_NUMBER_OF_AFFINITIES=1
 
-
-thread_selection_mode=( first random lowest_wl round_robin private )
+thread_selection_mode=( first random lowest_wl RoundRobin private )
 map_mode=(thread domain combined)
-page_selection_strategy=(first_page_of_first_affinity divide_in_n every_n_th first_and_last binary first)
-page_weight_strategy=(first majority by_affinity size)
-
-
-module switch intel intel/18.0
+page_selection_strategy=(FirstPageOfFirstAffinity DivideInN EveryNTh FirstAndLast binary first)
+page_weight_strategy=(first majority ByAffinity size)
 
 function compile {
   echo "Compiling affinity $1"
@@ -55,12 +48,12 @@ function compile {
 }
 
 function run {
-  no_numa_balancing "${PROG_CMD}" &> output_${NAME}.txt
-  sed -i 's/\./\,/g' output_${NAME}.txt
-  grep "Elapsed time" output_${NAME}.txt
-  grep ": corr_domain" output_${NAME}.txt > output_corr_domain_${NAME}.txt
-  grep ": in_corr_domain" output_${NAME}.txt > output_in_corr_domain_${NAME}.txt
-  grep -e "count_overall" -e "count_task" output_${NAME}.txt > output_stats_${NAME}.txt
+  no_numa_balancing "${PROG_CMD}" &> output-files/${NAME}_$2_output.txt
+  sed -i 's/\./\,/g' output-files/${NAME}_$2_output.txt
+  grep "Elapsed time" output-files/${NAME}_$2_output.txt
+  #grep ": corr_domain" output_${NAME}.txt > output_corr_domain_${NAME}.txt
+  #grep ": in_corr_domain" output_${NAME}.txt > output_in_corr_domain_${NAME}.txt
+  #grep -e "count_overall" -e "count_task" output_${NAME}.txt > output_stats_${NAME}.txt
   #grep "_affinity_schedule" output_${NAME}.txt
   #grep "combined_map_strat" output_${NAME}.txt > combined_map_stats_${NAME}.txt
   #grep "T#0" output_${NAME}.txt > stats_${NAME}.txt
@@ -83,9 +76,14 @@ function set_up_affinity {
   export TASK_AFF_PAGE_WEIGHTING_STRATEGY=$4
   echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
 
-  NAME=${PROG_VERSION}___${5}${1}${2}${3}${4}${6}${7}___${thread_selection_mode[$TASK_AFF_THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$TASK_AFF_AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$TASK_AFF_PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$TASK_AFF_PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
+  #NAME=${PROG_VERSION}___${5}${1}${2}${3}${4}${6}${7}___${thread_selection_mode[$TASK_AFF_THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$TASK_AFF_AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$TASK_AFF_PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$TASK_AFF_PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
+  
+
+  NAME=STREAM_${TASK_AFF_NUMBER_OF_AFFINITIES}-${page_selection_strategy[$3+1]}-${page_weight_strategy[$4+1]}-${map_mode[$2+1]}${6}
   echo "${NAME}"
 }
+
+mkdir output-files
 
 make clean
 module unload omp
@@ -96,65 +94,43 @@ echo "\nrun task without affinity"
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
 
-#run with default config
 compile ".affinity"
-# echo "\nrun default"
-# run ".affinity"
-# echo ""
-
-set_up_affinity 2 0 0 0 64               #thread(2)=lowest, page_sel(0)=first_of_every_page, page_weight(1)=Majority
-<<<<<<< HEAD
-for i in {0..2}
+for affinities in {2,5,10,15,20}
 do
-  run ".affinity"
-done
-echo "\n"
-set_up_affinity 2 1 0 0 64
-for i in {0..2}
-do
-  run ".affinity"
-done
-echo "\n"
-
-for threshold in {0..10}
-do
-  export TASK_AFF_THRESHOLD=$(($threshold/10.0))
-  echo "$TASK_AFF_THRESHOLD"
-  set_up_affinity 2 2 0 0 64 ${threshold}
-  for i in {0..2}
+  export TASK_AFF_NUMBER_OF_AFFINITIES=${affinities}
+  echo "Number of affinities:\t\t ${affinities}"
+  for page_mode in {0,1,3} #first_page_of_first_affinity, devide_in_n, first_and last
   do
-      run ".affinity"
+    for page_weight in {1,2}  #majority, by_affinity
+    do
+      set_up_affinity 2 0 ${page_mode} ${page_weight} 64 #thread
+      for i in {0..4}
+      do
+        run ".affinity" ${i}
+      done
+      echo "\n"
+
+      set_up_affinity 2 1 ${page_mode} ${page_weight} 64 #domain
+      for i in {0..4}
+      do
+        run ".affinity" ${i}
+      done
+      echo "\n"
+
+      for threshold in {0..10}
+      do
+        export TASK_AFF_THRESHOLD=$(($threshold/10.0))
+        set_up_affinity 2 2 ${page_mode} ${page_weight} 64 -${threshold}0%
+        for i in {0..4}
+        do
+            run ".affinity" ${i}
+        done
+        #grep "combined_map" stats_${NAME}.txt
+        echo "\n--------\n\n"
+      done
+    done
   done
-  #grep "combined_map" stats_${NAME}.txt
-  echo "\n--------\n\n"
 done
-=======
-#for i in {0..1}
-#do
-  run ".affinity"
-#done
-echo "\n"
-set_up_affinity 2 1 0 0 64
-#for i in {0..1}
-#do
-  run ".affinity"
-#done
-echo "\n"
-
-#for threshold in {0..10}
-#do
-#  export TASK_AFF_THRESHOLD=$(($threshold/10.0))
-#  echo "$TASK_AFF_THRESHOLD"
-#  set_up_affinity 2 2 0 0 64 ${threshold}
-  #for i in {0..10}
-  #do
-#      run ".affinity"
-  #done
-  #grep "combined_map" stats_${NAME}.txt
-  echo "\n--------\n\n"
-#done
->>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
-
 
 
 

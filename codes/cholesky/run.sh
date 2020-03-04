@@ -1,18 +1,23 @@
-#!/bin/bash
+#!/bin/zsh
+
+#SBATCH --account=jara0001
+#SBATCH --partition=c16s
 #SBARCH --nodes=1
-#SBATCH --ntasks=24
+#SBATCH --ntasks-per-node=1
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
-#SBATCH --output=sbatch_output.txt
-#SBATCH --time=00:10:00
+#SBATCH --output=sbatch.txt
+#SBATCH --time=10:30:00
+#SBATCH --exclusive
 
 PROG_VERSION=rel
+
 
 export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=3
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-export OMP_NUM_THREADS=16
-#export OMP_NUM_THREADS=284
+#export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=64
 
 export T_AFF_INVERTED=0
 export THIRD_INVERTED=0
@@ -25,49 +30,90 @@ export TASK_AFF_PAGE_SELECTION_MODE=-1
 export TASK_AFF_PAGE_WEIGHTING_STRATEGY=-1
 export TASK_AFF_NUMBER_OF_AFFINITIES=20
 
-export MATRIX_SIZE=15000
+export MATRIX_SIZE=40000
+#export MATRIX_SIZE=15000
 export TITLE_SIZE=500
 export CHECK_RESULTS=1
 
-thread_selection_mode=( first random lowest_wl round_robin private )
-map_mode=(thread domain)
-page_selection_strategy=(first_page_of_first_affinity divide_in_n every_n_th first_and_last binary first)
-page_weight_strategy=(first majority by_affinity size)
+PROG_CMD="./ch_intel_aff ${MATRIX_SIZE} ${TITLE_SIZE} ${CHECK_RESULTS}"
+
+thread_selection_mode=( first random lowest_wl RoundRobin private )
+map_mode=(thread domain combined)
+page_selection_strategy=(FirstPageOfFirstAffinity DivideInN EveryNTh FirstAndLast binary first)
+page_weight_strategy=(first majority ByAffinity size)
+
+function run {
+  no_numa_balancing "${PROG_CMD}" &> output-files/${NAME}_$2_output.txt
+  sed -i 's/\./\,/g' output-files/${NAME}_$2_output.txt
+  grep "Elapsed time" output-files/${NAME}_$2_output.txt
+  #grep ": corr_domain" output_${NAME}.txt > output_corr_domain_${NAME}.txt
+  #grep ": in_corr_domain" output_${NAME}.txt > output_in_corr_domain_${NAME}.txt
+  #grep -e "count_overall" -e "count_task" output_${NAME}.txt > output_stats_${NAME}.txt
+  #grep "_affinity_schedule" output_${NAME}.txt
+  #grep "combined_map_strat" output_${NAME}.txt > combined_map_stats_${NAME}.txt
+  #grep "T#0" output_${NAME}.txt > stats_${NAME}.txt
+  #grep "combined_map" stats_${NAME}.txt
+}
 
 function set_up_affinity {
   export TASK_AFF_THREAD_SELECTION_STRATEGY=$1
-  echo "\nThread selection strategy:\t ${thread_selection_mode[$1+1]}"
+  echo "Thread selection strategy:\t ${thread_selection_mode[$1+1]}"
   export TASK_AFF_AFFINITY_MAP_MODE=$2
   echo "Map mode:\t\t\t ${map_mode[$2+1]}"
   export TASK_AFF_PAGE_SELECTION_MODE=$3
   echo "Page selection strategy:\t ${page_selection_strategy[$3+1]}"
   export TASK_AFF_PAGE_WEIGHTING_STRATEGY=$4
   echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
-  echo ""
+
+  #NAME=${PROG_VERSION}___${5}${1}${2}${3}${4}${6}${7}___${thread_selection_mode[$TASK_AFF_THREAD_SELECTION_STRATEGY + 1]}___${map_mode[$TASK_AFF_AFFINITY_MAP_MODE+1]}___${page_selection_strategy[$TASK_AFF_PAGE_SELECTION_MODE+1]}___${page_weight_strategy[$TASK_AFF_PAGE_WEIGHTING_STRATEGY+1]}___THREADS-$OMP_NUM_THREADS
+  
+  NAME=CHOLESKY_${TASK_AFF_NUMBER_OF_AFFINITIES}-${page_selection_strategy[$3+1]}-${page_weight_strategy[$4+1]}-${map_mode[$2+1]}${6}
+  echo "${NAME}"
 }
 
-
+make clean
+mkdir output-files
 
 module use -a ~/.modules
 module load omp/task_aff.${PROG_VERSION}
 
-for t in {1..24}                  #number of threads
+echo "running regular..\n"
+./ch_intel ${MATRIX_SIZE} ${TITLE_SIZE} ${CHECK_RESULTS} &> output-files/regular_0_output.txt
+grep "Elapsed time" output-files/regular_0_output.txt
+echo "\n"
+
+for affinities in {5..5}
 do
-  export OMP_NUM_THREADS=$t
-  echo "\nNumber of threads:\t\t $t"
-  ./ch_intel ${MATRIX_SIZE} ${TITLE_SIZE} ${CHECK_RESULTS}
-  for tsm in {0..4}               #Thread selecetion mode
+  export TASK_AFF_NUMBER_OF_AFFINITIES=${affinities}
+  echo "Number of affinities:\t\t ${affinities}"
+  for page_mode in {0..0} #first_page_of_first_affinity, devide_in_n, first_and last
   do
-    for mm in {0..1}              #Map Mode
+    for page_weight in {1..1}  #majority, by_affinity
     do
-      for pss in {0..5}           #Page sellection mode
+      set_up_affinity 2 0 ${page_mode} ${page_weight} 64 #thread
+      for i in {0..10}
       do
-        for pws in {0..3}         #Page  Weight mode
+        run ".affinity" ${i}
+      done
+      echo "\n"
+
+      set_up_affinity 2 1 ${page_mode} ${page_weight} 64 #domain
+      for i in {0..10}
+      do
+        run ".affinity" ${i}
+      done
+      echo "\n"
+
+      for threshold in {0..10}
+      do
+        export TASK_AFF_THRESHOLD=$(($threshold/10.0))
+        set_up_affinity 2 2 ${page_mode} ${page_weight} 64 -${threshold}0%
+        for i in {0..10}
         do
-          set_up_affinity $tsm $mm $pss $pws
-          ./ch_intel_aff ${MATRIX_SIZE} ${TITLE_SIZE} ${CHECK_RESULTS}
-	        echo ""
+            run ".affinity" ${i}
         done
+        #grep "combined_map" stats_${NAME}.txt
+        echo "\n--------\n\n"
       done
     done
   done

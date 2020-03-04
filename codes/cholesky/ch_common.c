@@ -121,70 +121,132 @@ void cholesky_regular(const int ts, const int nt, double* A[nt][nt])
 
 void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
 {
-	// TODO:
-#pragma omp parallel
-{
-#pragma omp single
-{
-    for (int k = 0; k < nt; k++) {
-#ifdef TASK_AFFINITY
-        kmpc_set_task_affinity(&A[k][k], 1);
-#endif
+    int size = ts * ts * sizeof(double);
 
-#pragma omp task depend(out: A[k][k])
-{
-        omp_potrf(A[k][k], ts, ts);
-#ifdef DEBUG
-        printf("potrf:out:A[%d][%d]\n", k, k);
-#endif
-}
-        for (int i = k + 1; i < nt; i++) {
-#ifdef TASK_AFFINITY
-        kmpc_set_task_affinity(&A[k][k], 1);
-        kmpc_set_task_affinity(&A[k][i], 1);
-#endif
+    #pragma omp parallel
+    {
+        #pragma omp master
+        {
+            for (int k = 0; k < nt; k++) {
+                #ifdef TASK_AFFINITY
+                    kmpc_set_task_affinity(&A[k][k], size);
+                    //printf("set task affinity %d \n", size);
+                #endif
+                #pragma omp task depend(out: A[k][k])
+                {
+                    omp_potrf(A[k][k], ts, ts);
+                #ifdef DEBUG
+                    printf("potrf:out:A[%d][%d]\n", k, k);
+                #endif
+                }
 
-#pragma omp task depend(in: A[k][k]) depend(out: A[k][i])
-{
-            omp_trsm(A[k][k], A[k][i], ts, ts);
-#ifdef DEBUG
-        printf("trsm :in:A[%d][%d]:out:A[%d][%d]\n", k, k, k, i);
-#endif
-}
-        }
-        for (int i = k + 1; i < nt; i++) {
-            for (int j = k + 1; j < i; j++) {
-#ifdef TASK_AFFINITY
-        kmpc_set_task_affinity(&A[k][i], 1);
-        kmpc_set_task_affinity(&A[k][j], 1);
-        kmpc_set_task_affinity(&A[j][i], 1);
-#endif
-#pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i])
-{
-                omp_gemm(A[k][i], A[k][j], A[j][i], ts, ts);
-#ifdef DEBUG
-                printf("gemm :in:A[%d][%d]:A[%d][%d]:out:A[%d][%d]\n", k, i, k, j, j, i);
-#endif
-}
+                for (int i = k + 1; i < nt; i++) {
+                    #ifdef TASK_AFFINITY
+                        kmpc_set_task_affinity(&A[k][k], size);
+                        kmpc_set_task_affinity(&A[k][i], size);
+                    #endif
+                    #pragma omp task depend(in: A[k][k]) depend(out: A[k][i])
+                    {
+                        omp_trsm(A[k][k], A[k][i], ts, ts);
+                    #ifdef DEBUG
+                        printf("trsm :in:A[%d][%d]:out:A[%d][%d]\n", k, k, k, i);
+                    #endif
+                    }
+                }
+
+                for (int i = k + 1; i < nt; i++) {
+                    for (int j = k + 1; j < i; j++) {
+                        #ifdef TASK_AFFINITY
+                            kmpc_set_task_affinity(&A[k][i], size);
+                            kmpc_set_task_affinity(&A[k][j], size);
+                            kmpc_set_task_affinity(&A[j][i], size);
+                        #endif
+                        #pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i])
+                        {
+                            omp_gemm(A[k][i], A[k][j], A[j][i], ts, ts);
+                        #ifdef DEBUG
+                            printf("gemm :in:A[%d][%d]:A[%d][%d]:out:A[%d][%d]\n", k, i, k, j, j, i);
+                        #endif
+                        }
+                    }
+                    #ifdef TASK_AFFINITY
+                        kmpc_set_task_affinity(&A[k][i], size);
+                        kmpc_set_task_affinity(&A[i][i], size);
+                    #endif
+                    #pragma omp task depend(in: A[k][i]) depend(out: A[i][i])
+                    {
+                        omp_syrk(A[k][i], A[i][i], ts, ts);
+                    #ifdef DEBUG
+                        printf("syrk :in:A[%d][%d]:out:A[%d][%d]\n", k, i, i, i);
+                    #endif
+                    }
+                }
             }
-#ifdef TASK_AFFINITY
-        kmpc_set_task_affinity(&A[k][i], 1);
-        kmpc_set_task_affinity(&A[i][i], 1);
-#endif
-#pragma omp task depend(in: A[k][i]) depend(out: A[i][i])
-{
-            omp_syrk(A[k][i], A[i][i], ts, ts);
-#ifdef DEBUG
-            printf("syrk :in:A[%d][%d]:out:A[%d][%d]\n", k, i, i, i);
-#endif
-}
+        #pragma omp taskwait
         }
     }
-#pragma omp taskwait
 }
+/*
+void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
+{
+    int len = 0, k = 0;
+    #pragma omp parallel
+    {
+        #pragma omp taskgroup
+        {
+            #pragma omp for private(k) schedule(static)
+            for (k = 0; k < nt; k++) {
+                #ifdef TASK_AFFINITY
+                    kmpc_set_task_affinity(&A[k][1], 1);
+                #endif
+                    #pragma omp task depend(out: A[k][k])
+                    {
+                        omp_potrf(A[k][k], ts, ts);
+                    #ifdef DEBUG
+                        printf("potrf:out:A[%d][%d]\n", k, k);
+                    #endif
+                    }
+                #ifdef TASK_AFFINITY
+                    len = nt-k;
+                    kmpc_set_task_affinity(&A[k], len);
+                #endif
+                for (int i = k + 1; i < nt; i++) {
+                    #pragma omp task depend(in: A[k][k]) depend(out: A[k][i])
+                    {
+                        omp_trsm(A[k][k], A[k][i], ts, ts);
+                    #ifdef DEBUG
+                        printf("trsm :in:A[%d][%d]:out:A[%d][%d]\n", k, k, k, i);
+                    #endif
+                    }
+                }
+                #ifdef TASK_AFFINITY
+                    len = nt - k;
+                    kmpc_set_task_affinity(&A[k][k], len);
+                #endif
+                for (int i = k + 1; i < nt; i++) {
+                    for (int j = k + 1; j < i; j++) {
+                        #pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i])
+                        {
+                            omp_gemm(A[k][i], A[k][j], A[j][i], ts, ts);
+                        #ifdef DEBUG
+                            printf("gemm :in:A[%d][%d]:A[%d][%d]:out:A[%d][%d]\n", k, i, k, j, j, i);
+                        #endif
+                        }
+                    }
+                    #pragma omp task depend(in: A[k][i]) depend(out: A[i][i])
+                    {
+                        omp_syrk(A[k][i], A[i][i], ts, ts);
+                    #ifdef DEBUG
+                        printf("syrk :in:A[%d][%d]:out:A[%d][%d]\n", k, i, i, i);
+                    #endif
+                    }
+                }
+            }
+        #pragma omp taskwait
+        }
+    }
 }
-}
-
+*/
 int main(int argc, char *argv[])
 {
     /* cholesky init */
@@ -290,6 +352,7 @@ int main(int argc, char *argv[])
     float gflops_affinity   = (((1.0 / 3.0) * n * n * n) / ((time_affinity) * 1.0e+9));
 
     printf("test:%s-%d-%d-%d:threads:%2d:result:%s:gflops_regular:%f:time:%f:gflops_affinity:%f:time_ser:%f\n", argv[0], n, ts, num_threads, num_threads, result[check], gflops_regular, t2, gflops_affinity, t4);
+	printf("Elapsed time for program\t%lf\tsec\n",t4);
 
 #if (defined(DEBUG) || defined(USE_TIMING))
     printf("count#pdotrf:%d:count#trsm:%d:count#gemm:%d:count#syrk:%d\n", cnt_pdotrf, cnt_trsm, cnt_gemm, cnt_syrk);

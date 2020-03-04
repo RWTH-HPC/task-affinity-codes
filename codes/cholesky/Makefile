@@ -45,4 +45,4 @@ run-timing:
 	$(RUN_SETTINGS) ./$(PROG_EXE)_timing $(MATRIX_SIZE) $(BLOCK_SIZE) $(BOOL_CHECK)
 
 clean:
-	rm -f *.o ch_$(TARGET) ch_$(TARGET)_timing ch_$(TARGET)_aff ch_$(TARGET)_timing_aff
+	rm -f *.o ch_$(TARGET) ch_$(TARGET)_timing ch_$(TARGET)_aff ch_$(TARGET)_timing_aff *output.txt output-files/*output.txt

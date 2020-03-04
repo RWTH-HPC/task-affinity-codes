@@ -79,6 +79,8 @@ class Run:
     def __init__(self):
         self.thread_info = {}
         self.task_info = [{}, {}]   #correct domain, incorrect domain
+        self.number_of_threads = 0
+        self.number_of_affinities = 0
 
         for key in thread_search_items:
             self.thread_info[key] = Info_Object(key)
@@ -97,6 +99,13 @@ class Run:
             if "Elapsed time for program" in line:
                 self.elapsed_time = data[1]
                 #print(self.elapsed_time)
+            if "Chosen Number of affinities: " in line:
+                self.number_of_affinities = line.split(": ")[1]
+                #print("Chosen Number of affinities: " + str(self.number_of_affinities))
+            
+            if "Number of Threads counted = " in line:
+                self.number_of_threads = line.split("= ")[1]
+
 
             if len(data) > 3:
                 thread_id = data[1]
@@ -133,7 +142,6 @@ class Strategy:
         new_run = Run()
         new_run.extract_data(file)
         self.runs.append(new_run)
-
 
     def get_timings(self):
         data = []
@@ -191,16 +199,47 @@ class Test:
         self.strategies = {}
         self.plot_number = 112
 
+    def sort_strategy(self):
+        tmp_strat = [None] * (len(self.strategies))
+        
+
+        for strat_key in self.strategies.keys():
+            lenght = len(strat_key.split("-"))
+
+            if lenght < 3:
+                return
+
+            if strat_key.split("-")[lenght-2] != "combined":
+                return
+
+
+            #print(lenght)
+            i = int(strat_key.split("-")[lenght-1][:-2])
+            tmp_strat[i] = self.strategies[strat_key]
+            #print(strat_key.split("-")[lenght-1][:-2])
+
+        tmp_dict = {}
+
+        for strat in tmp_strat:
+            tmp_dict[strat.name] = strat
+
+        self.strategies = tmp_dict
+
+        
+
     def read_data(self, folder_path):
         for file_name in os.listdir(folder_path): #filename structure = strategy_runnumber_extrainformation.txt 
-            file = open(os.path.join(folder_path, file_name), "r")
+            if len(file_name.split("_")) > 1:
+                file = open(os.path.join(folder_path, file_name), "r")
 
-            strat_name = file_name.split("_")[1]
+                #print(file_name)
+                strat_name = file_name.split("_")[1]
 
-            if strat_name not in self.strategies.keys():
-                self.strategies[strat_name] = Strategy(strat_name)
+                if strat_name not in self.strategies.keys():
+                    self.strategies[strat_name] = Strategy(strat_name)
 
-            self.strategies[strat_name].add_run(file)
+                self.strategies[strat_name].add_run(file)
+        self.sort_strategy()
 
     def print_timings(self, plot_folder):
         data = []
@@ -213,18 +252,30 @@ class Test:
         
         title = self.name + '_elapsed_time_plot'
 
+        print (self.get_name())
+
         self.print_box_plot(title, data, label, "seconds", plot_folder)
+
+    def get_name(self):
+        tmp_start_key = list(self.strategies.keys())[0]
+        tmp_strat = self.strategies[tmp_start_key]
+        tmp_run = tmp_strat.runs[0]
+        tmp_thread_num = tmp_run.number_of_threads
+        tmp_affiniti_num = tmp_run.number_of_affinities
+
+        #return self.name + ", Affinities: "  + tmp_affiniti_num[:-1] + ", Threads: " + tmp_thread_num[:-1]
+        return self.name + ", Affinities: "  + str(tmp_affiniti_num)[:-1] + ", Threads: " + str(tmp_thread_num)
 
     def print_box_plot(self, title, data_array, label_array, ylabel, plot_folder):
         mpl.use('agg')
 
-        fig = plt.figure(self.plot_number, figsize=(10,10))
+        fig = plt.figure(self.plot_number, figsize=(len(label_array),10))
         self.plot_number = self.plot_number + 1
 
         ax = fig.add_subplot()
         ax.yaxis.grid(True, linestyle='-',which='major')
         plt.xticks(rotation=90)
-        ax.set_title(title)
+        ax.set_title(self.get_name())
         ax.set_ylabel(ylabel)
         ax.boxplot(data_array, labels=label_array)
 
@@ -233,22 +284,22 @@ class Test:
         
     def print_bar_plot(self, title, data_array, strat_array, labels, ylabel, plot_folder):
 
-        fig = plt.figure(self.plot_number, figsize=(10,10))
+        fig = plt.figure(self.plot_number, figsize=(len(strat_array),10))
         self.plot_number = self.plot_number + 1
 
         index = np.arange(len(labels))
 
-        bar_width = 0.2
+        bar_width = 1/(len(strat_array)*2)
         opacity = 0.8
         count = 0
 
         ax = fig.add_subplot()
-        ax.set_title(title)
+        ax.set_title(self.get_name())
         ax.yaxis.grid(True, linestyle='-',which='major')
         ax.set_ylabel(ylabel)
 
         for i in range(len(data_array)):
-            ax.bar(index + bar_width*count*1.2, data_array[i], bar_width, label=strat_array[i])
+            ax.bar(index + bar_width*count*(1+bar_width), data_array[i], bar_width, label=strat_array[i])
             count = count + 1
 
         plt.xticks(index + bar_width, labels, rotation=90)
@@ -294,7 +345,7 @@ class Test:
                     box_data.append(tmp_mn[index])
                     box_label.append(strat_key)
             if len(box_data) > 0:
-                self.print_box_plot(self.name + "_box_plot_" + key, box_data, box_label, "count", plot_folder)
+                self.print_box_plot(self.get_name() + " Box Plot " + key, box_data, box_label, "count", plot_folder)
                 box_data = []
                 box_label = []
 
@@ -431,7 +482,7 @@ class Test:
             writer.writerow([])
                 
 def read_setup_file(folder):
-    setup_file = open(os.path.join(source_folder, "setup.txt"), "r")
+    setup_file = open(os.path.join(source_folder, "setup.st"), "r")
     line = setup_file.readline()
 
     while line:
@@ -470,7 +521,7 @@ def read_setup_file(folder):
                             timings_items.append(data[1])
 
         line = setup_file.readline()
-        
+
 if __name__ == "__main__":
     Tests = {}
 
