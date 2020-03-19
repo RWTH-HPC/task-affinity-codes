@@ -215,6 +215,10 @@ class Test:
 
             #print(lenght)
             i = int(strat_key.split("-")[lenght-1][:-2])
+
+            if len(self.strategies) < i:
+                return
+
             tmp_strat[i] = self.strategies[strat_key]
             #print(strat_key.split("-")[lenght-1][:-2])
 
