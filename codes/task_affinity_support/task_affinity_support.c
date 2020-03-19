@@ -67,11 +67,7 @@ double get_env_int_value(double default_value, char *env)
         return default_value;
     }
 
-<<<<<<< HEAD
     double value = atoi(env);
-=======
-    double value = atof(env);
->>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 
     if (value < 0) 
     {
