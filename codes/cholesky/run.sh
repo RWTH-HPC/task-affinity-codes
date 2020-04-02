@@ -6,17 +6,18 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch.txt
-#SBATCH --time=10:30:00
+#SBATCH --time=01:30:00
 #SBATCH --exclusive
 
 PROG_VERSION=rel
+#PROG_VERSION=deb
 
 
 export KMP_TASK_STEALING_CONSTRAINT=0
-export KMP_A_DEBUG=3
+export KMP_A_DEBUG=1
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-#export OMP_NUM_THREADS=16
+#export OMP_NUM_THREADS=24
 export OMP_NUM_THREADS=64
 
 export T_AFF_INVERTED=0
@@ -28,7 +29,7 @@ export TASK_AFF_THREAD_SELECTION_STRATEGY=-1
 export TASK_AFF_AFFINITY_MAP_MODE=-1
 export TASK_AFF_PAGE_SELECTION_MODE=-1
 export TASK_AFF_PAGE_WEIGHTING_STRATEGY=-1
-export TASK_AFF_NUMBER_OF_AFFINITIES=20
+export TASK_AFF_NUMBER_OF_AFFINITIES=15
 
 export MATRIX_SIZE=40000
 #export MATRIX_SIZE=15000
@@ -82,39 +83,39 @@ echo "running regular..\n"
 grep "Elapsed time" output-files/regular_0_output.txt
 echo "\n"
 
-for affinities in {5..5}
-do
-  export TASK_AFF_NUMBER_OF_AFFINITIES=${affinities}
-  echo "Number of affinities:\t\t ${affinities}"
-  for page_mode in {0..0} #first_page_of_first_affinity, devide_in_n, first_and last
-  do
-    for page_weight in {1..1}  #majority, by_affinity
-    do
-      set_up_affinity 2 0 ${page_mode} ${page_weight} 64 #thread
-      for i in {0..10}
-      do
-        run ".affinity" ${i}
-      done
-      echo "\n"
+ for affinities in {10..10}
+ do
+   export TASK_AFF_NUMBER_OF_AFFINITIES=${affinities}
+   echo "Number of affinities:\t\t ${affinities}"
+   for page_mode in {0,3} #first_page_of_first_affinity, devide_in_n, first_and last
+   do
+     for page_weight in {1..1}  #majority, by_affinity
+     do
+       set_up_affinity 2 0 ${page_mode} ${page_weight} 64 #thread
+       for i in {0..2}
+       do
+         run ".affinity" ${i}
+       done
+       echo "\n"
 
-      set_up_affinity 2 1 ${page_mode} ${page_weight} 64 #domain
-      for i in {0..10}
-      do
-        run ".affinity" ${i}
-      done
-      echo "\n"
+       set_up_affinity 2 1 ${page_mode} ${page_weight} 64 #domain
+       for i in {0..2}
+       do
+         run ".affinity" ${i}
+       done
+       echo "\n"
 
-      for threshold in {0..10}
-      do
-        export TASK_AFF_THRESHOLD=$(($threshold/10.0))
-        set_up_affinity 2 2 ${page_mode} ${page_weight} 64 -${threshold}0%
-        for i in {0..10}
-        do
-            run ".affinity" ${i}
-        done
-        #grep "combined_map" stats_${NAME}.txt
-        echo "\n--------\n\n"
-      done
-    done
-  done
-done
+       for threshold in {0..10}
+       do
+         export TASK_AFF_THRESHOLD=$(($threshold/10.0))
+         set_up_affinity 2 2 ${page_mode} ${page_weight} 64 -${threshold}0%
+         for i in {0..3}
+         do
+             run ".affinity" ${i}
+         done
+         #grep "combined_map" stats_${NAME}.txt
+         echo "\n--------\n\n"
+       done
+     done
+   done
+ done
