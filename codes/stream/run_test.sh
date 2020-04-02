@@ -7,11 +7,7 @@
 #SBATCH --cpus-per-task=24
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch_output.txt
-<<<<<<< HEAD
-#SBATCH --time=00:02:00
-=======
 #SBATCH --time=00:30:00
->>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 #SBATCH --exclusive
 
 #duration of approximately 3 to 10 hours
@@ -25,15 +21,15 @@ export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=3
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=24
 #export OMP_NUM_THREADS=284
 
 export T_AFF_INVERTED=0
 export THIRD_INVERTED=0
 export T_AFF_SINGLE_CREATOR=1
 export T_AFF_NUM_TASK_MULTIPLICATOR=16
-#export STREAM_ARRAY_SIZE=$((2**27))
-export STREAM_ARRAY_SIZE=$((2**30))
+export STREAM_ARRAY_SIZE=$((2**27))
+#export STREAM_ARRAY_SIZE=$((2**30))
 
 export TASK_AFF_THREAD_SELECTION_STRATEGY=-1
 export TASK_AFF_AFFINITY_MAP_MODE=-1

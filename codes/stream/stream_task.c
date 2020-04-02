@@ -369,13 +369,8 @@ int main()
       long tmp_idx_start = ntask * step;
       long tmp_idx_end = MIN((ntask+1)*step-1,STREAM_ARRAY_SIZE);
 #ifdef TASK_AFFINITY
-<<<<<<< HEAD
-    //int len = (tmp_idx_end - tmp_idx_start + 1) * size;
-    //kmpc_set_task_affinity(&a[tmp_idx_start], len);
-=======
     int len = (tmp_idx_end - tmp_idx_start + 1) * size;
     kmpc_set_task_affinity(&a[tmp_idx_start], len);
->>>>>>> ec75990d0e4694571e24ac46f66a32a0b1353a38
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
