@@ -130,7 +130,6 @@ void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
             for (int k = 0; k < nt; k++) {
                 #ifdef TASK_AFFINITY
                     kmpc_set_task_affinity(&A[k][k], size);
-                    //printf("set task affinity %d \n", size);
                 #endif
                 #pragma omp task depend(out: A[k][k])
                 {
@@ -264,12 +263,40 @@ int main(int argc, char *argv[])
     const int  n = atoi(argv[1]); // matrix size
     const int ts = atoi(argv[2]); // tile size
     int check    = atoi(argv[3]); // check result?
-
     const int nt = n / ts;
+    //check = 0;
     printf("nt = %d, ts = %d\n", nt, ts);
 
     double *A_regular[nt][nt], *B, *C[nt], *A_affinity[nt][nt];
 
+    #pragma omp parallel for schedule(static,1)
+    for (int i = 0; i < nt*nt; i++)
+    {
+        if(check)
+        {
+            A_regular[0][i] = (double *) malloc(ts * ts * sizeof(double));
+            assert(A_regular[0][i]);
+        }
+        A_affinity[0][i] = (double *) malloc(ts * ts * sizeof(double));
+        assert(A_affinity[0][i]);
+
+        if(check) {
+            for (int k = 0; k < ts * ts; k++) {
+                A_affinity[0][i][k] = A_regular[0][i][k];
+            }
+        } else {
+            initialize_tile(ts, A_affinity[0][i]);
+        }   
+    }
+    
+    #pragma omp parallel for schedule(static,1)
+    for (int i = 0; i < nt; i++) {
+        if (check) {
+            A_regular[i][i][i*ts+i] = (double)nt;
+        }
+        A_affinity[i][i][i*ts+i] = (double)nt;
+    }
+/*
     for (int i = 0; i < nt; i++) {
         #pragma omp parallel for schedule(static,1)
         for (int j = 0; j < nt; j++) {
@@ -296,7 +323,7 @@ int main(int argc, char *argv[])
         }
         A_affinity[i][i][i*ts+i] = (double)nt;
     }
-
+*/
     B = (double *) malloc(ts * ts * sizeof(double));
     #pragma omp parallel for schedule(static, 1)
     for (int i = 0; i < nt; i++) {
