@@ -5,6 +5,8 @@
 #include "cholesky.h"
 #include "timing.h"
 #include "./../task_affinity_support/task_affinity_support.h"
+#include "./../01_util/no_huge_page_alloc.h"
+#include <numaif.h>
 
 
 #if (defined(DEBUG) || defined(USE_TIMING))
@@ -122,130 +124,70 @@ void cholesky_regular(const int ts, const int nt, double* A[nt][nt])
 void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
 {
     int size = ts * ts * sizeof(double);
-
     #pragma omp parallel
     {
-        #pragma omp master
+        #pragma omp single
         {
             for (int k = 0; k < nt; k++) {
                 #ifdef TASK_AFFINITY
-                    kmpc_set_task_affinity(&A[k][k], size);
+                kmpc_set_task_affinity(A[k][k], size);
                 #endif
                 #pragma omp task depend(out: A[k][k])
                 {
                     omp_potrf(A[k][k], ts, ts);
-                #ifdef DEBUG
+                    #ifdef DEBUG
                     printf("potrf:out:A[%d][%d]\n", k, k);
-                #endif
+                    #endif
                 }
-
+                
                 for (int i = k + 1; i < nt; i++) {
                     #ifdef TASK_AFFINITY
-                        kmpc_set_task_affinity(&A[k][k], size);
-                        kmpc_set_task_affinity(&A[k][i], size);
+                    kmpc_set_task_affinity(A[k][i], size);
+                    kmpc_set_task_affinity(A[k][k], size);
                     #endif
                     #pragma omp task depend(in: A[k][k]) depend(out: A[k][i])
                     {
                         omp_trsm(A[k][k], A[k][i], ts, ts);
-                    #ifdef DEBUG
+                        #ifdef DEBUG
                         printf("trsm :in:A[%d][%d]:out:A[%d][%d]\n", k, k, k, i);
-                    #endif
+                        #endif
                     }
                 }
 
                 for (int i = k + 1; i < nt; i++) {
                     for (int j = k + 1; j < i; j++) {
                         #ifdef TASK_AFFINITY
-                            kmpc_set_task_affinity(&A[k][i], size);
-                            kmpc_set_task_affinity(&A[k][j], size);
-                            kmpc_set_task_affinity(&A[j][i], size);
+                        kmpc_set_task_affinity(A[k][j], size);
+                        kmpc_set_task_affinity(A[j][i], size);
+                        kmpc_set_task_affinity(A[k][i], size);
                         #endif
                         #pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i])
                         {
                             omp_gemm(A[k][i], A[k][j], A[j][i], ts, ts);
-                        #ifdef DEBUG
+                            #ifdef DEBUG
                             printf("gemm :in:A[%d][%d]:A[%d][%d]:out:A[%d][%d]\n", k, i, k, j, j, i);
-                        #endif
+                            #endif
                         }
                     }
+
                     #ifdef TASK_AFFINITY
-                        kmpc_set_task_affinity(&A[k][i], size);
-                        kmpc_set_task_affinity(&A[i][i], size);
+                    kmpc_set_task_affinity(A[k][i], size);
+                    kmpc_set_task_affinity(A[i][i], size);
                     #endif
                     #pragma omp task depend(in: A[k][i]) depend(out: A[i][i])
                     {
                         omp_syrk(A[k][i], A[i][i], ts, ts);
-                    #ifdef DEBUG
-                        printf("syrk :in:A[%d][%d]:out:A[%d][%d]\n", k, i, i, i);
-                    #endif
-                    }
-                }
-            }
-        #pragma omp taskwait
-        }
-    }
-}
-/*
-void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
-{
-    int len = 0, k = 0;
-    #pragma omp parallel
-    {
-        #pragma omp taskgroup
-        {
-            #pragma omp for private(k) schedule(static)
-            for (k = 0; k < nt; k++) {
-                #ifdef TASK_AFFINITY
-                    kmpc_set_task_affinity(&A[k][1], 1);
-                #endif
-                    #pragma omp task depend(out: A[k][k])
-                    {
-                        omp_potrf(A[k][k], ts, ts);
-                    #ifdef DEBUG
-                        printf("potrf:out:A[%d][%d]\n", k, k);
-                    #endif
-                    }
-                #ifdef TASK_AFFINITY
-                    len = nt-k;
-                    kmpc_set_task_affinity(&A[k], len);
-                #endif
-                for (int i = k + 1; i < nt; i++) {
-                    #pragma omp task depend(in: A[k][k]) depend(out: A[k][i])
-                    {
-                        omp_trsm(A[k][k], A[k][i], ts, ts);
-                    #ifdef DEBUG
-                        printf("trsm :in:A[%d][%d]:out:A[%d][%d]\n", k, k, k, i);
-                    #endif
-                    }
-                }
-                #ifdef TASK_AFFINITY
-                    len = nt - k;
-                    kmpc_set_task_affinity(&A[k][k], len);
-                #endif
-                for (int i = k + 1; i < nt; i++) {
-                    for (int j = k + 1; j < i; j++) {
-                        #pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i])
-                        {
-                            omp_gemm(A[k][i], A[k][j], A[j][i], ts, ts);
                         #ifdef DEBUG
-                            printf("gemm :in:A[%d][%d]:A[%d][%d]:out:A[%d][%d]\n", k, i, k, j, j, i);
-                        #endif
-                        }
-                    }
-                    #pragma omp task depend(in: A[k][i]) depend(out: A[i][i])
-                    {
-                        omp_syrk(A[k][i], A[i][i], ts, ts);
-                    #ifdef DEBUG
                         printf("syrk :in:A[%d][%d]:out:A[%d][%d]\n", k, i, i, i);
-                    #endif
+                        #endif
                     }
                 }
             }
-        #pragma omp taskwait
+            #pragma omp taskwait
         }
     }
 }
-*/
+
 int main(int argc, char *argv[])
 {
     /* cholesky init */
@@ -269,44 +211,57 @@ int main(int argc, char *argv[])
 
     double *A_regular[nt][nt], *B, *C[nt], *A_affinity[nt][nt];
 
+    const int page_size = getpagesize();
+    fprintf(stderr, "Pagesize is %d\n", page_size);
+    
     #pragma omp parallel for schedule(static,1)
     for (int i = 0; i < nt*nt; i++)
     {
+        int tmp_i = i/nt;
+        int tmp_j = i % nt;
         if(check)
         {
-            A_regular[0][i] = (double *) malloc(ts * ts * sizeof(double));
-            assert(A_regular[0][i]);
+            A_regular[tmp_i][tmp_j] = (double *) alloc(ts * ts * sizeof(double));
+            assert(A_regular[tmp_i][tmp_j]);
         }
-        A_affinity[0][i] = (double *) malloc(ts * ts * sizeof(double));
-        assert(A_affinity[0][i]);
+        A_affinity[tmp_i][tmp_j] = (double *) alloc(ts * ts * sizeof(double));
+        assert(A_affinity[tmp_i][tmp_j]);
 
         if(check) {
             for (int k = 0; k < ts * ts; k++) {
-                A_affinity[0][i][k] = A_regular[0][i][k];
+                A_affinity[tmp_i][tmp_j][k] = A_regular[tmp_i][tmp_j][k];
             }
         } else {
-            initialize_tile(ts, A_affinity[0][i]);
-        }   
+            initialize_tile(ts, A_affinity[tmp_i][tmp_j]);
+        }
+
+        // size_t tmp_address = (size_t)A_affinity[tmp_i][tmp_j];
+        // size_t page_start_address = tmp_address & ~(page_size-1);
+        // void * page_boundary_pointer = (void *) page_start_address;
+        // int current_data_domain, current_data_domain_b;
+        // int ret_code    = move_pages(0, 1, &(A_affinity[tmp_i][tmp_j]), NULL, &current_data_domain, 0);
+        // int ret_code_b  = move_pages(0, 1, &(page_boundary_pointer), NULL, &current_data_domain_b, 0);
+        // fprintf(stderr, "A[%03d][%03d] = %lp at domain: %d (ret_code: %d) - page_start = %lp at domain: %d (ret_code: %d)\n", tmp_i, tmp_j, A_affinity[tmp_i][tmp_j], current_data_domain, ret_code, page_boundary_pointer, current_data_domain_b, ret_code_b);
     }
     
-    #pragma omp parallel for schedule(static,1)
     for (int i = 0; i < nt; i++) {
         if (check) {
             A_regular[i][i][i*ts+i] = (double)nt;
         }
         A_affinity[i][i][i*ts+i] = (double)nt;
     }
+
 /*
     for (int i = 0; i < nt; i++) {
         #pragma omp parallel for schedule(static,1)
         for (int j = 0; j < nt; j++) {
             if(check) {
-                A_regular[i][j] = (double *) malloc(ts * ts * sizeof(double));
+                A_regular[i][j] = (double *) alloc(ts * ts * sizeof(double));
                 assert(A_regular[i][j]);
                 initialize_tile(ts, A_regular[i][j]);
             }
             
-            A_affinity[i][j] = (double *) malloc(ts * ts * sizeof(double));
+            A_affinity[i][j] = (double *) alloc(ts * ts * sizeof(double));
             assert(A_affinity[i][j]);
             if(check) {
                 for (int k = 0; k < ts * ts; k++) {
@@ -314,7 +269,15 @@ int main(int argc, char *argv[])
                 }
             } else {
                 initialize_tile(ts, A_affinity[i][j]);
-            }            
+            }
+
+            // size_t tmp_address = (size_t)A_affinity[i][j];
+            // size_t page_start_address = tmp_address & ~(page_size-1);
+            // void * page_boundary_pointer = (void *) page_start_address;
+            // int current_data_domain, current_data_domain_b;
+            // int ret_code    = move_pages(0, 1, &(A_affinity[i][j]), NULL, &current_data_domain, 0);
+            // int ret_code_b  = move_pages(0, 1, &(page_boundary_pointer), NULL, &current_data_domain_b, 0);
+            // fprintf(stderr, "A[%03d][%03d] = %lp at domain: %d (ret_code: %d) - page_start = %lp at domain: %d (ret_code: %d)\n", i, j, A_affinity[i][j], current_data_domain, ret_code, page_boundary_pointer, current_data_domain_b, ret_code_b);
         }
 
         // add to diagonal
@@ -323,11 +286,12 @@ int main(int argc, char *argv[])
         }
         A_affinity[i][i][i*ts+i] = (double)nt;
     }
-*/
-    B = (double *) malloc(ts * ts * sizeof(double));
+    */
+
+    B = (double *) alloc(ts * ts * sizeof(double));
     #pragma omp parallel for schedule(static, 1)
     for (int i = 0; i < nt; i++) {
-        C[i] = (double *) malloc(ts * ts * sizeof(double));
+        C[i] = (double *) alloc(ts * ts * sizeof(double));
         for(int j = 0; j < ts*ts; j++) {
             C[i][j] = 0.0;
         }
@@ -344,14 +308,14 @@ int main(int argc, char *argv[])
     const float t2 = get_time() - t1;
 
     const float t3 = get_time();
-    // TODO: implement cholesky affinity version here
-#ifdef TASK_AFFINITY
+
+    #ifdef TASK_AFFINITY
     printf("\nrunning cholesky affinity...\n");
     cholesky_affinity(ts, nt, (double* (*)[nt]) A_affinity);
-#else
+    #else
     printf("\nrunning cholesky regular...\n");
     cholesky_regular(ts, nt, (double* (*)[nt]) A_affinity);
-#endif
+    #endif
 
     const float t4 = get_time() - t3;
 
