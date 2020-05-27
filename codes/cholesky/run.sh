@@ -1,10 +1,10 @@
 #!/bin/zsh
 
-#SBATCH --account=jara0001
+#SBATCH --account=supp0001
 #SBATCH --partition=c16s
 #SBARCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
+#SBATCH --job-name=CHOLESKY_TASK_AFFINITY_TEST
 #SBATCH --output=sbatch.txt
 #SBATCH --time=05:30:00
 #SBATCH --exclusive
@@ -17,8 +17,8 @@ export KMP_TASK_STEALING_CONSTRAINT=0
 export KMP_A_DEBUG=1
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
-export OMP_NUM_THREADS=24
-#export OMP_NUM_THREADS=64
+#export OMP_NUM_THREADS=24
+export OMP_NUM_THREADS=64
 
 export T_AFF_INVERTED=0
 export THIRD_INVERTED=0
@@ -29,11 +29,14 @@ export TASK_AFF_THREAD_SELECTION_STRATEGY=-1
 export TASK_AFF_AFFINITY_MAP_MODE=-1
 export TASK_AFF_PAGE_SELECTION_MODE=-1
 export TASK_AFF_PAGE_WEIGHTING_STRATEGY=-1
-export TASK_AFF_NUMBER_OF_AFFINITIES=15
+export TASK_AFF_NUMBER_OF_AFFINITIES=10
 
 #export MATRIX_SIZE=40000
-export MATRIX_SIZE=15000
-export TITLE_SIZE=500
+#export MATRIX_SIZE=15000
+export MATRIX_SIZE=32768 #2^15
+
+#export TITLE_SIZE=500
+export TITLE_SIZE=512
 export CHECK_RESULTS=0
 
 PROG_CMD="./ch_intel_aff ${MATRIX_SIZE} ${TITLE_SIZE} ${CHECK_RESULTS}"
@@ -85,6 +88,7 @@ echo "running regular..\n"
 grep "Elapsed time" output-files/regular_0_output.txt
 echo "\n"
 
+
 # set_up_affinity 2 0 0 1
 # run ".affinity" 24
 # echo "\n"
@@ -100,9 +104,9 @@ echo "\n"
  do
    export TASK_AFF_NUMBER_OF_AFFINITIES=${affinities}
    echo "Number of affinities:\t\t ${affinities}"
-   for page_mode in {0..0} #first_page_of_first_affinity, devide_in_n, first_and last
+   for page_mode in {0,1,3} #first_page_of_first_affinity, devide_in_n, first_and last
    do
-     for page_weight in {3..3}  #majority, by_affinity
+     for page_weight in {1..1}  #majority, by_affinity
      do
        set_up_affinity 2 1 ${page_mode} ${page_weight} 64 #thread
        for i in {0..9}
@@ -118,7 +122,7 @@ echo "\n"
        done
        echo "\n"
 
-       for threshold in {8..8}
+       for threshold in {0..10}
        do
          export TASK_AFF_THRESHOLD=$(($threshold/10.0))
          set_up_affinity 2 2 ${page_mode} ${page_weight} 64 -${threshold}0%

@@ -24,4 +24,5 @@ do
   TARGET=${target} make affinity
   
   TARGET=${target} make
+  
 done
