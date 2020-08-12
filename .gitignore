@@ -1,2 +1,3 @@
 *.txt
 .vscode
+scripts/task_affinity_eval/result_data/
