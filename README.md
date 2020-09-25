@@ -2,7 +2,7 @@
 Benchmarks and scripts to test the experimental implementation for task affinity
 
 ## 1. List of benchmarks tested
-The following benchmarks have been tested with and without affinity extenstion for the OpenMP task construct.
+The following benchmarks have been tested with and without affinity extension for the OpenMP task construct.
 
 * **./codes/stream**                  
     - STREAM version that uses tasks instead of work sharing construct
@@ -62,3 +62,5 @@ cd codes/stream
 # this script will build and compare multiple versions
 bash run_test.sh
 ```
+
+**Note:** If you have linker issues complaining about task-affinity related symbols, you might need to add `-L${RUNTIME_AFF_REL_DIR}/lib` to your compile flags.

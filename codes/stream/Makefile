@@ -2,7 +2,7 @@ PROG=stream_task
 FILE_ENDING=.c
 CUR_COMPILER=$(CC)
 FLAGS_COMPILER=-Wall -mcmodel=medium
-ADD_COMPILE_FLAGS=-I../01_util/ -qopt-streaming-stores=always
+ADD_COMPILE_FLAGS=-I../01_util/ -L${RUNTIME_AFF_REL_DIR}/lib -qopt-streaming-stores=always
 ADD_COMPILE_FLAGS_GCC=-I../01_util/
 AFFINITY_FLAG=
 
