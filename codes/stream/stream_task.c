@@ -236,10 +236,11 @@ int main()
     int			quantum, checktick();
     int			BytesPerWord;
     int			k;
-    ssize_t		j,ntask;
-    STREAM_TYPE		scalar;
+    ssize_t		j = 0;
+    ssize_t     ntask = 0;
+    STREAM_TYPE	scalar;
     double		t, times[4][NTIMES];
-	  double t_overall;
+	double t_overall;
 
 #ifndef _STAT_ARRAYS
     a = alloc(STREAM_ARRAY_SIZE * sizeof(STREAM_TYPE));
@@ -250,8 +251,9 @@ int main()
     //printf("set_mempolicy: %d (errno=%d)\n", ret, errno);
 
     /* --- SETUP --- determine precision and check timing --- */
+#ifdef TASK_AFFINITY
     int size = sizeof(STREAM_TYPE);
-
+#endif
     printf(HLINE);
     printf("STREAM version $Revision: 5.10 $\n");
     printf(HLINE);

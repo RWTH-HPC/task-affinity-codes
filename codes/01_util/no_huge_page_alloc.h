@@ -1,4 +1,7 @@
-#include <linux/mman.h>
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE
+#endif
+#include <sys/mman.h>
 #include <malloc.h>
 
 #define MEM_ALIGNMENT        4096

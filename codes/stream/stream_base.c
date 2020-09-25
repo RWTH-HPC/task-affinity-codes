@@ -217,7 +217,7 @@ main()
     int			quantum, checktick();
     int			BytesPerWord;
     int			k;
-    ssize_t		j;
+    ssize_t		j=0;
     STREAM_TYPE		scalar;
     double		t, times[4][NTIMES];
     double t_overall;
