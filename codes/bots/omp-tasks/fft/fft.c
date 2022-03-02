@@ -4661,42 +4661,52 @@ void fft_aux(int n, COMPLEX * in, COMPLEX * out, int *factors, COMPLEX * W, int 
 	   */
 	  if (r == 32) {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&out[0]);
+        #pragma omp task affinity(out[0])
+#else
+        #pragma omp task 
 #endif
-               #pragma omp task 
-	       fft_unshuffle_32(0, m, in, out, m);
+        fft_unshuffle_32(0, m, in, out, m);
 	  } else if (r == 16) {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&out[0]);
+        #pragma omp task affinity(out[0])
+#else
+        #pragma omp task 
 #endif
-               #pragma omp task 
-	       fft_unshuffle_16(0, m, in, out, m);
+        fft_unshuffle_16(0, m, in, out, m);
 	  } else if (r == 8) {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&out[0]);
+        #pragma omp task affinity(out[0])
+#else
+        #pragma omp task 
 #endif
-               #pragma omp task 
-	       fft_unshuffle_8(0, m, in, out, m);
+        fft_unshuffle_8(0, m, in, out, m);
 	  } else if (r == 4) {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&out[0]);
+        #pragma omp task affinity(out[0])
+#else
+        #pragma omp task 
 #endif
-               #pragma omp task 
-	       fft_unshuffle_4(0, m, in, out, m);
+        fft_unshuffle_4(0, m, in, out, m);
 	  } else if (r == 2) {
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(&out[0]);
+        #pragma omp task affinity(out[0])
+#else
+        #pragma omp task 
 #endif
-               #pragma omp task 
-	       fft_unshuffle_2(0, m, in, out, m);
-	  } else
-	       unshuffle(0, m, in, out, r, m);
+        fft_unshuffle_2(0, m, in, out, m);
+	  } else {
+        unshuffle(0, m, in, out, r, m);
+      }
 
-          #pragma omp taskwait
+      #pragma omp taskwait
 
 	  for (k = 0; k < n; k += m) {
-               #pragma omp task 
-	       fft_aux(m, out + k, in + k, factors + 1, W, nW);
+#ifdef TASK_AFFINITY
+            #pragma omp task affinity(in + k)
+#else
+            #pragma omp task 
+#endif
+        fft_aux(m, out + k, in + k, factors + 1, W, nW);
 	  }
           #pragma omp taskwait
      }
@@ -4705,22 +4715,46 @@ void fft_aux(int n, COMPLEX * in, COMPLEX * out, int *factors, COMPLEX * W, int 
       * of length r
       */
      if (r == 2) {
-          #pragma omp task 
+#ifdef TASK_AFFINITY
+        #pragma omp task affinity(out)
+#else
+        #pragma omp task 
+#endif
 	  fft_twiddle_2(0, m, in, out, W, nW, nW / n, m);
      } else if (r == 4) {
-          #pragma omp task 
+#ifdef TASK_AFFINITY
+        #pragma omp task affinity(out)
+#else
+        #pragma omp task 
+#endif
 	  fft_twiddle_4(0, m, in, out, W, nW, nW / n, m);
      } else if (r == 8) {
-          #pragma omp task 
+#ifdef TASK_AFFINITY
+        #pragma omp task affinity(out)
+#else
+        #pragma omp task 
+#endif
 	  fft_twiddle_8(0, m, in, out, W, nW, nW / n, m);
      } else if (r == 16) {
-          #pragma omp task 
+#ifdef TASK_AFFINITY
+        #pragma omp task affinity(out)
+#else
+        #pragma omp task 
+#endif
 	  fft_twiddle_16(0, m, in, out, W, nW, nW / n, m);
      } else if (r == 32) {
-          #pragma omp task 
+#ifdef TASK_AFFINITY
+        #pragma omp task affinity(out)
+#else
+        #pragma omp task 
+#endif
 	  fft_twiddle_32(0, m, in, out, W, nW, nW / n, m);
      } else {
-          #pragma omp task 
+#ifdef TASK_AFFINITY
+        #pragma omp task affinity(out)
+#else
+        #pragma omp task 
+#endif
 	  fft_twiddle_gen(0, m, in, out, W, nW, nW / n, r, m);
      }
 
@@ -4796,72 +4830,44 @@ void fft_aux_seq(int n, COMPLEX * in, COMPLEX * out, int *factors, COMPLEX * W, 
  */
 void fft(int n, COMPLEX * in, COMPLEX * out)
 {
-     int factors[40];		/* allows FFTs up to at least 3^40 */
-     int *p = factors;
-     int l = n;
-     int r;
-     COMPLEX *W;
+	int factors[40];		/* allows FFTs up to at least 3^40 */
+	int *p = factors;
+	int l = n;
+	int r;
+	COMPLEX *W;
 
-     bots_message("Computing coefficients ");
-     W = (COMPLEX *) alloc((n + 1) * sizeof(COMPLEX));
-	 first_touch_array(W, (n + 1));
-	 
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_PRIVATE
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
-#endif
-	 
-	 double t_overall = omp_get_wtime();
-     #pragma omp parallel
-     #pragma omp single
-     #pragma omp task 
-     compute_w_coefficients(n, 0, n / 2, W);
-     bots_message(" completed!\n");
+	bots_message("Computing coefficients ");
+	W = (COMPLEX *) alloc((n + 1) * sizeof(COMPLEX));
+	first_touch_array(W, (n + 1));
 
-     /* 
-      * find factors of n, first 8, then 4 and then primes in ascending
-      * order 
-      */
-     do {
-	  r = factor(l);
-	  *p++ = r;
-	  l /= r;
-     } while (l > 1);
+	double t_overall = omp_get_wtime();
+	#pragma omp parallel
+	#pragma omp single
+	#pragma omp task 
+	compute_w_coefficients(n, 0, n / 2, W);
+	bots_message(" completed!\n");
 
-     bots_message("Computing FFT ");
-     #pragma omp parallel
-     #pragma omp single
-     #pragma omp task 
-     fft_aux(n, in, out, factors, W, n);
-     bots_message(" completed!\n");
+	/* 
+	* find factors of n, first 8, then 4 and then primes in ascending
+	* order 
+	*/
+	do {
+		r = factor(l);
+		*p++ = r;
+		l /= r;
+	} while (l > 1);
 
-     t_overall = omp_get_wtime() - t_overall;
-	 printf("Elapsed time for program\t%lf\tsec\n",t_overall);
-     free(W);
-     return;
+	bots_message("Computing FFT ");
+	#pragma omp parallel
+	#pragma omp single
+	#pragma omp task 
+	fft_aux(n, in, out, factors, W, n);
+	bots_message(" completed!\n");
+
+	t_overall = omp_get_wtime() - t_overall;
+	printf("Elapsed time for program\t%lf\tsec\n",t_overall);
+	free(W);
+	return;
 }
 void fft_seq(int n, COMPLEX * in, COMPLEX * out)
 {

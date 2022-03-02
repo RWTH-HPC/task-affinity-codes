@@ -714,38 +714,8 @@ void sort_par ( void )
 	#   define SCHEDULE_NUM 20
 	#endif
 
-     init_task_affinity();
-     /*
-	#ifdef TASK_AFF_DOMAIN_FIRST
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_DOMAIN_RAND
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_DOMAIN_LOWEST
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_DOMAIN_PRIVATE
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_DOMAIN_RR
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_THREAD_FIRST
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_THREAD_RAND
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_THREAD_LOWEST
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif
-	#ifdef TASK_AFF_THREAD_RR
-	  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-	#endif*/
-
 	#ifdef _FILTER_EXEC_TIMES
-	  kmpc_task_affinity_taskexectimes_set_enabled(0);
+	kmpc_task_affinity_taskexectimes_set_enabled(0);
 	#endif
 
 	double t_overall;

@@ -27,34 +27,6 @@ program bsp
   end do
   !$omp end parallel do
 
-#if defined ( TASK_AFF_DOMAIN_FIRST)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain)
-#endif
-#if defined ( TASK_AFF_DOMAIN_RAND)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain)
-#endif
-#if defined ( TASK_AFF_DOMAIN_LOWEST)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain)
-#endif
-#if defined ( TASK_AFF_DOMAIN_PRIVATE)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain)
-#endif
-#if defined ( TASK_AFF_DOMAIN_RR)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain)
-#endif
-#if defined ( TASK_AFF_THREAD_FIRST)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread)
-#endif
-#if defined ( TASK_AFF_THREAD_RAND)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread)
-#endif
-#if defined ( TASK_AFF_THREAD_LOWEST)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread)
-#endif
-#if defined ( TASK_AFF_THREAD_RR)
-  call kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread)
-#endif
-
   ntimes = 10
 #if defined (T_AFF_NUM_TASK_MULTIPLICATOR)
   ntasks_overall = T_AFF_NUM_TASK_MULTIPLICATOR*omp_get_max_threads()

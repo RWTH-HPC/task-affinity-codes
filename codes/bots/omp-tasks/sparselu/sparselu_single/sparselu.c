@@ -223,32 +223,6 @@ void sparselu_init (float ***pBENCH, char *pass)
 
 void sparselu_par_call(float **BENCH)
 {
-
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
-#endif
-
    int ii, jj, kk;
    double t_overall;
    t_overall = omp_get_wtime();
@@ -265,45 +239,45 @@ void sparselu_par_call(float **BENCH)
          if (BENCH[kk*bots_arg_size+jj] != NULL)
          {
 #ifdef TASK_AFFINITY
-  kmpc_set_task_affinity(BENCH[kk*bots_arg_size+kk]);
-  //kmpc_set_task_affinity(BENCH[kk*bots_arg_size+jj]);
-#endif
+            #pragma omp task untied firstprivate(kk, jj) shared(BENCH) affinity(BENCH[kk*bots_arg_size+kk])
+#else
             #pragma omp task untied firstprivate(kk, jj) shared(BENCH)
-         {
-            fwd(BENCH[kk*bots_arg_size+kk], BENCH[kk*bots_arg_size+jj]);
-         }
-         }
-      for (ii=kk+1; ii<bots_arg_size; ii++) 
-         if(BENCH[ii*bots_arg_size+kk] != NULL)
-         {
-#ifdef TASK_AFFINITY
-  kmpc_set_task_affinity(BENCH[kk*bots_arg_size+kk]);
-  //kmpc_set_task_affinity(BENCH[ii*bots_arg_size+kk]);
 #endif
+            {
+                fwd(BENCH[kk*bots_arg_size+kk], BENCH[kk*bots_arg_size+jj]);
+            }
+        }
+
+    for (ii=kk+1; ii<bots_arg_size; ii++) 
+        if(BENCH[ii*bots_arg_size+kk] != NULL)
+        {
+#ifdef TASK_AFFINITY
+            #pragma omp task untied firstprivate(kk, ii) shared(BENCH) affinity(BENCH[kk*bots_arg_size+kk])
+#else
             #pragma omp task untied firstprivate(kk, ii) shared(BENCH)
-         {
-            bdiv (BENCH[kk*bots_arg_size+kk], BENCH[ii*bots_arg_size+kk]);
-         }
-         }
+#endif
+            {
+                bdiv (BENCH[kk*bots_arg_size+kk], BENCH[ii*bots_arg_size+kk]);
+            }
+        }
 
       #pragma omp taskwait
 
       for (ii=kk+1; ii<bots_arg_size; ii++)
          if (BENCH[ii*bots_arg_size+kk] != NULL)
             for (jj=kk+1; jj<bots_arg_size; jj++)
-               if (BENCH[kk*bots_arg_size+jj] != NULL)
-               {
+                if (BENCH[kk*bots_arg_size+jj] != NULL)
+                {
 #ifdef TASK_AFFINITY
-  kmpc_set_task_affinity(BENCH[ii*bots_arg_size+kk]);
-  //kmpc_set_task_affinity(BENCH[ii*bots_arg_size+jj]);
-  //kmpc_set_task_affinity(BENCH[kk*bots_arg_size+jj]);
+                    #pragma omp task untied firstprivate(kk, jj, ii) shared(BENCH) affinity(BENCH[ii*bots_arg_size+kk])
+#else
+                    #pragma omp task untied firstprivate(kk, jj, ii) shared(BENCH)
 #endif
-               #pragma omp task untied firstprivate(kk, jj, ii) shared(BENCH)
-               {
-                     if (BENCH[ii*bots_arg_size+jj]==NULL) BENCH[ii*bots_arg_size+jj] = allocate_clean_block();
-                     bmod(BENCH[ii*bots_arg_size+kk], BENCH[kk*bots_arg_size+jj], BENCH[ii*bots_arg_size+jj]);
-               }
-               }
+                    {
+                        if (BENCH[ii*bots_arg_size+jj]==NULL) BENCH[ii*bots_arg_size+jj] = allocate_clean_block();
+                        bmod(BENCH[ii*bots_arg_size+kk], BENCH[kk*bots_arg_size+jj], BENCH[ii*bots_arg_size+jj]);
+                    }
+                }
 
       #pragma omp taskwait
    }

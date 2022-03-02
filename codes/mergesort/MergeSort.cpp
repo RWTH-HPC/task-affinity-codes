@@ -39,15 +39,16 @@
 #include <numaif.h>
 
 #include <omp.h>
-
 #include <no_huge_page_alloc.h>
 
-#define KMP_PRINT_MSG 0
+#ifndef TASK_AFF_UNTIED
 #define TASK_AFF_UNTIED 0
+#endif
+
 #define PAGE_ALIGN 0
 
 #ifndef T_AFF_NUMBER_TASKS_MULTIPLICATOR
-  #define T_AFF_NUMBER_TASKS_MULTIPLICATOR 5
+#define T_AFF_NUMBER_TASKS_MULTIPLICATOR 5
 #endif
 
 #if PAGE_ALIGN
@@ -236,66 +237,47 @@ void MsMergeParallel(T out[], T in[], long begin1, long end1, long begin2, long 
 					}
 				}
 			}
-#ifdef TASK_AFFINITY
-#if KMP_PRINT_MSG
-      char buf[50];
-#endif
-      if(nextDeep){
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsMergeParallel %d", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-      }
-      else{
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsMergeParallel %d (seq)", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-        //kmpc_set_task_affinity(&out[begin1]);
-        int len1 = half1 - begin1;
-        int len2 = half2 - begin2;
-        int len12 = len1+len2;
-        kmpc_set_task_affinity(&out[begin1],&len12);
-        kmpc_set_task_affinity(&in[begin1],&len1);
-        kmpc_set_task_affinity(&in[begin2],&len2);
-      }
-#endif
+
+      int len1, len2, len12;
+
+#if TASK_AFFINITY
+      len1    = half1 - begin1;
+      len2    = half2 - begin2;
+      len12   = len1+len2;
+      #if TASK_AFF_UNTIED
+      #pragma omp task default(shared) affinity(out[begin1:len12], in[begin1:len1], in[begin2:len2]) untied
+      #else
+      #pragma omp task default(shared) affinity(out[begin1:len12], in[begin1:len1], in[begin2:len2])
+      #endif
+#else
 #if TASK_AFF_UNTIED
 			#pragma omp task default(shared) untied
 #else
 			#pragma omp task default(shared)
-#endif
+#endif // TASK_AFF_UNTIED
+#endif // TASK_AFFINITY
 			{
 				MsMergeParallel(out, in, begin1, half1, begin2, half2, outBegin, deep - 1);
 			}
 
 			long outBegin2 = outBegin + (half1 - begin1) + (half2 - begin2);
-#ifdef TASK_AFFINITY
-      if(nextDeep){
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsMergeParallel %d", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-      }
-      else{
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsMergeParallel %d (seq)", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-        //kmpc_set_task_affinity(&out[half1]);
-        int len1 = end1 - half1;
-        int len2 = end2 - half2;
-        int len12 = len1+len2;
-        kmpc_set_task_affinity(&out[half1],&len12);
-        kmpc_set_task_affinity(&in[half1],&len1);
-        kmpc_set_task_affinity(&in[half2],&len2);
-      }
-#endif
+
+#if TASK_AFFINITY
+      len1    = end1 - half1;
+      len2    = end2 - half2;
+      len12   = len1+len2;
+      #if TASK_AFF_UNTIED
+      #pragma omp task default(shared) affinity(out[half1:len12], in[half1:len1], in[half2:len2]) untied
+      #else
+      #pragma omp task default(shared) affinity(out[half1:len12], in[half1:len1], in[half2:len2])
+      #endif
+#else
 #if TASK_AFF_UNTIED
 			#pragma omp task default(shared) untied
 #else
 			#pragma omp task default(shared)
-#endif
+#endif // TASK_AFF_UNTIED
+#endif // TASK_AFFINITY
 			{
 				MsMergeParallel(out, in, half1, end1, half2, end2, outBegin2, deep - 1);
 			}
@@ -316,63 +298,42 @@ void MsParallel(T array[], T tmp[], bool inplace, long begin, long end, int deep
     int nextDeep = deep-1;
 
 		if (deep){
-
-#ifdef TASK_AFFINITY
-#if KMP_PRINT_MSG
-      char buf[50];
-#endif
-      if(nextDeep){
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsParallel %d", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-      }
-      else{
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsParallel %d (seq)", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-        //kmpc_set_task_affinity(&tmp[begin]);
-        int len = half - begin;
-        kmpc_set_task_affinity(&array[begin],&len);
-        kmpc_set_task_affinity(&tmp[begin],&len);
-      }
-#endif
+#if TASK_AFFINITY
+      int len = half - begin;
+      #if TASK_AFF_UNTIED
+      #pragma omp task default(shared) affinity(array[begin:len], tmp[begin:len]) untied
+      #else
+      #pragma omp task default(shared) affinity(array[begin:len], tmp[begin:len])
+      #endif
+#else
 #if TASK_AFF_UNTIED
 			#pragma omp task default(shared) untied
 #else
 			#pragma omp task default(shared)
-#endif
+#endif // TASK_AFF_UNTIED
+#endif // TASK_AFFINITY
 			{
 				MsParallel(array, tmp, !inplace, begin, half, deep - 1);
 			}
-#ifdef TASK_AFFINITY
-      if(nextDeep){
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsParallel %d", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-      }
-      else{
-#if KMP_PRINT_MSG
-        sprintf(buf, "MsParallel %d (seq)", nextDeep);
-        kmpc_task_affinity_set_msg(buf);
-#endif
-        //kmpc_set_task_affinity(&tmp[half]);
-        int len = end- half;
-        kmpc_set_task_affinity(&array[half],&len);
-        kmpc_set_task_affinity(&tmp[half],&len);
-      }
-#endif
+
+#if TASK_AFFINITY
+      int len2 = end - half;
+      #if TASK_AFF_UNTIED
+      #pragma omp task default(shared) affinity(array[half:len2], tmp[half:len2]) untied
+      #else
+      #pragma omp task default(shared) affinity(array[half:len2], tmp[half:len2])
+      #endif
+#else
 #if TASK_AFF_UNTIED
 			#pragma omp task default(shared) untied
 #else
 			#pragma omp task default(shared)
-#endif
+#endif // TASK_AFF_UNTIED
+#endif // TASK_AFFINITY
 			{
 				MsParallel(array, tmp, !inplace, half, end, deep - 1);
 			}
-    #pragma omp taskwait
+      #pragma omp taskwait
 		}
 		else
     {
@@ -435,42 +396,14 @@ int main(int argc, char* argv[]) {
 	// measure the time
 	double t1, t2;
 
-    // choose which policy you want to use by specifying FLAG during compile process
-    //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
-    #ifndef SCHEDULE_TYPE
-    #   define SCHEDULE_TYPE 101
-    #endif
-    #ifndef SCHEDULE_NUM
-    #   define SCHEDULE_NUM 20
-    #endif
-
-    #ifdef TASK_AFF_DOMAIN_FIRST
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_DOMAIN_RAND
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_DOMAIN_LOWEST
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_DOMAIN_PRIVATE
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_DOMAIN_RR
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_THREAD_FIRST
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_THREAD_RAND
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_THREAD_LOWEST
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
-    #ifdef TASK_AFF_THREAD_RR
-      kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-    #endif
+  // choose which policy you want to use by specifying FLAG during compile process
+  //also SCHEDULE_TYPE and SCHEDULE_NUM can be specified for other strategies
+  #ifndef SCHEDULE_TYPE
+  #   define SCHEDULE_TYPE 101
+  #endif
+  #ifndef SCHEDULE_NUM
+  #   define SCHEDULE_NUM 20
+  #endif
 
 	// expect one command line arguments: array size
 	if (argc != 2) {
@@ -492,8 +425,8 @@ int main(int argc, char* argv[]) {
       pagesize = 4096;
 
 		std::cout << "Use memory alignment with pagesize = " << pagesize << std::endl;
-    data = (ELEMENT_T*) memalign(pagesize, sizeof(ELEMENT_T) * stSize);
-    tmp = (ELEMENT_T*) memalign(pagesize, sizeof(ELEMENT_T) * stSize);
+    data  = (ELEMENT_T*) memalign(pagesize, sizeof(ELEMENT_T) * stSize);
+    tmp   = (ELEMENT_T*) memalign(pagesize, sizeof(ELEMENT_T) * stSize);
 #endif
 
 		// first touch

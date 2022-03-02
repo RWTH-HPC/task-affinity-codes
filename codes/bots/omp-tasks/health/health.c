@@ -433,15 +433,18 @@ void sim_village_par(struct Village *village)
    vlist = village->forward;
    while(vlist)
    {
+    //printf("Task created\n");
+    //#pragma omp atomic update
+    //nr_tasks++;
 #ifdef TASK_AFFINITY
       int len = sizeof(Village);
-      kmpc_set_task_affinity(&vlist, len);
-#endif
-//printf("Task created\n");
-//#pragma omp atomic update
-//nr_tasks++;
-#pragma omp task if((sim_level - village->level) < bots_cutoff_value)
+      byte *tmp = (byte*) &vlist;
+      #pragma omp task affinity(tmp[0:len]) if((sim_level - village->level) < bots_cutoff_value)
+#else
+      #pragma omp task if((sim_level - village->level) < bots_cutoff_value)
+#endif     
       sim_village_par(vlist);
+
       vlist = vlist->next;
    }
 
@@ -478,15 +481,19 @@ void sim_village_par(struct Village *village)
    {
       while(vlist)
       {
+        //#pragma omp atomic update
+        //nr_tasks++;
 #ifdef TASK_AFFINITY
-      int len = sizeof(vlist);
-      kmpc_set_task_affinity(&vlist, len);
+        int len = sizeof(vlist);
+        // kmpc_set_task_affinity(&vlist, len);
+        byte *tmp = (byte*) &vlist;
+        #pragma omp task affinity(tmp[0:len])
+#else
+        #pragma omp task
 #endif
-//#pragma omp atomic update
-//nr_tasks++;
-#pragma omp task
-         sim_village_par(vlist);
-         vlist = vlist->next;
+        sim_village_par(vlist);
+      
+        vlist = vlist->next;
       }
    }
    else
@@ -532,13 +539,15 @@ void sim_village_par(struct Village *village)
    vlist = village->forward;
    while(vlist)
    {
+      //#pragma omp atomic update
+      //nr_tasks++;
 #ifdef TASK_AFFINITY
       int len = sizeof(vlist);
-      kmpc_set_task_affinity(&vlist, len);
+      byte *tmp = (byte*) &vlist;
+      #pragma omp task affinity(tmp[0:len])
+#else
+      #pragma omp task
 #endif
-//#pragma omp atomic update
-//nr_tasks++;
-#pragma omp task
       sim_village_par(vlist);
       vlist = vlist->next;
    }
@@ -680,38 +689,8 @@ void sim_village_main_par(struct Village *top)
    #ifndef SCHEDULE_NUM
    #   define SCHEDULE_NUM 20
    #endif
-   
-   init_task_affinity();
-   /*
-   #ifdef TASK_AFF_DOMAIN_FIRST
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_DOMAIN_RAND
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_DOMAIN_LOWEST
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_DOMAIN_PRIVATE
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_private, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_DOMAIN_RR
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_THREAD_FIRST
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_THREAD_RAND
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_THREAD_LOWEST
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif
-   #ifdef TASK_AFF_THREAD_RR
-     kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread, SCHEDULE_TYPE , SCHEDULE_NUM);
-   #endif*/
 
-printf("Last Patient id = %d\n", sim_pid);
+   printf("Last Patient id = %d\n", sim_pid);
 #pragma omp parallel
 #pragma omp single
 #pragma omp task

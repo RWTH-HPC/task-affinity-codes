@@ -50,8 +50,6 @@
 
 // #include <callback.h>
 
-#define KMP_PRINT_MSG 0
-
 int FileExists(const size_t size, int mat_id)
 {
   char buf[255];
@@ -991,121 +989,60 @@ void OptimizedStrassenMultiply_par(REAL *C, REAL *A, REAL *B, unsigned MatrixSiz
   {
     int nextDepth = Depth+1;
     /* M2 = A11 x B11 */
-#if KMP_PRINT_MSG
-      char buf[60];
-      if(nextDepth < bots_cutoff_value){
-        sprintf(buf, "OptimizedStrassenMultiply_par A11 B11 %d", nextDepth);
-      }else{
-        sprintf(buf, "OptimizedStrassenMultiply_par A11 B11 %d (ser)", nextDepth);
-      }
-      kmpc_task_affinity_set_msg(buf);
-#endif
+
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(M2);
-      // if(Depth == 1)
-      //   kmpc_set_task_affinity(A11);
-#endif
+    #pragma omp task untied affinity(M2, A11)
+#else
     #pragma omp task untied
+#endif
     OptimizedStrassenMultiply_par(M2, A11, B11, QuadrantSize, QuadrantSize, RowWidthA, RowWidthB, nextDepth);
 
     /* M5 = S1 * S5 */
-#if KMP_PRINT_MSG
-      if(nextDepth < bots_cutoff_value){
-        sprintf(buf, "OptimizedStrassenMultiply_par S1 S5 %d", nextDepth);
-      }else{
-        sprintf(buf, "OptimizedStrassenMultiply_par S1 S5 %d (ser)", nextDepth);
-      }
-      kmpc_task_affinity_set_msg(buf);
-#endif
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(M5);
-      // kmpc_set_task_affinity(S1);
-#endif
+    #pragma omp task untied affinity(M5)
+#else
     #pragma omp task untied
+#endif
     OptimizedStrassenMultiply_par(M5, S1, S5, QuadrantSize, QuadrantSize, QuadrantSize, QuadrantSize, nextDepth);
 
     /* Step 1 of T1 = S2 x S6 + M2 */
-#if KMP_PRINT_MSG
-      if(nextDepth < bots_cutoff_value){
-        sprintf(buf, "OptimizedStrassenMultiply_par S2 S6 %d", nextDepth);
-      }else{
-        sprintf(buf, "OptimizedStrassenMultiply_par S2 S6 %d (ser)", nextDepth);
-      }
-      kmpc_task_affinity_set_msg(buf);
-#endif
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(T1sMULT);
-      // kmpc_set_task_affinity(S2);
-#endif
+    #pragma omp task untied affinity(T1sMULT)
+#else
     #pragma omp task untied
+#endif
     OptimizedStrassenMultiply_par(T1sMULT, S2, S6,  QuadrantSize, QuadrantSize, QuadrantSize, QuadrantSize, nextDepth);
 
     /* Step 1 of T2 = T1 + S3 x S7 */
-#if KMP_PRINT_MSG
-      
-      if(nextDepth < bots_cutoff_value){
-        sprintf(buf, "OptimizedStrassenMultiply_par S3 S7 %d", nextDepth);
-      }else{
-        sprintf(buf, "OptimizedStrassenMultiply_par S3 S7 %d (ser)", nextDepth);
-      }
-      kmpc_task_affinity_set_msg(buf);
-#endif
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(C22);
-      // kmpc_set_task_affinity(S3);
-#endif
+    #pragma omp task untied affinity(C22)
+#else
     #pragma omp task untied
+#endif
     OptimizedStrassenMultiply_par(C22, S3, S7, QuadrantSize, RowWidthC /*FIXME*/, QuadrantSize, QuadrantSize, nextDepth);
 
     /* Step 1 of C11 = M2 + A12 * B21 */
-#if KMP_PRINT_MSG     
-      if(nextDepth < bots_cutoff_value){
-        sprintf(buf, "OptimizedStrassenMultiply_par A12 B21 %d", nextDepth);
-      }else{
-        sprintf(buf, "OptimizedStrassenMultiply_par A12 B21 %d (ser)", nextDepth);
-      }
-      kmpc_task_affinity_set_msg(buf);
-#endif
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(C11);
-      // if(Depth == 1)
-      //   kmpc_set_task_affinity(A12);
-#endif
+    #pragma omp task untied affinity(C11)
+#else
     #pragma omp task untied
+#endif
     OptimizedStrassenMultiply_par(C11, A12, B21, QuadrantSize, RowWidthC, RowWidthA, RowWidthB, nextDepth);
   
     /* Step 1 of C12 = S4 x B22 + T1 + M5 */
-#if KMP_PRINT_MSG 
-      if(nextDepth < bots_cutoff_value){
-        sprintf(buf, "OptimizedStrassenMultiply_par S4 B22 %d", nextDepth);
-      }else{
-        sprintf(buf, "OptimizedStrassenMultiply_par S4 B22 %d (ser)", nextDepth);
-      }
-      kmpc_task_affinity_set_msg(buf);
-#endif
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(C12);
-      // if(Depth == 1)
-      //   kmpc_set_task_affinity(B22);
-#endif
+    #pragma omp task untied affinity(C12)
+#else
     #pragma omp task untied
+#endif
     OptimizedStrassenMultiply_par(C12, S4, B22, QuadrantSize, RowWidthC, QuadrantSize, RowWidthB, nextDepth);
 
     /* Step 1 of C21 = T2 - A22 * S8 */
-#if KMP_PRINT_MSG  
-      if(nextDepth < bots_cutoff_value){
-        sprintf(buf, "OptimizedStrassenMultiply_par A22 S8 %d", nextDepth);
-      }else{
-        sprintf(buf, "OptimizedStrassenMultiply_par A22 S8 %d (ser)", nextDepth);
-      }
-      kmpc_task_affinity_set_msg(buf);
-#endif
 #ifdef TASK_AFFINITY
-      kmpc_set_task_affinity(C21);
-      // if(Depth == 1)
-      //   kmpc_set_task_affinity(A22);
-#endif
+    #pragma omp task untied affinity(C21)
+#else
     #pragma omp task untied
+#endif
     OptimizedStrassenMultiply_par(C21, A22, S8, QuadrantSize, RowWidthC, RowWidthA, QuadrantSize, nextDepth);
 
     /**********************************************
@@ -1469,43 +1406,13 @@ REAL *alloc_matrix(int n)
 
 void strassen_main_par(REAL *A, REAL *B, REAL *C, int n)
 {
-#ifdef TASK_AFF_DOMAIN_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_DOMAIN_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_domain);
-#endif
-#ifdef TASK_AFF_THREAD_FIRST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_first, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RAND
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_random, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_LOWEST
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_lowest_wl, kmp_task_aff_map_type_thread);
-#endif
-#ifdef TASK_AFF_THREAD_RR
-  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_round_robin, kmp_task_aff_map_type_thread);
-#endif
-
   double t_overall;
   t_overall = omp_get_wtime();
 	bots_message("Computing parallel Strassen algorithm (n=%d) ", n);
 	#pragma omp parallel
 	#pragma omp single
   {
-#if KMP_PRINT_MSG
-      char buf[60];
-      sprintf(buf, "OptimizedStrassenMultiply_par main A B %d (ser)", 1);
-      kmpc_task_affinity_set_msg(buf);
-#endif
-	#pragma omp task untied     
+	  #pragma omp task untied
 		OptimizedStrassenMultiply_par(C, A, B, n, n, n, n, 1);
   }
 	bots_message(" completed!\n");
@@ -1513,6 +1420,7 @@ void strassen_main_par(REAL *A, REAL *B, REAL *C, int n)
   t_overall = omp_get_wtime() - t_overall;
   printf("Elapsed time for program\t%lf\tsec\n",t_overall);
 }
+
 void strassen_main_seq(REAL *A, REAL *B, REAL *C, int n)
 {
 	bots_message("Computing sequential Strassen algorithm (n=%d) ", n);

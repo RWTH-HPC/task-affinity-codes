@@ -130,9 +130,11 @@ void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
         {
             for (int k = 0; k < nt; k++) {
                 #ifdef TASK_AFFINITY
-                kmpc_set_task_affinity(A[k][k], size);
-                #endif
+                kmpc_set_task_affinity
+                #pragma omp task depend(out: A[k][k]) affinity(A[k][k][0:size])
+                #else
                 #pragma omp task depend(out: A[k][k])
+                #endif
                 {
                     omp_potrf(A[k][k], ts, ts);
                     #ifdef DEBUG
@@ -142,10 +144,10 @@ void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
                 
                 for (int i = k + 1; i < nt; i++) {
                     #ifdef TASK_AFFINITY
-                    kmpc_set_task_affinity(A[k][i], size);
-                    kmpc_set_task_affinity(A[k][k], size);
-                    #endif
+                    #pragma omp task depend(in: A[k][k]) depend(out: A[k][i]) affinity(A[k][i:size], A[k][k:size])
+                    #else
                     #pragma omp task depend(in: A[k][k]) depend(out: A[k][i])
+                    #endif
                     {
                         omp_trsm(A[k][k], A[k][i], ts, ts);
                         #ifdef DEBUG
@@ -157,11 +159,10 @@ void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
                 for (int i = k + 1; i < nt; i++) {
                     for (int j = k + 1; j < i; j++) {
                         #ifdef TASK_AFFINITY
-                        kmpc_set_task_affinity(A[k][j], size);
-                        kmpc_set_task_affinity(A[j][i], size);
-                        kmpc_set_task_affinity(A[k][i], size);
-                        #endif
+                        #pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i]) affinity(A[k][j:size], A[j][i:size], A[k][i:size])
+                        #else
                         #pragma omp task depend(in: A[k][i], A[k][j]) depend(out: A[j][i])
+                        #endif
                         {
                             omp_gemm(A[k][i], A[k][j], A[j][i], ts, ts);
                             #ifdef DEBUG
@@ -171,10 +172,10 @@ void cholesky_affinity(const int ts, const int nt, double* A[nt][nt])
                     }
 
                     #ifdef TASK_AFFINITY
-                    kmpc_set_task_affinity(A[k][i], size);
-                    kmpc_set_task_affinity(A[i][i], size);
-                    #endif
+                    #pragma omp task depend(in: A[k][i]) depend(out: A[i][i]) affinity(A[i][i:size], A[k][i:size])
+                    #else
                     #pragma omp task depend(in: A[k][i]) depend(out: A[i][i])
+                    #endif
                     {
                         omp_syrk(A[k][i], A[i][i], ts, ts);
                         #ifdef DEBUG
