@@ -38,10 +38,10 @@ rel.affinity: rel
 deb.affinity: AFFINITY_FLAG=-DTASK_AFFINITY ./../task_affinity_support/task_affinity_support.c -D_FILTER_EXEC_TIMES
 deb.affinity: deb
 
-rel.baseline: PROG=stream_base
+#rel.baseline: PROG=stream_base
 rel.baseline: rel
 
-deb.baseline: PROG=stream_base
+#deb.baseline: PROG=stream_base
 deb.baseline: deb
 
 rel.gcc: FLAGS_COMPILER=-mcmodel=medium
