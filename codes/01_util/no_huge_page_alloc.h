@@ -9,7 +9,7 @@
 static inline void* alloc(size_t size)
 {
   void* p = memalign(MEM_ALIGNMENT, size);
-  madvise(p, size, MADV_NOHUGEPAGE);
+  //madvise(p, size, MADV_NOHUGEPAGE);
   return p;
 }
 
