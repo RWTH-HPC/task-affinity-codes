@@ -47,7 +47,7 @@ function compile {
 
 function run {
     no_numa_balancing "${PROG_CMD}" &> ${RESULT_DIR}/${NAME}_$2_output.txt
-    sed -i 's/\./\,/g' ${RESULT_DIR}/${NAME}_$2_output.txt
+    # sed -i 's/\./\,/g' ${RESULT_DIR}/${NAME}_$2_output.txt
     grep "Elapsed time" ${RESULT_DIR}/${NAME}_$2_output.txt
     #grep ": corr_domain" output_${NAME}.txt > output_corr_domain_${NAME}.txt
     #grep ": in_corr_domain" output_${NAME}.txt > output_in_corr_domain_${NAME}.txt
@@ -65,7 +65,7 @@ function compile_and_run {
 }
 
 function set_up_affinity {
-    NAME=STREAM_${map_mode[$2+1]}-${page_selection_strategy[$3+1]}-${TASK_AFF_NUMBER_OF_AFFINITIES}-${page_weight_strategy[$4+1]}-${5}
+    NAME=STREAM_${map_mode[$2+1]}_${page_selection_strategy[$3+1]}_${TASK_AFF_NUMBER_OF_AFFINITIES}_${page_weight_strategy[$4+1]}_${5}
     echo "${NAME}"
 
     export TASK_AFF_THREAD_SELECTION_STRATEGY=$1
@@ -136,6 +136,6 @@ do
                     run ".affinity" ${rep}
                 fi
             done
-        done        
+        done
     done
 done
