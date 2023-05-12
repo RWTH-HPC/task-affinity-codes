@@ -66,6 +66,9 @@
 #if T_AFF_SINGLE_CREATOR
     #define T_AFF_INVERTED 0
 #endif
+#if THIRD_INVERTED
+    #define THIRD_INVERTED 0
+#endif
 
 #ifndef NUMA_BALANCING
 #include <errno.h>
@@ -311,7 +314,7 @@ int main()
     /* Get initial value for system clock. */
     fprintf(stderr, "Initializing data (parallel) ...\n");
     #if THIRD_INVERTED
-    fprintf(stderr, "using one third inverted data setup!\n");
+    fprintf(stderr, "... using first third inverted data setup!\n");
     #endif
 	#pragma omp parallel for schedule(static)
     for (j=0; j<STREAM_ARRAY_SIZE; j++) {
@@ -410,6 +413,8 @@ int main()
     for (k=0; k<NTIMES; k++)
 	{
     fprintf(stderr, "---------- Running iteration %d ...\n", k);
+#if THIRD_INVERTED == 0 // Execute Copy, Scale and Add if not in THIRD_INVERTED mode
+    fprintf(stderr, "---------- Copy ...\n");
 	times[0][k] = mysecond();
 
 #pragma omp parallel
@@ -528,6 +533,7 @@ int main()
 #endif
 }
 	times[2][k] = mysecond() - times[2][k];
+#endif // THIRD_INVERTED == 0
 
   fprintf(stderr, "---------- Triad ...\n");
 #ifdef _FILTER_EXEC_TIMES
