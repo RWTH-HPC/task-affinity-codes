@@ -10,6 +10,12 @@
 #SBATCH --time=10:00:00
 #SBATCH --exclusive
 
+# ========================================
+# === Environment: Prep & Execution Setup
+# ========================================
+RESULT_DIR="$(pwd)/$(date +"%Y-%m-%d_%H%M%S")_results"
+mkdir ${RESULT_DIR}
+
 PROG_CMD=./stream_task.exe
 PROG_VERSION=rel
 #PROG_VERSION=deb
@@ -40,6 +46,9 @@ map_mode=(thread domain combined)
 page_selection_strategy=(FirstPageOfFirstAffinity DivideInN EveryNTh FirstAndLast binary first)
 page_weight_strategy=(first majority ByAffinity size)
 
+# ========================================
+# === Functions
+# ========================================
 function compile {
     echo "Compiling affinity $1"
     make ${PROG_VERSION}"$1"
@@ -78,18 +87,9 @@ function set_up_affinity {
     echo "Page weight strategy:\t\t ${page_weight_strategy[$4+1]}"
 }
 
-RESULT_DIR="$(pwd)/$(date +"%Y-%m-%d_%H%M%S")_results"
-mkdir ${RESULT_DIR}
-
-# clean first
-make clean
-
-echo "--- Run without task affinity ---"
-compile_and_run ".baseline"
-
-echo "--- Run with affinity ---"
-compile ".affinity"
-
+# ========================================
+# === Environment: Stategies and Settings
+# ========================================
 # Main modes
 #   0: temporal mode
 #   1: domain mode
@@ -114,6 +114,23 @@ STRATS_PAGE_SELECTION=(0 1 2 3 5)
 # Number of affinities
 N_AFFINITIES=(16 32 64 128)
 
+# clean first
+make clean
+
+# ========================================
+# === Baseline Experiments
+# ========================================
+compile ".baseline"
+NAME="baseline"
+for rep in {0..${N_REP}}
+do
+    run ".baseline" ${rep}    
+done
+
+# ========================================
+# === Affinity Experiments
+# ========================================
+compile ".affinity"
 for rep in {0..${N_REP}}
 do
     for mode in "${MAIN_MODES[@]}"
