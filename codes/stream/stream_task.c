@@ -62,12 +62,15 @@
 #ifndef T_AFF_NUM_TASK_MULTIPLICATOR
     #define T_AFF_NUM_TASK_MULTIPLICATOR 32
 #endif
+#ifndef T_AFF_BLOCK_GRAIN_DIVISOR
+    #define T_AFF_BLOCK_GRAIN_DIVISOR 32
+#endif
+#ifndef THIRD_INVERTED
+    #define THIRD_INVERTED 0
+#endif
 // invert flag is only on for multiple task creators
 #if T_AFF_SINGLE_CREATOR
     #define T_AFF_INVERTED 0
-#endif
-#if THIRD_INVERTED
-    #define THIRD_INVERTED 0
 #endif
 
 #ifndef NUMA_BALANCING
@@ -78,7 +81,7 @@
 /*-----------------------------------------------------------------------
  * INSTRUCTIONS:
  *
- *	1) STREAM requires different amounts of memory to run on different
+ *    1) STREAM requires different amounts of memory to run on different
  *           systems, depending on both the system cache size(s) and the
  *           granularity of the system timer.
  *     You should adjust the value of 'STREAM_ARRAY_SIZE' (below)
@@ -119,10 +122,10 @@
  *          per array.
  */
 #ifndef STREAM_ARRAY_SIZE
-//#   define STREAM_ARRAY_SIZE	660000000
-#   define STREAM_ARRAY_SIZE	260000000
-//#   define STREAM_ARRAY_SIZE	60000000
-//#   define STREAM_ARRAY_SIZE	120000000
+//#   define STREAM_ARRAY_SIZE    660000000
+#   define STREAM_ARRAY_SIZE    260000000
+//#   define STREAM_ARRAY_SIZE    60000000
+//#   define STREAM_ARRAY_SIZE    120000000
 #endif
 
 /*  2) STREAM runs each kernel "NTIMES" times and reports the *best* result
@@ -136,11 +139,11 @@
  */
 #ifdef NTIMES
 #if NTIMES<=1
-#   define NTIMES	10
+#   define NTIMES    10
 #endif
 #endif
 #ifndef NTIMES
-#   define NTIMES	10
+#   define NTIMES    10
 #endif
 
 /*  Users are allowed to modify the "OFFSET" variable, which *may* change the
@@ -152,11 +155,11 @@
  *         code using, for example, "-DOFFSET=56".
  */
 #ifndef OFFSET
-#   define OFFSET	0
+#   define OFFSET    0
 #endif
 
 /*
- *	3) Compile the code with optimization.  Many compilers generate
+ *    3) Compile the code with optimization.  Many compilers generate
  *       unreasonably bad code before the optimizer tightens things up.
  *     If the results are unreasonably good, on the other hand, the
  *       optimizer might be too smart for me!
@@ -183,12 +186,12 @@
  *       provide predefined interfaces to be replaced with tuned code.
  *
  *
- *	4) Optional: Mail the results to mccalpin@cs.virginia.edu
- *	   Be sure to include info that will help me understand:
- *		a) the computer hardware configuration (e.g., processor model, memory type)
- *		b) the compiler name/version and compilation flags
+ *    4) Optional: Mail the results to mccalpin@cs.virginia.edu
+ *       Be sure to include info that will help me understand:
+ *        a) the computer hardware configuration (e.g., processor model, memory type)
+ *        b) the compiler name/version and compilation flags
  *      c) any run-time information (such as OMP_NUM_THREADS)
- *		d) all of the output from the test case.
+ *        d) all of the output from the test case.
  *
  * Thanks!
  *
@@ -210,18 +213,18 @@
 #ifndef _STAT_ARRAYS
 static STREAM_TYPE *a, *b, *c;
 #else
-static STREAM_TYPE	a[STREAM_ARRAY_SIZE+OFFSET],
-			b[STREAM_ARRAY_SIZE+OFFSET],
-			c[STREAM_ARRAY_SIZE+OFFSET];
+static STREAM_TYPE    a[STREAM_ARRAY_SIZE+OFFSET],
+            b[STREAM_ARRAY_SIZE+OFFSET],
+            c[STREAM_ARRAY_SIZE+OFFSET];
 #endif
 
-static double	avgtime[4] = {0}, maxtime[4] = {0},
-		mintime[4] = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
+static double    avgtime[4] = {0}, maxtime[4] = {0},
+        mintime[4] = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
 
-static char	*label[4] = {"Copy:      ", "Scale:     ",
+static char    *label[4] = {"Copy:      ", "Scale:     ",
     "Add:       ", "Triad:     "};
 
-static double	bytes[4] = {
+static double    bytes[4] = {
     2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE,
     2 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE,
     3 * sizeof(STREAM_TYPE) * STREAM_ARRAY_SIZE,
@@ -236,14 +239,16 @@ extern void checkSTREAMresults();
 
 int main()
 {
-    int			quantum, checktick();
-    int			BytesPerWord;
-    int			k;
-    ssize_t		j = 0;
-    ssize_t     ntask = 0;
-    STREAM_TYPE	scalar;
-    double		t, times[4][NTIMES];
-	double t_overall;
+    int            quantum, checktick();
+    int            BytesPerWord;
+    int            k;
+    ssize_t        j = 0;
+    ssize_t        ntask = 0;
+    ssize_t        n_tasks_overall = 0;
+    ssize_t        n_blocks_overall = 0;
+    STREAM_TYPE    scalar;
+    double         t, times[4][NTIMES];
+    double         t_overall;    
 
 #ifndef _STAT_ARRAYS
     a = alloc(STREAM_ARRAY_SIZE * sizeof(STREAM_TYPE));
@@ -262,7 +267,7 @@ int main()
     printf(HLINE);
     BytesPerWord = sizeof(STREAM_TYPE);
     printf("This system uses %d bytes pxer array element.\n",
-	BytesPerWord);
+    BytesPerWord);
 
     printf(HLINE);
 #ifdef N
@@ -275,11 +280,11 @@ int main()
 
     printf("Array size = %llu (elements), Offset = %d (elements)\n" , (unsigned long long) STREAM_ARRAY_SIZE, OFFSET);
     printf("Memory per array = %.1f MiB (= %.1f GiB).\n",
-	BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
-	BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
+    BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0),
+    BytesPerWord * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.0/1024.0));
     printf("Total memory required = %.1f MiB (= %.1f GiB).\n",
-	(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
-	(3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
+    (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024.),
+    (3.0 * BytesPerWord) * ( (double) STREAM_ARRAY_SIZE / 1024.0/1024./1024.));
     printf("Each kernel will be executed %d times.\n", NTIMES);
     printf(" The *best* time for each kernel (excluding the first iteration)\n");
     printf(" will be used to compute the reported bandwidth.\n");
@@ -296,50 +301,22 @@ int main()
 #pragma omp parallel
     {
 #pragma omp master
-	{
-	    k = omp_get_num_threads();
-	    printf ("Number of Threads requested = %i\n",k);
+    {
+        k = omp_get_num_threads();
+        printf ("Number of Threads requested = %i\n",k);
         }
     }
 #endif
 
 #ifdef _OPENMP
-	k = 0;
+    k = 0;
 #pragma omp parallel
 #pragma omp atomic
-		k++;
+        k++;
     printf ("Number of Threads counted = %i\n",k);
 #endif
 
-    /* Get initial value for system clock. */
-    fprintf(stderr, "Initializing data (parallel) ...\n");
-    #if THIRD_INVERTED
-    fprintf(stderr, "... using first third inverted data setup!\n");
-    #endif
-	#pragma omp parallel for schedule(static)
-    for (j=0; j<STREAM_ARRAY_SIZE; j++) {
-        #if THIRD_INVERTED
-	    a[STREAM_ARRAY_SIZE-1 - j] = 1.0;//inverted!!
-        #else
-        a[j] = 1.0;
-        #endif
-	    b[j] = 2.0;
-	    c[j] = 0.0;
-	}
-
-    printf(HLINE);
-
-    if  ( (quantum = checktick()) >= 1)
-	printf("Your clock granularity/precision appears to be "
-	    "%d microseconds.\n", quantum);
-    else {
-	printf("Your clock granularity appears to be "
-	    "less than one microsecond.\n");
-	quantum = 1;
-    }
-
-	// number of task in which each kernel is divided
-    int n_tasks_overall = -1;
+// number of task in which each kernel is divided    
 #pragma omp parallel
 #pragma omp master
 #ifndef T_AFF_N_TASKS
@@ -347,13 +324,57 @@ int main()
 #else
     n_tasks_overall = T_AFF_N_TASKS;
 #endif
-
+    n_blocks_overall = n_tasks_overall * T_AFF_BLOCK_GRAIN_DIVISOR;
+    long step_block = STREAM_ARRAY_SIZE / n_blocks_overall;
+    if(STREAM_ARRAY_SIZE % n_blocks_overall != 0) {
+        step_block++;
+    }
     long step = STREAM_ARRAY_SIZE / n_tasks_overall;
-    if(STREAM_ARRAY_SIZE % n_tasks_overall != 0)
-      step++;
+    if(STREAM_ARRAY_SIZE % n_tasks_overall != 0) {
+        step++;
+    }
     fprintf(stderr, "STREAM_ARRAY_SIZE = %ld; n_tasks_overall = %d; step = %ld\n", (long)STREAM_ARRAY_SIZE, n_tasks_overall, (long)step);
 
+    /* Get initial value for system clock. */
+    fprintf(stderr, "Initializing data (parallel) ...\n");
+    #pragma omp parallel for schedule(static)
+    for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+        a[j] = 1.0;
+        b[j] = 2.0;
+        c[j] = 0.0;
+    }
+
+    printf(HLINE);
+
+    if  ( (quantum = checktick()) >= 1)
+    printf("Your clock granularity/precision appears to be "
+        "%d microseconds.\n", quantum);
+    else {
+    printf("Your clock granularity appears to be "
+        "less than one microsecond.\n");
+    quantum = 1;
+    }
+
     fprintf(stderr, "Initializing data done... running first test.. with n_tasks_overall = %d\n", n_tasks_overall);
+
+#if RANDOM_BLOCK_INIT
+    int chunk_assignment[n_tasks_overall];
+    int n_threads = omp_get_num_threads();
+    for(int i = 0; i < n_tasks_overall; i++) {
+        task_assignment[i] == int(i / n_threads);
+    }
+    // now shuffle assignment
+    size_t i;
+    srand(42);
+    for (i = 0; i < n - 1; i++) {
+        size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+        int t = task_assignment[j];
+        task_assignment[j] = task_assignment[i];
+        task_assignment[i] = t;
+    }
+}
+#endif
+    
     t = mysecond();
 
 #pragma omp parallel
@@ -379,7 +400,7 @@ int main()
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
-		long i;
+        long i;
         for(i = tmp_idx_start; i <= tmp_idx_end; i++){
           a[i] = 2.0E0 * a[i];
         }
@@ -404,18 +425,18 @@ int main()
     printf("precision of your system timer.\n");
     printf(HLINE);
 
-    /*	--- MAIN LOOP --- repeat test cases NTIMES times --- */
+    /*    --- MAIN LOOP --- repeat test cases NTIMES times --- */
 
     fprintf(stderr, "Starting main loop...\n");
 
     scalar = 3.0;
-	  t_overall = mysecond();
+      t_overall = mysecond();
     for (k=0; k<NTIMES; k++)
-	{
+    {
     fprintf(stderr, "---------- Running iteration %d ...\n", k);
 #if THIRD_INVERTED == 0 // Execute Copy, Scale and Add if not in THIRD_INVERTED mode
     fprintf(stderr, "---------- Copy ...\n");
-	times[0][k] = mysecond();
+    times[0][k] = mysecond();
 
 #pragma omp parallel
 #pragma omp taskgroup
@@ -441,7 +462,7 @@ int main()
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
-		    long i;
+            long i;
         for(i = tmp_idx_start; i <= tmp_idx_end; i++){
           c[i] = a[i];
         }
@@ -451,11 +472,11 @@ int main()
     }
 #endif
 }
-	times[0][k] = mysecond() - times[0][k];
+    times[0][k] = mysecond() - times[0][k];
 
 
   fprintf(stderr, "---------- Scale ...\n");
-	times[1][k] = mysecond();
+    times[1][k] = mysecond();
 
 #pragma omp parallel
 #pragma omp taskgroup
@@ -481,7 +502,7 @@ int main()
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
-		long  i;
+        long  i;
         for(i = tmp_idx_start; i <= tmp_idx_end; i++){
           b[i] = scalar*c[i];
         }
@@ -492,10 +513,10 @@ int main()
 #endif
 }
 
-	times[1][k] = mysecond() - times[1][k];
+    times[1][k] = mysecond() - times[1][k];
 
   fprintf(stderr, "---------- Add ...\n");
-	times[2][k] = mysecond();
+    times[2][k] = mysecond();
 
 #pragma omp parallel
 #pragma omp taskgroup
@@ -522,7 +543,7 @@ int main()
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
-		long i;
+        long i;
         for(i = tmp_idx_start; i <= tmp_idx_end; i++){
           c[i] = a[i]+b[i];
         }
@@ -532,14 +553,14 @@ int main()
     }
 #endif
 }
-	times[2][k] = mysecond() - times[2][k];
+    times[2][k] = mysecond() - times[2][k];
 #endif // THIRD_INVERTED == 0
 
   fprintf(stderr, "---------- Triad ...\n");
 #ifdef _FILTER_EXEC_TIMES
   kmpc_task_affinity_taskexectimes_set_enabled(1);
 #endif
-	times[3][k] = mysecond();
+    times[3][k] = mysecond();
 
 #pragma omp parallel
 #pragma omp taskgroup
@@ -568,7 +589,7 @@ int main()
 #endif
       #pragma omp task firstprivate(tmp_idx_start, tmp_idx_end)
       {
-		long i;
+        long i;
         for(i = tmp_idx_start; i <= tmp_idx_end; i++){
           a[i] = b[i]+scalar*c[i];
         }
@@ -578,35 +599,35 @@ int main()
     }
 #endif
 }
-	times[3][k] = mysecond() - times[3][k];
+    times[3][k] = mysecond() - times[3][k];
 #ifdef _FILTER_EXEC_TIMES
   kmpc_task_affinity_taskexectimes_set_enabled(0);
 #endif
-	}
-	t_overall = mysecond() - t_overall;
-	printf("Elapsed time for program\t%lf\tsec\n",t_overall);
+    }
+    t_overall = mysecond() - t_overall;
+    printf("Elapsed time for program\t%lf\tsec\n",t_overall);
 
-    /*	--- SUMMARY --- */
+    /*    --- SUMMARY --- */
 
     for (k=1; k<NTIMES; k++) /* note -- skip first iteration */
-	{
-	for (j=0; j<4; j++)
-	    {
-	    avgtime[j] = avgtime[j] + times[j][k];
-	    mintime[j] = MIN(mintime[j], times[j][k]);
-	    maxtime[j] = MAX(maxtime[j], times[j][k]);
-	    }
-	}
+    {
+    for (j=0; j<4; j++)
+        {
+        avgtime[j] = avgtime[j] + times[j][k];
+        mintime[j] = MIN(mintime[j], times[j][k]);
+        maxtime[j] = MAX(maxtime[j], times[j][k]);
+        }
+    }
 
     printf("Function    Best Rate MB/s  Avg time     Min time     Max time\n");
     for (j=0; j<4; j++) {
-		avgtime[j] = avgtime[j]/(double)(NTIMES-1);
+        avgtime[j] = avgtime[j]/(double)(NTIMES-1);
 
-		printf("%s%12.1f  %11.6f  %11.6f  %11.6f\n", label[j],
-	       1.0E-06 * bytes[j]/mintime[j],
-	       avgtime[j],
-	       mintime[j],
-	       maxtime[j]);
+        printf("%s%12.1f  %11.6f  %11.6f  %11.6f\n", label[j],
+           1.0E-06 * bytes[j]/mintime[j],
+           avgtime[j],
+           mintime[j],
+           maxtime[j]);
     }
     printf(HLINE);
 
@@ -615,22 +636,22 @@ int main()
     return 0;
 }
 
-# define	M	20
+# define    M    20
 
 int
 checktick()
     {
-    int		i, minDelta, Delta;
-    double	t1, t2, timesfound[M];
+    int        i, minDelta, Delta;
+    double    t1, t2, timesfound[M];
 
 /*  Collect a sequence of M unique time values from the system. */
 
     for (i = 0; i < M; i++) {
-	t1 = mysecond();
-	while( ((t2=mysecond()) - t1) < 1.0E-6 )
-	    ;
-	timesfound[i] = t1 = t2;
-	}
+    t1 = mysecond();
+    while( ((t2=mysecond()) - t1) < 1.0E-6 )
+        ;
+    timesfound[i] = t1 = t2;
+    }
 
 /*
  * Determine the minimum difference between these M values.
@@ -640,9 +661,9 @@ checktick()
 
     minDelta = 1000000;
     for (i = 1; i < M; i++) {
-	Delta = (int)( 1.0E6 * (timesfound[i]-timesfound[i-1]));
-	minDelta = MIN(minDelta, MAX(Delta,0));
-	}
+    Delta = (int)( 1.0E6 * (timesfound[i]-timesfound[i-1]));
+    minDelta = MIN(minDelta, MAX(Delta,0));
+    }
 
    return(minDelta);
     }
@@ -669,22 +690,22 @@ double mysecond()
 #endif
 void checkSTREAMresults ()
 {
-	STREAM_TYPE aj,bj,cj,scalar;
-	STREAM_TYPE aSumErr,bSumErr,cSumErr;
-	STREAM_TYPE aAvgErr,bAvgErr,cAvgErr;
-	double epsilon;
-	ssize_t	j;
-	int	k,ierr,err;
+    STREAM_TYPE aj,bj,cj,scalar;
+    STREAM_TYPE aSumErr,bSumErr,cSumErr;
+    STREAM_TYPE aAvgErr,bAvgErr,cAvgErr;
+    double epsilon;
+    ssize_t    j;
+    int    k,ierr,err;
 
     /* reproduce initialization */
-	aj = 1.0;
-	bj = 2.0;
-	cj = 0.0;
+    aj = 1.0;
+    bj = 2.0;
+    cj = 0.0;
     /* a[] is modified during timing check */
-	aj = 2.0E0 * aj;
+    aj = 2.0E0 * aj;
     /* now execute timing loop */
-	scalar = 3.0;
-	for (k=0; k<NTIMES; k++)
+    scalar = 3.0;
+    for (k=0; k<NTIMES; k++)
         {
             cj = aj;
             bj = scalar*cj;
@@ -693,94 +714,94 @@ void checkSTREAMresults ()
         }
 
     /* accumulate deltas between observed and expected results */
-	aSumErr = 0.0;
-	bSumErr = 0.0;
-	cSumErr = 0.0;
-	for (j=0; j<STREAM_ARRAY_SIZE; j++) {
-		aSumErr += abs(a[j] - aj);
-		bSumErr += abs(b[j] - bj);
-		cSumErr += abs(c[j] - cj);
-		// if (j == 417) printf("Index 417: c[j]: %f, cj: %f\n",c[j],cj);	// MCCALPIN
-	}
-	aAvgErr = aSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
-	bAvgErr = bSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
-	cAvgErr = cSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
+    aSumErr = 0.0;
+    bSumErr = 0.0;
+    cSumErr = 0.0;
+    for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+        aSumErr += abs(a[j] - aj);
+        bSumErr += abs(b[j] - bj);
+        cSumErr += abs(c[j] - cj);
+        // if (j == 417) printf("Index 417: c[j]: %f, cj: %f\n",c[j],cj);    // MCCALPIN
+    }
+    aAvgErr = aSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
+    bAvgErr = bSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
+    cAvgErr = cSumErr / (STREAM_TYPE) STREAM_ARRAY_SIZE;
 
-	if (sizeof(STREAM_TYPE) == 4) {
-		epsilon = 1.e-6;
-	}
-	else if (sizeof(STREAM_TYPE) == 8) {
-		epsilon = 1.e-13;
-	}
-	else {
-		printf("WEIRD: sizeof(STREAM_TYPE) = %lu\n",sizeof(STREAM_TYPE));
-		epsilon = 1.e-6;
-	}
+    if (sizeof(STREAM_TYPE) == 4) {
+        epsilon = 1.e-6;
+    }
+    else if (sizeof(STREAM_TYPE) == 8) {
+        epsilon = 1.e-13;
+    }
+    else {
+        printf("WEIRD: sizeof(STREAM_TYPE) = %lu\n",sizeof(STREAM_TYPE));
+        epsilon = 1.e-6;
+    }
 
-	err = 0;
-	if (abs(aAvgErr/aj) > epsilon) {
-		err++;
-		printf ("Failed Validation on array a[], AvgRelAbsErr > epsilon (%e)\n",epsilon);
-		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",aj,aAvgErr,abs(aAvgErr)/aj);
-		ierr = 0;
-		for (j=0; j<STREAM_ARRAY_SIZE; j++) {
-			if (abs(a[j]/aj-1.0) > epsilon) {
-				ierr++;
+    err = 0;
+    if (abs(aAvgErr/aj) > epsilon) {
+        err++;
+        printf ("Failed Validation on array a[], AvgRelAbsErr > epsilon (%e)\n",epsilon);
+        printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",aj,aAvgErr,abs(aAvgErr)/aj);
+        ierr = 0;
+        for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+            if (abs(a[j]/aj-1.0) > epsilon) {
+                ierr++;
 #ifdef VERBOSE
-				if (ierr < 10) {
-					printf("         array a: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-						j,aj,a[j],abs((aj-a[j])/aAvgErr));
-				}
+                if (ierr < 10) {
+                    printf("         array a: index: %ld, expected: %e, observed: %e, relative error: %e\n",
+                        j,aj,a[j],abs((aj-a[j])/aAvgErr));
+                }
 #endif
-			}
-		}
-		printf("     For array a[], %d errors were found.\n",ierr);
-	}
-	if (abs(bAvgErr/bj) > epsilon) {
-		err++;
-		printf ("Failed Validation on array b[], AvgRelAbsErr > epsilon (%e)\n",epsilon);
-		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",bj,bAvgErr,abs(bAvgErr)/bj);
-		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
-		ierr = 0;
-		for (j=0; j<STREAM_ARRAY_SIZE; j++) {
-			if (abs(b[j]/bj-1.0) > epsilon) {
-				ierr++;
+            }
+        }
+        printf("     For array a[], %d errors were found.\n",ierr);
+    }
+    if (abs(bAvgErr/bj) > epsilon) {
+        err++;
+        printf ("Failed Validation on array b[], AvgRelAbsErr > epsilon (%e)\n",epsilon);
+        printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",bj,bAvgErr,abs(bAvgErr)/bj);
+        printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
+        ierr = 0;
+        for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+            if (abs(b[j]/bj-1.0) > epsilon) {
+                ierr++;
 #ifdef VERBOSE
-				if (ierr < 10) {
-					printf("         array b: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-						j,bj,b[j],abs((bj-b[j])/bAvgErr));
-				}
+                if (ierr < 10) {
+                    printf("         array b: index: %ld, expected: %e, observed: %e, relative error: %e\n",
+                        j,bj,b[j],abs((bj-b[j])/bAvgErr));
+                }
 #endif
-			}
-		}
-		printf("     For array b[], %d errors were found.\n",ierr);
-	}
-	if (abs(cAvgErr/cj) > epsilon) {
-		err++;
-		printf ("Failed Validation on array c[], AvgRelAbsErr > epsilon (%e)\n",epsilon);
-		printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",cj,cAvgErr,abs(cAvgErr)/cj);
-		printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
-		ierr = 0;
-		for (j=0; j<STREAM_ARRAY_SIZE; j++) {
-			if (abs(c[j]/cj-1.0) > epsilon) {
-				ierr++;
+            }
+        }
+        printf("     For array b[], %d errors were found.\n",ierr);
+    }
+    if (abs(cAvgErr/cj) > epsilon) {
+        err++;
+        printf ("Failed Validation on array c[], AvgRelAbsErr > epsilon (%e)\n",epsilon);
+        printf ("     Expected Value: %e, AvgAbsErr: %e, AvgRelAbsErr: %e\n",cj,cAvgErr,abs(cAvgErr)/cj);
+        printf ("     AvgRelAbsErr > Epsilon (%e)\n",epsilon);
+        ierr = 0;
+        for (j=0; j<STREAM_ARRAY_SIZE; j++) {
+            if (abs(c[j]/cj-1.0) > epsilon) {
+                ierr++;
 #ifdef VERBOSE
-				if (ierr < 10) {
-					printf("         array c: index: %ld, expected: %e, observed: %e, relative error: %e\n",
-						j,cj,c[j],abs((cj-c[j])/cAvgErr));
-				}
+                if (ierr < 10) {
+                    printf("         array c: index: %ld, expected: %e, observed: %e, relative error: %e\n",
+                        j,cj,c[j],abs((cj-c[j])/cAvgErr));
+                }
 #endif
-			}
-		}
-		printf("     For array c[], %d errors were found.\n",ierr);
-	}
-	if (err == 0) {
-		printf ("Solution Validates: avg error less than %e on all three arrays\n",epsilon);
-	}
+            }
+        }
+        printf("     For array c[], %d errors were found.\n",ierr);
+    }
+    if (err == 0) {
+        printf ("Solution Validates: avg error less than %e on all three arrays\n",epsilon);
+    }
 #ifdef VERBOSE
-	printf ("Results Validation Verbose Results: \n");
-	printf ("    Expected a(1), b(1), c(1): %f %f %f \n",aj,bj,cj);
-	printf ("    Observed a(1), b(1), c(1): %f %f %f \n",a[1],b[1],c[1]);
-	printf ("    Rel Errors on a, b, c:     %e %e %e \n",abs(aAvgErr/aj),abs(bAvgErr/bj),abs(cAvgErr/cj));
+    printf ("Results Validation Verbose Results: \n");
+    printf ("    Expected a(1), b(1), c(1): %f %f %f \n",aj,bj,cj);
+    printf ("    Observed a(1), b(1), c(1): %f %f %f \n",a[1],b[1],c[1]);
+    printf ("    Rel Errors on a, b, c:     %e %e %e \n",abs(aAvgErr/aj),abs(bAvgErr/bj),abs(cAvgErr/cj));
 #endif
 }
