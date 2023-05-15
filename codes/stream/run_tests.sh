@@ -121,7 +121,7 @@ make clean
 # === Baseline Experiments
 # ========================================
 compile ".baseline"
-NAME="baseline"
+NAME="baseline_${OMP_NUM_THREADS}"
 for rep in {0..${N_REP}}
 do
     run ".baseline" ${rep}    

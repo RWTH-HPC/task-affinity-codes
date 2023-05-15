@@ -60,14 +60,14 @@ class CMeasurement():
         self.time_work = 0.0
 
         # parse meta information from filename
-        if "_baseline_" in file_name:
+        if "baseline_" in file_name:
             self.mode                   = "baseline"
             self.page_selection_strat   = ""
             self.n_affinities           = 0
             self.weighting_strat        = ""
             self.version                = "baseline"
-            self.n_threads              = int(tmp_split[2])
-            self.repetition             = int(tmp_split[3])
+            self.n_threads              = int(tmp_split[1])
+            self.repetition             = int(tmp_split[2])
         else:
             self.mode                   = tmp_split[1]
             self.page_selection_strat   = tmp_split[2]
