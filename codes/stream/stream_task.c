@@ -62,11 +62,11 @@
 #ifndef T_AFF_NUM_TASK_MULTIPLICATOR
     #define T_AFF_NUM_TASK_MULTIPLICATOR 32
 #endif
-#ifndef T_AFF_BLOCK_GRAIN_DIVISOR
-    #define T_AFF_BLOCK_GRAIN_DIVISOR 32
+#ifndef T_AFF_BLOCK_DIVISOR
+    #define T_AFF_BLOCK_DIVISOR 3.0
 #endif
-#ifndef T_AFF_RANDOM_BLOCK_INIT
-    #define T_AFF_RANDOM_BLOCK_INIT 1
+#ifndef T_AFF_DATA_INIT_PARTIAL_REMOTE
+    #define T_AFF_DATA_INIT_PARTIAL_REMOTE 1
 #endif
 // invert flag is only on for multiple task creators
 #if T_AFF_SINGLE_CREATOR
@@ -247,7 +247,6 @@ int main()
     ssize_t        j = 0;
     ssize_t        ntask = 0;
     ssize_t        n_tasks_overall = 0;
-    ssize_t        n_blocks_overall = 0;
     STREAM_TYPE    scalar;
     double         t, times[4][NTIMES];
     double         t_overall;
@@ -330,51 +329,41 @@ int main()
     if(STREAM_ARRAY_SIZE % n_tasks_overall != 0) {
         step++;
     }
-    n_blocks_overall = n_tasks_overall * T_AFF_BLOCK_GRAIN_DIVISOR;
-    long step_block = STREAM_ARRAY_SIZE / n_blocks_overall;
-    if(STREAM_ARRAY_SIZE % n_blocks_overall != 0) {
-        step_block++;
-    }
-    fprintf(stderr, "STREAM_ARRAY_SIZE=%ld; n_tasks_overall=%zd; step=%ld; n_blocks_overall=%zd; step_block=%ld\n", (long)STREAM_ARRAY_SIZE, n_tasks_overall, step, n_blocks_overall, step_block);
+    fprintf(stderr, "STREAM_ARRAY_SIZE=%ld; n_tasks_overall=%zd; step=%ld; T_AFF_BLOCK_DIVISOR=%f\n", (long)STREAM_ARRAY_SIZE, n_tasks_overall, step, (float)T_AFF_BLOCK_DIVISOR);
 
-#if T_AFF_RANDOM_BLOCK_INIT
-    int chunk_assignment[n_blocks_overall];
-    for(i = 0; i < n_blocks_overall; i++) {
-        chunk_assignment[i] = (int)(i / T_AFF_BLOCK_GRAIN_DIVISOR / T_AFF_NUM_TASK_MULTIPLICATOR);
-        printf("%d;", chunk_assignment[i]);
-    }
-    printf("\n");
-
-
-    // now shuffle assignment
-    srand(42);
-    for (i = 0; i < n_blocks_overall - 1; i++) {
-        size_t j = i + rand() / (RAND_MAX / (n_blocks_overall - i) + 1);
-        int t = chunk_assignment[j];
-        chunk_assignment[j] = chunk_assignment[i];
-        chunk_assignment[i] = t;
-        printf("%d;", chunk_assignment[i]);
-    }
-    printf("\n");
-
-    fprintf(stderr, "Initializing data block (random assignment) ...\n");
-    #pragma omp parallel
+#if T_AFF_DATA_INIT_PARTIAL_REMOTE
+    fprintf(stderr, "Initializing data (second part remote) ...\n");
+    long step_first_part = (long)(step / T_AFF_BLOCK_DIVISOR);
+    #pragma omp parallel private(j, i2)
     {
         int cur_thread = omp_get_thread_num();
-        for (j = 0; j < n_blocks_overall; j++) {
-            if(cur_thread == chunk_assignment[j]) {
-                long tmp_idx_start  = j * step_block;
-                long tmp_idx_end    = MIN((j+1)*step_block-1,STREAM_ARRAY_SIZE);
-                for (i2 = tmp_idx_start; i2 <= tmp_idx_end; i2++) {
+
+        for (j = 0; j < n_tasks_overall; j++) {
+            int assigned_thread = (int)(j / T_AFF_NUM_TASK_MULTIPLICATOR);
+            int remote_thread   = n_threads - 1 - assigned_thread;
+            long idx_start      = j * step;
+            long idx_end        = MIN((j+1)*step-1,STREAM_ARRAY_SIZE);
+            long idx_break      = MIN(j*step+step_first_part,STREAM_ARRAY_SIZE);
+
+            if(cur_thread == assigned_thread) {
+                printf("Task\t%03zd\tThread\t%03d\tInit Local Part\t%ld\t%ld\n", j, cur_thread, idx_start, idx_break);
+                for (i2 = idx_start; i2 < idx_break; i2++) {
                     a[i2] = 1.0;
                     b[i2] = 2.0;
                     c[i2] = 0.0;
                 }
             }
-            // #pragma omp barrier
+            if(cur_thread == remote_thread) {
+                printf("Task\t%03zd\tThread\t%03d\tInit Remote Part\t%ld\t%ld\n", j, cur_thread, idx_break, idx_end);
+                for (i2 = idx_break; i2 <= idx_end; i2++) {
+                    a[i2] = 1.0;
+                    b[i2] = 2.0;
+                    c[i2] = 0.0;
+                }
+            }
         }
     }
-#else // T_AFF_RANDOM_BLOCK_INIT
+#else // T_AFF_DATA_INIT_PARTIAL_REMOTE
     fprintf(stderr, "Initializing data (parallel) ...\n");
     #pragma omp parallel for schedule(static)
     for (j=0; j<STREAM_ARRAY_SIZE; j++) {
@@ -382,7 +371,7 @@ int main()
         b[j] = 2.0;
         c[j] = 0.0;
     }
-#endif // T_AFF_RANDOM_BLOCK_INIT
+#endif // T_AFF_DATA_INIT_PARTIAL_REMOTE
 
     printf(HLINE);
 
