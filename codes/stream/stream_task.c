@@ -65,8 +65,8 @@
 #ifndef T_AFF_BLOCK_GRAIN_DIVISOR
     #define T_AFF_BLOCK_GRAIN_DIVISOR 32
 #endif
-#ifndef THIRD_INVERTED
-    #define THIRD_INVERTED 0
+#ifndef T_AFF_RANDOM_BLOCK_INIT
+    #define T_AFF_RANDOM_BLOCK_INIT 1
 #endif
 // invert flag is only on for multiple task creators
 #if T_AFF_SINGLE_CREATOR
@@ -242,13 +242,16 @@ int main()
     int            quantum, checktick();
     int            BytesPerWord;
     int            k;
+    ssize_t        i = 0;
+    ssize_t        i2 = 0;
     ssize_t        j = 0;
     ssize_t        ntask = 0;
     ssize_t        n_tasks_overall = 0;
     ssize_t        n_blocks_overall = 0;
     STREAM_TYPE    scalar;
     double         t, times[4][NTIMES];
-    double         t_overall;    
+    double         t_overall;
+    int            n_threads = 1;
 
 #ifndef _STAT_ARRAYS
     a = alloc(STREAM_ARRAY_SIZE * sizeof(STREAM_TYPE));
@@ -302,8 +305,8 @@ int main()
     {
 #pragma omp master
     {
-        k = omp_get_num_threads();
-        printf ("Number of Threads requested = %i\n",k);
+        n_threads = omp_get_num_threads();
+        printf ("Number of Threads requested = %i\n", n_threads);
         }
     }
 #endif
@@ -317,25 +320,61 @@ int main()
 #endif
 
 // number of task in which each kernel is divided    
-#pragma omp parallel
-#pragma omp master
 #ifndef T_AFF_N_TASKS
-    n_tasks_overall = omp_get_num_threads()*T_AFF_NUM_TASK_MULTIPLICATOR;
+    n_tasks_overall = n_threads * T_AFF_NUM_TASK_MULTIPLICATOR;
 #else
     n_tasks_overall = T_AFF_N_TASKS;
 #endif
+
+    long step = STREAM_ARRAY_SIZE / n_tasks_overall;
+    if(STREAM_ARRAY_SIZE % n_tasks_overall != 0) {
+        step++;
+    }
     n_blocks_overall = n_tasks_overall * T_AFF_BLOCK_GRAIN_DIVISOR;
     long step_block = STREAM_ARRAY_SIZE / n_blocks_overall;
     if(STREAM_ARRAY_SIZE % n_blocks_overall != 0) {
         step_block++;
     }
-    long step = STREAM_ARRAY_SIZE / n_tasks_overall;
-    if(STREAM_ARRAY_SIZE % n_tasks_overall != 0) {
-        step++;
-    }
-    fprintf(stderr, "STREAM_ARRAY_SIZE = %ld; n_tasks_overall = %d; step = %ld\n", (long)STREAM_ARRAY_SIZE, n_tasks_overall, (long)step);
+    fprintf(stderr, "STREAM_ARRAY_SIZE=%ld; n_tasks_overall=%zd; step=%ld; n_blocks_overall=%zd; step_block=%ld\n", (long)STREAM_ARRAY_SIZE, n_tasks_overall, step, n_blocks_overall, step_block);
 
-    /* Get initial value for system clock. */
+#if T_AFF_RANDOM_BLOCK_INIT
+    int chunk_assignment[n_blocks_overall];
+    for(i = 0; i < n_blocks_overall; i++) {
+        chunk_assignment[i] = (int)(i / T_AFF_BLOCK_GRAIN_DIVISOR / T_AFF_NUM_TASK_MULTIPLICATOR);
+        printf("%d;", chunk_assignment[i]);
+    }
+    printf("\n");
+
+
+    // now shuffle assignment
+    srand(42);
+    for (i = 0; i < n_blocks_overall - 1; i++) {
+        size_t j = i + rand() / (RAND_MAX / (n_blocks_overall - i) + 1);
+        int t = chunk_assignment[j];
+        chunk_assignment[j] = chunk_assignment[i];
+        chunk_assignment[i] = t;
+        printf("%d;", chunk_assignment[i]);
+    }
+    printf("\n");
+
+    fprintf(stderr, "Initializing data block (random assignment) ...\n");
+    #pragma omp parallel
+    {
+        int cur_thread = omp_get_thread_num();
+        for (j = 0; j < n_blocks_overall; j++) {
+            if(cur_thread == chunk_assignment[j]) {
+                long tmp_idx_start  = j * step_block;
+                long tmp_idx_end    = MIN((j+1)*step_block-1,STREAM_ARRAY_SIZE);
+                for (i2 = tmp_idx_start; i2 <= tmp_idx_end; i2++) {
+                    a[i2] = 1.0;
+                    b[i2] = 2.0;
+                    c[i2] = 0.0;
+                }
+            }
+            // #pragma omp barrier
+        }
+    }
+#else // T_AFF_RANDOM_BLOCK_INIT
     fprintf(stderr, "Initializing data (parallel) ...\n");
     #pragma omp parallel for schedule(static)
     for (j=0; j<STREAM_ARRAY_SIZE; j++) {
@@ -343,6 +382,7 @@ int main()
         b[j] = 2.0;
         c[j] = 0.0;
     }
+#endif // T_AFF_RANDOM_BLOCK_INIT
 
     printf(HLINE);
 
@@ -355,26 +395,8 @@ int main()
     quantum = 1;
     }
 
-    fprintf(stderr, "Initializing data done... running first test.. with n_tasks_overall = %d\n", n_tasks_overall);
+    fprintf(stderr, "Initializing data done... running first test.. with n_tasks_overall = %zd\n", n_tasks_overall);
 
-#if RANDOM_BLOCK_INIT
-    int chunk_assignment[n_tasks_overall];
-    int n_threads = omp_get_num_threads();
-    for(int i = 0; i < n_tasks_overall; i++) {
-        task_assignment[i] == int(i / n_threads);
-    }
-    // now shuffle assignment
-    size_t i;
-    srand(42);
-    for (i = 0; i < n - 1; i++) {
-        size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
-        int t = task_assignment[j];
-        task_assignment[j] = task_assignment[i];
-        task_assignment[i] = t;
-    }
-}
-#endif
-    
     t = mysecond();
 
 #pragma omp parallel
@@ -434,7 +456,6 @@ int main()
     for (k=0; k<NTIMES; k++)
     {
     fprintf(stderr, "---------- Running iteration %d ...\n", k);
-#if THIRD_INVERTED == 0 // Execute Copy, Scale and Add if not in THIRD_INVERTED mode
     fprintf(stderr, "---------- Copy ...\n");
     times[0][k] = mysecond();
 
@@ -554,7 +575,6 @@ int main()
 #endif
 }
     times[2][k] = mysecond() - times[2][k];
-#endif // THIRD_INVERTED == 0
 
   fprintf(stderr, "---------- Triad ...\n");
 #ifdef _FILTER_EXEC_TIMES
