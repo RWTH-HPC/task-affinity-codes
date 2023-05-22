@@ -6,13 +6,22 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=144
 #SBATCH --job-name=STREAM_TASK_AFFINITY_TEST
-#SBATCH --output=STREAM_TASK_AFFINITY_TEST.txt
 #SBATCH --time=10:00:00
 #SBATCH --exclusive
+#SBATCH --output=out_%j.txt
 
 # ========================================
 # === Environment: Prep & Execution Setup
 # ========================================
+# activate runtime
+RUNTIME_BASE_DIR=${RUNTIME_BASE_DIR:-"$(pwd)/../../runtime_affinity_rel"}
+export LD_LIBRARY_PATH=${RUNTIME_BASE_DIR}/lib:${LD_LIBRARY_PATH}
+export LIBRARY_PATH=${RUNTIME_BASE_DIR}/lib:${LIBRARY_PATH}
+export INCLUDE=${RUNTIME_BASE_DIR}/include:${INCLUDE}
+export CPATH=${RUNTIME_BASE_DIR}/include:${CPATH}
+export C_INCLUDE_PATH=${RUNTIME_BASE_DIR}/include:${C_INCLUDE_PATH}
+export CPLUS_INCLUDE_PATH=${RUNTIME_BASE_DIR}/include:${CPLUS_INCLUDE_PATH}
+
 RESULT_DIR="$(pwd)/$(date +"%Y-%m-%d_%H%M%S")_results"
 mkdir ${RESULT_DIR}
 
@@ -26,7 +35,7 @@ export KMP_TASK_STEALING_CONSTRAINT=0
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 export OMP_NUM_THREADS=64
-export N_REP=3
+export N_REP=9
 
 export T_AFF_INVERTED=0
 export T_AFF_DATA_INIT_PARTIAL_REMOTE=0
@@ -65,7 +74,7 @@ function run {
     #grep "combined_map_strat" output_${NAME}.txt > combined_map_stats_${NAME}.txt
     #grep "T#0" output_${NAME}.txt > stats_${NAME}.txt
     #grep "combined_map" stats_${NAME}.txt
-    echo "\n"
+    #echo "\n"
 }
 
 function compile_and_run {
@@ -112,7 +121,7 @@ STRATS_WEIGHTING=(1 2)
 STRATS_PAGE_SELECTION=(0 1 2 3 5)
 
 # Number of affinities
-N_AFFINITIES=(16 32 64 128)
+N_AFFINITIES=(4 8 16 32 64 128)
 
 # clean first
 make clean
