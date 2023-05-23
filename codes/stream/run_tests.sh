@@ -35,7 +35,7 @@ export KMP_TASK_STEALING_CONSTRAINT=0
 export OMP_PLACES=cores
 export OMP_PROC_BIND=spread
 export OMP_NUM_THREADS=64
-export N_REP=9
+export N_REP=10
 
 export T_AFF_INVERTED=0
 export T_AFF_DATA_INIT_PARTIAL_REMOTE=0
@@ -131,7 +131,7 @@ make clean
 # ========================================
 compile ".baseline"
 NAME="baseline_${OMP_NUM_THREADS}"
-for rep in {0..${N_REP}}
+for rep in {1..${N_REP}}
 do
     run ".baseline" ${rep}    
 done
@@ -140,7 +140,7 @@ done
 # === Affinity Experiments
 # ========================================
 compile ".affinity"
-for rep in {0..${N_REP}}
+for rep in {1..${N_REP}}
 do
     for mode in "${MAIN_MODES[@]}"
     do

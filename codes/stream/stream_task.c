@@ -338,6 +338,7 @@ int main()
     {
         int cur_thread = omp_get_thread_num();
 
+        // first init local parts (ensure that first page of each chunk is local)
         for (j = 0; j < n_tasks_overall; j++) {
             int assigned_thread = (int)(j / T_AFF_NUM_TASK_MULTIPLICATOR);
             int remote_thread   = n_threads - 1 - assigned_thread;
@@ -353,6 +354,18 @@ int main()
                     c[i2] = 0.0;
                 }
             }
+        }
+
+        #pragma omp barrier
+
+        // then init remote part
+        for (j = 0; j < n_tasks_overall; j++) {
+            int assigned_thread = (int)(j / T_AFF_NUM_TASK_MULTIPLICATOR);
+            int remote_thread   = n_threads - 1 - assigned_thread;
+            long idx_start      = j * step;
+            long idx_end        = MIN((j+1)*step-1,STREAM_ARRAY_SIZE);
+            long idx_break      = MIN(j*step+step_first_part,STREAM_ARRAY_SIZE);
+            
             if(cur_thread == remote_thread) {
                 printf("Task\t%03zd\tThread\t%03d\tInit Remote Part\t%ld\t%ld\n", j, cur_thread, idx_break, idx_end);
                 for (i2 = idx_break; i2 <= idx_end; i2++) {
